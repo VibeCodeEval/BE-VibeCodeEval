@@ -1,0 +1,112 @@
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Spring Boot ###
+*.jar
+*.war
+*.ear
+*.nar
+*.log
+logs/
+*.log.*
+application-*.properties
+!application.properties
+!application-*.yml
+!application-*.yaml
+application-local.yml
+application-local.yaml
+
+### Compiled class files ###
+*.class
+
+### Package Files ###
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+### Log files ###
+*.log
+*.log.*
+logs/
+log/
+
+### Temporary files ###
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+### OS specific files ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+### Test coverage ###
+.nyc_output/
+coverage/
+*.lcov
+
+### Maven (if used alongside Gradle) ###
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+### H2 Database (if used) ###
+*.mv.db
+*.trace.db
+
+### Application specific ###
+application-local.properties
+application-dev.properties
+application-prod.properties
