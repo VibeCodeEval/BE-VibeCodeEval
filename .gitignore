@@ -107,6 +107,5 @@ buildNumber.properties
 *.trace.db
 
 ### Application specific ###
-application-local.properties
-application-dev.properties
-application-prod.properties
+/src/main/resources/application-secret.yml
+/docs/
