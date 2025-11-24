@@ -38,6 +38,7 @@ out/
 
 ### Spring Boot ###
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.ear
 *.nar
@@ -56,6 +57,7 @@ application-local.yaml
 
 ### Package Files ###
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.nar
 *.ear
