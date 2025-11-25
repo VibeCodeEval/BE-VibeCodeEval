@@ -11,8 +11,9 @@ import com.yd.vibecode.domain.auth.application.usecase.AdminSignupUseCase;
 import com.yd.vibecode.domain.auth.application.usecase.EnterUseCase;
 import com.yd.vibecode.domain.auth.application.usecase.MeUseCase;
 import com.yd.vibecode.global.annotation.AuthApi;
-import com.yd.vibecode.global.annotation.CurrentUser;
 import com.yd.vibecode.global.common.BaseResponse;
+import com.yd.vibecode.global.exception.RestApiException;
+import com.yd.vibecode.global.exception.code.status.AuthErrorStatus;
 import com.yd.vibecode.global.security.TokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -55,7 +56,7 @@ public class AuthController implements AuthApi {
     @GetMapping("/me")
     public BaseResponse<MeResponse> me(HttpServletRequest request) {
         String token = tokenProvider.getToken(request)
-                .orElseThrow(() -> new IllegalArgumentException("토큰이 없습니다."));
+                .orElseThrow(() -> new RestApiException(AuthErrorStatus.EMPTY_JWT));
         MeResponse response = meUseCase.execute(token);
         return BaseResponse.onSuccess(response);
     }

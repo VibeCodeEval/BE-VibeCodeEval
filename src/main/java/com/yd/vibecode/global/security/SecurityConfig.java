@@ -3,6 +3,10 @@ package com.yd.vibecode.global.security;
 import com.yd.vibecode.domain.auth.domain.service.RefreshTokenService;
 import com.yd.vibecode.domain.auth.domain.service.TokenWhitelistService;
 import com.yd.vibecode.global.config.properties.CorsProperties;
+import com.yd.vibecode.global.exception.code.BaseCode;
+import com.yd.vibecode.global.exception.code.status.GlobalErrorStatus;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -75,7 +79,7 @@ public class SecurityConfig {
 
 		// Token Exception Handling
 		http.exceptionHandling(except -> except
-				.authenticationEntryPoint((request, response, authException) -> response.sendError(response.getStatus(), "토큰 오류"))
+				.authenticationEntryPoint((request, response, authException) -> writeUnauthorizedResponse(response))
 		);
 
 		return http.build();
@@ -109,5 +113,14 @@ public class SecurityConfig {
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    private void writeUnauthorizedResponse(HttpServletResponse response) throws IOException {
+        BaseCode errorCode = GlobalErrorStatus._UNAUTHORIZED.getCode();
+        response.setStatus(errorCode.getHttpStatus().value());
+        response.setContentType("application/json;charset=UTF-8");
+        String jsonResponse = String.format("{\"code\":\"%s\",\"message\":\"%s\"}",
+                errorCode.getCode(), errorCode.getMessage());
+        response.getWriter().write(jsonResponse);
     }
 }

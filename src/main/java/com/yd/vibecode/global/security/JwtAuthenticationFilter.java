@@ -35,6 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final PathPatternParser pathPatternParser = new PathPatternParser();
 
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         log.debug("[JwtAuthFilter] start: {} {}", request.getMethod(), request.getRequestURI());
         try {
@@ -62,8 +63,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (tokenProvider.validateToken(token)) {
                 log.info("[JwtAuthFilter] token valid, authenticating user");
                 setAuthentication(token);
-                // 토큰 캐시
-                tokenWhitelistService.whitelist(token, Duration.ofSeconds(30));
+                // 토큰 캐시 (최대 5분 유지)
+                tokenWhitelistService.whitelist(token, Duration.ofMinutes(5));
             } else {
                 log.warn("[JwtAuthFilter] invalid token");
                 throw new RestApiException(INVALID_ACCESS_TOKEN);
@@ -71,7 +72,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } catch (RestApiException e) {
-            log.error("[JwtAuthFilter] authentication error: {}", e.getErrorCode().getMessage());
+            log.warn("[JwtAuthFilter] authentication failure");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
 
@@ -98,9 +99,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void setAuthentication(String token) {
-        if (tokenProvider.validateToken(token)) {
-            Authentication authentication = tokenProvider.getAuthentication(token);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
+        Authentication authentication = tokenProvider.getAuthentication(token);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

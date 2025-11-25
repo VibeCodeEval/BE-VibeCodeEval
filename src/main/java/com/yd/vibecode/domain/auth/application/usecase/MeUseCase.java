@@ -8,6 +8,8 @@ import com.yd.vibecode.domain.auth.domain.entity.ExamParticipant;
 import com.yd.vibecode.domain.auth.domain.entity.Participant;
 import com.yd.vibecode.domain.auth.domain.service.ExamParticipantService;
 import com.yd.vibecode.domain.auth.domain.service.ParticipantService;
+import com.yd.vibecode.global.exception.RestApiException;
+import com.yd.vibecode.global.exception.code.status.AuthErrorStatus;
 import com.yd.vibecode.global.security.TokenProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -24,11 +26,16 @@ public class MeUseCase {
     public MeResponse execute(String token) {
         // 1. 토큰에서 사용자 ID와 역할 추출
         String userId = tokenProvider.getId(token)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 토큰입니다."));
+                .orElseThrow(() -> new RestApiException(AuthErrorStatus.INVALID_ACCESS_TOKEN));
         String role = tokenProvider.getRole(token)
                 .orElse("USER");
 
-        Long participantId = Long.parseLong(userId);
+        Long participantId;
+        try {
+            participantId = Long.parseLong(userId);
+        } catch (NumberFormatException e) {
+            throw new RestApiException(AuthErrorStatus.INVALID_ACCESS_TOKEN);
+        }
 
         // 2. 참가자 정보 조회
         Participant participant = participantService.findById(participantId);

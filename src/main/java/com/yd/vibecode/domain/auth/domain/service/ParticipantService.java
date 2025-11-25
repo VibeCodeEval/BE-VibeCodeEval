@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 
 import com.yd.vibecode.domain.auth.domain.entity.Participant;
 import com.yd.vibecode.domain.auth.domain.repository.ParticipantRepository;
+import com.yd.vibecode.global.exception.RestApiException;
+import com.yd.vibecode.global.exception.code.status.GlobalErrorStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,7 +17,7 @@ public class ParticipantService {
 
     public Participant findById(Long id) {
         return participantRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("참가자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
     }
 
     public Participant findByPhone(String phone) {

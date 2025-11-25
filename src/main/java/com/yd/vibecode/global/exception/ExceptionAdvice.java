@@ -67,7 +67,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 
     /*
      *  MethodArgumentNotValidException 발생 시 예외 처리
-     * @@RequestBody 내부에서 처리 실패한 경우, @Valid 검증 실패한 경우 (ArgumnetResolver에 의해 유효성 검사)
+     * @@RequestBody 내부에서 처리 실패한 경우, @Valid 검증 실패한 경우 (ArgumentResolver에 의해 유효성 검사)
      */
     @Override
     public ResponseEntity<Object> handleMethodArgumentNotValid(

@@ -56,13 +56,13 @@ public class EnterUseCase {
             );
         }
 
-        // 4. 입장코드 사용 횟수 증가
-        entryCodeService.incrementUsedCount(entryCode);
-        examParticipantRepository.flush(); // 트랜잭션 커밋 전 flush
-
-        // 5. JWT 토큰 생성
+        // 4. 예외 발생 가능 작업 이후 JWT 토큰 생성
         String accessToken = tokenProvider.createAccessToken(
                 participant.getId().toString(), "USER");
+
+        // 5. 입장코드 사용 횟수 증가 및 flush
+        entryCodeService.incrementUsedCount(entryCode);
+        examParticipantRepository.flush(); // 트랜잭션 커밋 전 flush
 
         // 6. 응답 생성
         return new EnterResponse(
