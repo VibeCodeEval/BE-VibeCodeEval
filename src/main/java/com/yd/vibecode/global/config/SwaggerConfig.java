@@ -1,2 +1,4 @@
-package com.yd.vibecode.global.config;public class SwaggerConfig {
+package com.yd.vibecode.global.config;
+
+public class SwaggerConfig {
 }
