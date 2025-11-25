@@ -110,4 +110,5 @@ buildNumber.properties
 
 ### Application specific ###
 /src/main/resources/application-secret.yml
+/src/main/resources/application-test.yml
 /docs/
