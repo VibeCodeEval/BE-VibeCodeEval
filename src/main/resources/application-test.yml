@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: vibecode-test
+
+  # PostgreSQL 데이터베이스 설정 (로컬 PostgreSQL 사용)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/vibecode_test
+    username: parkyoungdu
+    password: yd157238+
+    driver-class-name: org.postgresql.Driver
+
+  # JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        show_sql: true
+
+  # Redis 테스트 설정 (임베디드 Redis 사용 시)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+
+# JWT 설정 (테스트용 공유 Secret)
+jwt:
+  key: test-secret-key-for-testing-purposes-only-do-not-use-in-production-must-be-at-least-256-bits-long
+  access:
+    expiration: 3600000  # 1시간
+  refresh:
+    expiration: 86400000  # 24시간
+
+# 인증 제외 경로 설정
+exclude-auth-path-patterns:
+  paths:
+    - path-pattern: /api/auth/enter
+      method: POST
+    - path-pattern: /api/auth/admin/signup
+      method: POST
+    - path-pattern: /api/auth/admin/login
+      method: POST
+    - path-pattern: /api/health
+      method: GET
+
+# 블랙리스트 제외 경로 설정
+exclude-blacklist-path-patterns:
+  paths:
+    - path-pattern: /api/auth/enter
+      method: POST
+    - path-pattern: /api/auth/admin/signup
+      method: POST
+    - path-pattern: /api/auth/admin/login
+      method: POST
+    - path-pattern: /api/auth/logout
+      method: POST
+    - path-pattern: /api/health
+      method: GET
+
+# 로그 레벨 설정
+logging:
+  level:
+    com.yd.vibecode: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
