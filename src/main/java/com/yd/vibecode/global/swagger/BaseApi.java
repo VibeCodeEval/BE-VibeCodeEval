@@ -1,4 +1,4 @@
-package com.yd.vibecode.global.annotation;
+package com.yd.vibecode.global.swagger;
 
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
