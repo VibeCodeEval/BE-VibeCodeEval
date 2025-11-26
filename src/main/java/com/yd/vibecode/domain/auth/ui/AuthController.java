@@ -7,15 +7,13 @@ import com.yd.vibecode.domain.auth.application.dto.response.AdminLoginResponse;
 import com.yd.vibecode.domain.auth.application.dto.response.EnterResponse;
 import com.yd.vibecode.domain.auth.application.dto.response.MeResponse;
 import com.yd.vibecode.domain.auth.application.usecase.AdminLoginUseCase;
+import com.yd.vibecode.domain.auth.application.usecase.AdminLogoutUseCase;
 import com.yd.vibecode.domain.auth.application.usecase.AdminSignupUseCase;
 import com.yd.vibecode.domain.auth.application.usecase.EnterUseCase;
 import com.yd.vibecode.domain.auth.application.usecase.MeUseCase;
-import com.yd.vibecode.global.annotation.AuthApi;
+import com.yd.vibecode.global.annotation.AccessToken;
+import com.yd.vibecode.global.swagger.AuthApi;
 import com.yd.vibecode.global.common.BaseResponse;
-import com.yd.vibecode.global.exception.RestApiException;
-import com.yd.vibecode.global.exception.code.status.AuthErrorStatus;
-import com.yd.vibecode.global.security.TokenProvider;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,8 +30,8 @@ public class AuthController implements AuthApi {
     private final EnterUseCase enterUseCase;
     private final AdminSignupUseCase adminSignupUseCase;
     private final AdminLoginUseCase adminLoginUseCase;
+    private final AdminLogoutUseCase adminLogoutUseCase;
     private final MeUseCase meUseCase;
-    private final TokenProvider tokenProvider;
 
     @PostMapping("/enter")
     public BaseResponse<EnterResponse> enter(@Valid @RequestBody EnterRequest request) {
@@ -53,10 +51,15 @@ public class AuthController implements AuthApi {
         return BaseResponse.onSuccess(response);
     }
 
+    @PostMapping("/admin/logout")
+    @Override
+    public BaseResponse<Void> adminLogout(@AccessToken String token) {
+        adminLogoutUseCase.execute(token);
+        return BaseResponse.onSuccess();
+    }
+
     @GetMapping("/me")
-    public BaseResponse<MeResponse> me(HttpServletRequest request) {
-        String token = tokenProvider.getToken(request)
-                .orElseThrow(() -> new RestApiException(AuthErrorStatus.EMPTY_JWT));
+    public BaseResponse<MeResponse> me(@AccessToken String token) {
         MeResponse response = meUseCase.execute(token);
         return BaseResponse.onSuccess(response);
     }

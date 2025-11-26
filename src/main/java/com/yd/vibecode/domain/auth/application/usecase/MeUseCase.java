@@ -5,9 +5,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.yd.vibecode.domain.auth.application.dto.response.MeResponse;
 import com.yd.vibecode.domain.auth.domain.entity.ExamParticipant;
-import com.yd.vibecode.domain.auth.domain.entity.Participant;
+import com.yd.vibecode.domain.auth.domain.entity.User;
 import com.yd.vibecode.domain.auth.domain.service.ExamParticipantService;
-import com.yd.vibecode.domain.auth.domain.service.ParticipantService;
+import com.yd.vibecode.domain.auth.domain.service.UserService;
 import com.yd.vibecode.global.exception.RestApiException;
 import com.yd.vibecode.global.exception.code.status.AuthErrorStatus;
 import com.yd.vibecode.global.security.TokenProvider;
@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class MeUseCase {
 
     private final TokenProvider tokenProvider;
-    private final ParticipantService participantService;
+    private final UserService userService;
     private final ExamParticipantService examParticipantService;
 
     @Transactional(readOnly = true)
@@ -38,7 +38,7 @@ public class MeUseCase {
         }
 
         // 2. 참가자 정보 조회
-        Participant participant = participantService.findById(participantId);
+        User user = userService.findById(participantId);
 
         // 3. 시험 참가자 세션 조회 (가장 최근 것)
         ExamParticipant examParticipant = examParticipantService.findLatestByParticipantId(participantId);
@@ -49,9 +49,9 @@ public class MeUseCase {
             return new MeResponse(
                     role,
                     new MeResponse.ParticipantInfo(
-                            participant.getId(),
-                            participant.getName(),
-                            participant.getPhone()
+                            user.getId(),
+                            user.getName(),
+                            user.getPhone()
                     ),
                     new MeResponse.ExamInfo(
                             examParticipant.getExamId(),
@@ -71,9 +71,9 @@ public class MeUseCase {
         return new MeResponse(
                 role,
                 new MeResponse.ParticipantInfo(
-                        participant.getId(),
-                        participant.getName(),
-                        participant.getPhone()
+                        user.getId(),
+                        user.getName(),
+                        user.getPhone()
                 ),
                 null,
                 null

@@ -1,18 +1,7 @@
 package com.yd.vibecode.domain.auth;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yd.vibecode.config.TestConfig;
-import com.yd.vibecode.domain.auth.application.dto.request.AdminSignupRequest;
-import com.yd.vibecode.domain.auth.application.dto.request.EnterRequest;
-import com.yd.vibecode.domain.auth.domain.entity.EntryCode;
-import com.yd.vibecode.domain.auth.domain.repository.EntryCodeRepository;
-import com.yd.vibecode.domain.auth.domain.repository.ParticipantRepository;
 import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +12,17 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yd.vibecode.config.TestConfig;
+import com.yd.vibecode.domain.auth.application.dto.request.EnterRequest;
+import com.yd.vibecode.domain.auth.domain.entity.EntryCode;
+import com.yd.vibecode.domain.auth.domain.repository.EntryCodeRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
@@ -40,9 +39,6 @@ class AuthIntegrationTest {
 
     @Autowired
     private EntryCodeRepository entryCodeRepository;
-
-    @Autowired
-    private ParticipantRepository participantRepository;
 
     @BeforeEach
     void setUp() {
