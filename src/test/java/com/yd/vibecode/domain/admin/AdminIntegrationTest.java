@@ -1,14 +1,5 @@
 package com.yd.vibecode.domain.admin;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yd.vibecode.config.TestConfig;
-import com.yd.vibecode.domain.auth.domain.entity.Admin;
-import com.yd.vibecode.domain.auth.domain.repository.AdminRepository;
-import com.yd.vibecode.global.security.TokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +10,16 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yd.vibecode.config.TestConfig;
+import com.yd.vibecode.domain.auth.domain.entity.Admin;
+import com.yd.vibecode.domain.auth.domain.repository.AdminRepository;
+import com.yd.vibecode.global.security.TokenProvider;
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
