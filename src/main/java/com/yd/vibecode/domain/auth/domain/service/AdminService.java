@@ -7,6 +7,7 @@ import com.yd.vibecode.domain.auth.domain.entity.Admin;
 import com.yd.vibecode.domain.auth.domain.repository.AdminRepository;
 import com.yd.vibecode.global.exception.RestApiException;
 import com.yd.vibecode.global.exception.code.status.AuthErrorStatus;
+import com.yd.vibecode.global.exception.code.status.GlobalErrorStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +34,11 @@ public class AdminService {
     public Admin findByEmail(String email) {
         return adminRepository.findByEmail(email)
                 .orElseThrow(() -> new RestApiException(AuthErrorStatus.LOGIN_ERROR));
+    }
+
+    public Admin findById(Long id) {
+        return adminRepository.findById(id)
+                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
     }
 
     public String encodePassword(String password) {

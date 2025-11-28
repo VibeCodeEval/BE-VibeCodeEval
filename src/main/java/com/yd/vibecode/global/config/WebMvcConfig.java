@@ -3,6 +3,7 @@ package com.yd.vibecode.global.config;
 import com.yd.vibecode.global.interceptor.JwtBlacklistInterceptor;
 import com.yd.vibecode.global.resolver.CurrentUserArgumentResolver;
 import com.yd.vibecode.global.resolver.RefreshTokenArgumentResolver;
+import com.yd.vibecode.global.resolver.AccessTokenArgumentResolver;
 import com.yd.vibecode.global.security.ExcludeBlacklistPathProperties;
 import com.yd.vibecode.global.security.TokenProvider;
 import java.util.List;
@@ -24,7 +25,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.addAll(List.of(
                 new CurrentUserArgumentResolver(tokenProvider),
-                new RefreshTokenArgumentResolver(tokenProvider)
+                new RefreshTokenArgumentResolver(tokenProvider),
+                new AccessTokenArgumentResolver(tokenProvider)
         ));
     }
 

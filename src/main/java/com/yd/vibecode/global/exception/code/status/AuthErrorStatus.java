@@ -37,7 +37,10 @@ public enum AuthErrorStatus implements BaseCodeInterface {
     TOKEN_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "AUTH016", "잔여 토큰이 부족합니다."),
     
     // 관리자 관련
-    ALREADY_REGISTERED_ADMIN_NUMBER(HttpStatus.BAD_REQUEST, "AUTH017", "이미 사용 중인 관리자 번호입니다.")
+    ALREADY_REGISTERED_ADMIN_NUMBER(HttpStatus.BAD_REQUEST, "AUTH017", "이미 사용 중인 관리자 번호입니다."),
+    INVALID_ADMIN_NUMBER(HttpStatus.BAD_REQUEST, "AUTH018", "유효하지 않은 관리자 번호입니다."),
+    ADMIN_NUMBER_INACTIVE(HttpStatus.BAD_REQUEST, "AUTH019", "사용할 수 없는 관리자 번호입니다."),
+    MASTER_ONLY(HttpStatus.FORBIDDEN, "AUTH020", "MASTER 권한이 필요합니다.")
     ;
 
     private final HttpStatus httpStatus;

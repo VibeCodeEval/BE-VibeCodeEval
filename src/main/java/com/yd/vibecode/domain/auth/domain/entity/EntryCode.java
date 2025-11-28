@@ -69,6 +69,12 @@ public class EntryCode extends BaseEntity {
         this.isActive = false;
     }
 
+    public void update(Boolean isActive) {
+        if (isActive != null) {
+            this.isActive = isActive;
+        }
+    }
+
     public boolean isExpired() {
         return expiresAt != null && LocalDateTime.now().isAfter(expiresAt);
     }

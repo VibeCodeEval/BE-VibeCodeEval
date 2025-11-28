@@ -13,6 +13,8 @@ public interface ExamParticipantRepository extends JpaRepository<ExamParticipant
 
     List<ExamParticipant> findByExamId(Long examId);
 
+    List<ExamParticipant> findAllByExamId(Long examId);
+
     List<ExamParticipant> findByParticipantId(Long participantId);
 
     List<ExamParticipant> findByParticipantIdOrderByJoinedAtDesc(Long participantId);

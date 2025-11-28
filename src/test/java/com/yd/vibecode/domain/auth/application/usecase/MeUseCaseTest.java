@@ -1,22 +1,23 @@
 package com.yd.vibecode.domain.auth.application.usecase;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-
-import com.yd.vibecode.domain.auth.application.dto.response.MeResponse;
-import com.yd.vibecode.domain.auth.domain.entity.ExamParticipant;
-import com.yd.vibecode.domain.auth.domain.entity.Participant;
-import com.yd.vibecode.domain.auth.domain.service.ExamParticipantService;
-import com.yd.vibecode.domain.auth.domain.service.ParticipantService;
-import com.yd.vibecode.global.security.TokenProvider;
 import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.BDDMockito.given;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import com.yd.vibecode.domain.auth.application.dto.response.MeResponse;
+import com.yd.vibecode.domain.auth.domain.entity.ExamParticipant;
+import com.yd.vibecode.domain.auth.domain.entity.User;
+import com.yd.vibecode.domain.auth.domain.service.ExamParticipantService;
+import com.yd.vibecode.domain.auth.domain.service.UserService;
+import com.yd.vibecode.global.security.TokenProvider;
 
 @ExtendWith(MockitoExtension.class)
 class MeUseCaseTest {
@@ -27,7 +28,7 @@ class MeUseCaseTest {
     @Mock
     private TokenProvider tokenProvider;
     @Mock
-    private ParticipantService participantService;
+    private UserService userService;
     @Mock
     private ExamParticipantService examParticipantService;
 
@@ -38,7 +39,7 @@ class MeUseCaseTest {
         String token = "accessToken";
         Long participantId = 100L;
         
-        Participant participant = Participant.builder()
+        User participant = User.builder()
                 .name("홍길동")
                 .phone("010-1234-5678")
                 .build();
@@ -55,7 +56,7 @@ class MeUseCaseTest {
 
         given(tokenProvider.getId(token)).willReturn(Optional.of(String.valueOf(participantId)));
         given(tokenProvider.getRole(token)).willReturn(Optional.of("USER"));
-        given(participantService.findById(participantId)).willReturn(participant);
+        given(userService.findById(participantId)).willReturn(participant);
         given(examParticipantService.findLatestByParticipantId(participantId)).willReturn(examParticipant);
 
         // when

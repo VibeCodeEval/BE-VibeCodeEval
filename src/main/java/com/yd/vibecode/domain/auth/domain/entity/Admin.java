@@ -4,6 +4,8 @@ import com.yd.vibecode.global.common.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -33,13 +35,18 @@ public class Admin extends BaseEntity {
     private String passwordHash;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private AdminRole role = AdminRole.ADMIN;
+
+    @Column(nullable = false)
     private Boolean is2faEnabled = false;
 
     @Builder
-    public Admin(String adminNumber, String email, String passwordHash, Boolean is2faEnabled) {
+    public Admin(String adminNumber, String email, String passwordHash, AdminRole role, Boolean is2faEnabled) {
         this.adminNumber = adminNumber;
         this.email = email;
         this.passwordHash = passwordHash;
+        this.role = role != null ? role : AdminRole.ADMIN;
         this.is2faEnabled = is2faEnabled != null ? is2faEnabled : false;
     }
 
@@ -49,6 +56,14 @@ public class Admin extends BaseEntity {
 
     public void update2faEnabled(Boolean is2faEnabled) {
         this.is2faEnabled = is2faEnabled;
+    }
+
+    public boolean isMaster() {
+        return this.role == AdminRole.MASTER;
+    }
+
+    public boolean isAdmin() {
+        return this.role == AdminRole.ADMIN;
     }
 }
 
