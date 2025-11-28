@@ -34,6 +34,12 @@ jwt:
   refresh:
     expiration: 86400000  # 24시간
 
+master:
+  admin:
+    admin-number: TEST-MASTER-0001
+    email: master-test@vibecode.com
+    password: master-test-pass
+
 # 인증 제외 경로 설정
 exclude-auth-path-patterns:
   paths:
