@@ -25,14 +25,14 @@ public class ChangeAdminPasswordUseCase {
         Admin admin = adminRepository.findById(adminId)
             .orElseThrow(() -> new RestApiException(AuthErrorStatus.LOGIN_ERROR));
 
-        // Validate current password
+        // 현재 비밀번호 검증
         adminService.validatePassword(admin, request.currentPassword());
 
-        // Update password
+        // 비밀번호 업데이트
         String newPasswordHash = adminService.encodePassword(request.newPassword());
         admin.updatePassword(newPasswordHash);
         
-        // Audit logging
+        // 감사 로그 기록
         adminAuditLogService.log(adminId, "CHANGE_PASSWORD", Map.of(
             "adminNumber", admin.getAdminNumber()
         ));

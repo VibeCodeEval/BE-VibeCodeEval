@@ -34,7 +34,7 @@ public class CreateEntryCodeUseCase {
 
         EntryCode saved = entryCodeRepository.save(entryCode);
         
-        // Audit logging
+        // 감사 로그 기록
         adminAuditLogService.log(adminId, "CREATE_ENTRY_CODE", Map.of(
             "code", saved.getCode(),
             "label", saved.getLabel() != null ? saved.getLabel() : "",
@@ -46,9 +46,9 @@ public class CreateEntryCodeUseCase {
     }
 
     private String generateUniqueCode() {
-        // Generate random alphanumeric code (8 characters: mix of letters and numbers)
-        // Example: "aB3xK9mZ", "7pQ2rN8s"
-        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789"; // Exclude similar looking chars (0,O,1,I,l)
+        // 랜덤 영숫자 코드 생성 (8자: 문자와 숫자 혼합)
+        // 예시: "aB3xK9mZ", "7pQ2rN8s"
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789"; // 헷갈리기 쉬운 문자 제외 (0,O,1,I,l)
         StringBuilder code = new StringBuilder();
         java.util.Random random = new java.util.Random();
         
