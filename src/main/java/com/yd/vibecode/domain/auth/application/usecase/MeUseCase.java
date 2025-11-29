@@ -4,9 +4,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.yd.vibecode.domain.auth.application.dto.response.MeResponse;
-import com.yd.vibecode.domain.auth.domain.entity.ExamParticipant;
 import com.yd.vibecode.domain.auth.domain.entity.User;
-import com.yd.vibecode.domain.auth.domain.service.ExamParticipantService;
+import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
+import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
 import com.yd.vibecode.domain.auth.domain.service.UserService;
 import com.yd.vibecode.global.exception.RestApiException;
 import com.yd.vibecode.global.exception.code.status.AuthErrorStatus;
@@ -21,6 +21,7 @@ public class MeUseCase {
     private final TokenProvider tokenProvider;
     private final UserService userService;
     private final ExamParticipantService examParticipantService;
+    private final com.yd.vibecode.domain.exam.domain.service.ExamService examService;
 
     @Transactional(readOnly = true)
     public MeResponse execute(String token) {
@@ -45,25 +46,26 @@ public class MeUseCase {
 
         // 4. 응답 생성
         if (examParticipant != null) {
-            // TODO: exam 도메인과 연계하여 exam title 조회 필요
+            // 3. Exam 정보 조회
+            com.yd.vibecode.domain.exam.domain.entity.Exam exam = examService.findById(examParticipant.getExamId());
+
+            // 4. 응답 구성
             return new MeResponse(
-                    role,
+                    "USER",
                     new MeResponse.ParticipantInfo(
                             user.getId(),
                             user.getName(),
                             user.getPhone()
                     ),
-                    new MeResponse.ExamInfo(
-                            examParticipant.getExamId(),
-                            "", // TODO: exam 도메인에서 조회 필요
-                            examParticipant.getState()
+                    new com.yd.vibecode.domain.exam.application.dto.response.ExamInfoResponse(
+                            exam.getId(),
+                            exam.getTitle(),
+                            exam.getState().name()
                     ),
-                    new MeResponse.SessionInfo(
+                    new com.yd.vibecode.domain.exam.application.dto.response.SessionInfoResponse(
                             examParticipant.getId(),
                             examParticipant.getTokenLimit(),
-                            examParticipant.getTokenUsed(),
-                            examParticipant.getAssignedSpecVersion(),
-                            examParticipant.getAssignedProblemId()
+                            examParticipant.getTokenUsed()
                     )
             );
         }

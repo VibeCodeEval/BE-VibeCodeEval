@@ -1,23 +1,26 @@
 package com.yd.vibecode.domain.auth.application.usecase;
 
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+
+import com.yd.vibecode.domain.auth.application.dto.response.MeResponse;
+import com.yd.vibecode.domain.auth.domain.entity.User;
+import com.yd.vibecode.domain.auth.domain.service.UserService;
+import com.yd.vibecode.domain.exam.domain.entity.Exam;
+import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
+import com.yd.vibecode.domain.exam.domain.entity.ExamState;
+import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
+import com.yd.vibecode.domain.exam.domain.service.ExamService;
+import com.yd.vibecode.global.security.TokenProvider;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import static org.mockito.BDDMockito.given;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import com.yd.vibecode.domain.auth.application.dto.response.MeResponse;
-import com.yd.vibecode.domain.auth.domain.entity.ExamParticipant;
-import com.yd.vibecode.domain.auth.domain.entity.User;
-import com.yd.vibecode.domain.auth.domain.service.ExamParticipantService;
-import com.yd.vibecode.domain.auth.domain.service.UserService;
-import com.yd.vibecode.global.security.TokenProvider;
 
 @ExtendWith(MockitoExtension.class)
 class MeUseCaseTest {
@@ -31,6 +34,8 @@ class MeUseCaseTest {
     private UserService userService;
     @Mock
     private ExamParticipantService examParticipantService;
+    @Mock
+    private ExamService examService;
 
     @Test
     @DisplayName("내 정보 조회 성공")
@@ -54,10 +59,19 @@ class MeUseCaseTest {
                 .build();
         ReflectionTestUtils.setField(examParticipant, "id", 200L);
 
+        Exam exam = Exam.builder()
+                .title("Test Exam")
+                .state(ExamState.WAITING)
+                .startsAt(LocalDateTime.now())
+                .endsAt(LocalDateTime.now().plusHours(1))
+                .build();
+        ReflectionTestUtils.setField(exam, "id", 1L);
+
         given(tokenProvider.getId(token)).willReturn(Optional.of(String.valueOf(participantId)));
         given(tokenProvider.getRole(token)).willReturn(Optional.of("USER"));
         given(userService.findById(participantId)).willReturn(participant);
         given(examParticipantService.findLatestByParticipantId(participantId)).willReturn(examParticipant);
+        given(examService.findById(1L)).willReturn(exam);
 
         // when
         MeResponse response = meUseCase.execute(token);
