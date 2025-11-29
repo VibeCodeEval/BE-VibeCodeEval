@@ -1,6 +1,6 @@
 package com.yd.vibecode.domain.admin.application.dto.response;
 
-import com.yd.vibecode.domain.auth.domain.entity.ExamParticipant;
+import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
 import com.yd.vibecode.domain.auth.domain.entity.User;
 
 public record ExamineeBoardResponse(
