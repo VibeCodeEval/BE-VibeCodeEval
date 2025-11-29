@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.yd.vibecode.domain.submission.application.dto.request.ScoringResultRequest;
 import com.yd.vibecode.domain.submission.application.usecase.ReceiveScoringResultUseCase;
 import com.yd.vibecode.global.common.BaseResponse;
+import com.yd.vibecode.global.swagger.InternalSubmissionApi;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/internal/submissions")
-public class InternalSubmissionController {
+public class InternalSubmissionController implements InternalSubmissionApi {
 
     private final ReceiveScoringResultUseCase receiveScoringResultUseCase;
 
