@@ -9,6 +9,7 @@ import com.yd.vibecode.domain.problem.application.dto.response.AssignmentRespons
 import com.yd.vibecode.domain.problem.application.usecase.GetAssignmentUseCase;
 import com.yd.vibecode.global.annotation.CurrentUser;
 import com.yd.vibecode.global.common.BaseResponse;
+import com.yd.vibecode.global.swagger.ProblemApi;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/exams")
-public class ProblemController {
+public class ProblemController implements ProblemApi {
 
     private final GetAssignmentUseCase getAssignmentUseCase;
 

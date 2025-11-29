@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.yd.vibecode.domain.exam.application.dto.response.ExamStateResponse;
 import com.yd.vibecode.domain.exam.application.usecase.GetExamStateUseCase;
 import com.yd.vibecode.global.common.BaseResponse;
+import com.yd.vibecode.global.swagger.ExamApi;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/exams")
-public class ExamController {
+public class ExamController implements ExamApi {
 
     private final GetExamStateUseCase getExamStateUseCase;
 

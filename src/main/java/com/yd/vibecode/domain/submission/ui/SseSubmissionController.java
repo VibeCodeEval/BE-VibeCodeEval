@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.yd.vibecode.global.sse.SseEmitterService;
+import com.yd.vibecode.global.swagger.SseSubmissionApi;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/submissions")
-public class SseSubmissionController {
+public class SseSubmissionController implements SseSubmissionApi {
 
     private final SseEmitterService sseEmitterService;
 

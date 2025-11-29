@@ -11,6 +11,7 @@ import com.yd.vibecode.domain.exam.application.usecase.EndExamUseCase;
 import com.yd.vibecode.domain.exam.application.usecase.ExtendExamUseCase;
 import com.yd.vibecode.domain.exam.application.usecase.StartExamUseCase;
 import com.yd.vibecode.global.common.BaseResponse;
+import com.yd.vibecode.global.swagger.AdminExamApi;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/exams")
-public class AdminExamController {
+public class AdminExamController implements AdminExamApi {
 
     private final StartExamUseCase startExamUseCase;
     private final EndExamUseCase endExamUseCase;

@@ -16,6 +16,7 @@ import com.yd.vibecode.domain.submission.application.usecase.GetSubmissionDetail
 import com.yd.vibecode.domain.submission.application.usecase.SubmitUseCase;
 import com.yd.vibecode.global.annotation.CurrentUser;
 import com.yd.vibecode.global.common.BaseResponse;
+import com.yd.vibecode.global.swagger.SubmissionApi;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
-public class SubmissionController {
+public class SubmissionController implements SubmissionApi {
 
     private final SubmitUseCase submitUseCase;
     private final GetSubmissionDetailUseCase getSubmissionDetailUseCase;
