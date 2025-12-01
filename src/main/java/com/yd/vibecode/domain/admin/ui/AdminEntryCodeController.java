@@ -11,6 +11,7 @@ import com.yd.vibecode.domain.admin.application.dto.request.CreateEntryCodeReque
 import com.yd.vibecode.domain.admin.application.dto.request.UpdateEntryCodeRequest;
 import com.yd.vibecode.domain.admin.application.dto.response.EntryCodeResponse;
 import com.yd.vibecode.domain.admin.application.usecase.CreateEntryCodeUseCase;
+import com.yd.vibecode.domain.admin.application.usecase.GetEntryCodesUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.UpdateEntryCodeUseCase;
 import com.yd.vibecode.global.swagger.AdminEntryCodeApi;
 import com.yd.vibecode.global.annotation.CurrentUser;
@@ -26,6 +27,7 @@ public class AdminEntryCodeController implements AdminEntryCodeApi {
 
     private final CreateEntryCodeUseCase createEntryCodeUseCase;
     private final UpdateEntryCodeUseCase updateEntryCodeUseCase;
+    private final GetEntryCodesUseCase getEntryCodesUseCase;
 
     @PostMapping
     @Override
@@ -44,6 +46,16 @@ public class AdminEntryCodeController implements AdminEntryCodeApi {
         @Valid @RequestBody UpdateEntryCodeRequest updateRequest
     ) {
         EntryCodeResponse response = updateEntryCodeUseCase.execute(code, updateRequest);
+        return BaseResponse.onSuccess(response);
+    }
+
+    @GetMapping
+    @Override
+    public BaseResponse<java.util.List<EntryCodeResponse>> getEntryCodes(
+        @RequestParam Long examId,
+        @RequestParam(required = false) Boolean isActive
+    ) {
+        java.util.List<EntryCodeResponse> response = getEntryCodesUseCase.execute(examId, isActive);
         return BaseResponse.onSuccess(response);
     }
 }
