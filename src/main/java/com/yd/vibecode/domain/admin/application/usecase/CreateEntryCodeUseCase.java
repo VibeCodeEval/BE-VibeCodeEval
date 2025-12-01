@@ -1,14 +1,18 @@
 package com.yd.vibecode.domain.admin.application.usecase;
 
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.yd.vibecode.domain.admin.application.dto.request.CreateEntryCodeRequest;
 import com.yd.vibecode.domain.admin.application.dto.response.EntryCodeResponse;
 import com.yd.vibecode.domain.admin.domain.service.AdminAuditLogService;
 import com.yd.vibecode.domain.auth.domain.entity.EntryCode;
 import com.yd.vibecode.domain.auth.domain.repository.EntryCodeRepository;
-import java.util.Map;
+import com.yd.vibecode.domain.exam.domain.service.ExamService;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -16,9 +20,14 @@ public class CreateEntryCodeUseCase {
 
     private final EntryCodeRepository entryCodeRepository;
     private final AdminAuditLogService adminAuditLogService;
+    private final ExamService examService;
 
     @Transactional
     public EntryCodeResponse execute(Long adminId, CreateEntryCodeRequest request) {
+        // 1. 시험 존재 여부 검증
+        examService.findById(request.examId());
+        
+        // 2. 입장 코드 생성
         String code = generateUniqueCode();
         
         EntryCode entryCode = EntryCode.builder()
