@@ -41,13 +41,17 @@ public class Admin extends BaseEntity {
     @Column(nullable = false)
     private Boolean is2faEnabled = false;
 
+    @Column(nullable = false)
+    private Boolean isActive = true;
+
     @Builder
-    public Admin(String adminNumber, String email, String passwordHash, AdminRole role, Boolean is2faEnabled) {
+    public Admin(String adminNumber, String email, String passwordHash, AdminRole role, Boolean is2faEnabled, Boolean isActive) {
         this.adminNumber = adminNumber;
         this.email = email;
         this.passwordHash = passwordHash;
         this.role = role != null ? role : AdminRole.ADMIN;
         this.is2faEnabled = is2faEnabled != null ? is2faEnabled : false;
+        this.isActive = isActive != null ? isActive : true;
     }
 
     public void updatePassword(String passwordHash) {
@@ -56,6 +60,10 @@ public class Admin extends BaseEntity {
 
     public void update2faEnabled(Boolean is2faEnabled) {
         this.is2faEnabled = is2faEnabled;
+    }
+
+    public void updateActive(Boolean isActive) {
+        this.isActive = isActive != null ? isActive : true;
     }
 
     public boolean isMaster() {

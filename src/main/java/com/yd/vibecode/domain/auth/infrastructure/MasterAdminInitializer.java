@@ -1,18 +1,21 @@
 package com.yd.vibecode.domain.auth.infrastructure;
 
-import com.yd.vibecode.domain.auth.domain.entity.Admin;
-import com.yd.vibecode.domain.auth.domain.entity.AdminNumber;
-import com.yd.vibecode.domain.auth.domain.repository.AdminNumberRepository;
-import com.yd.vibecode.domain.auth.domain.repository.AdminRepository;
-import com.yd.vibecode.domain.auth.domain.entity.AdminRole;
 import java.time.LocalDateTime;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.yd.vibecode.domain.auth.domain.entity.Admin;
+import com.yd.vibecode.domain.auth.domain.entity.AdminNumber;
+import com.yd.vibecode.domain.auth.domain.entity.AdminRole;
+import com.yd.vibecode.domain.auth.domain.repository.AdminNumberRepository;
+import com.yd.vibecode.domain.auth.domain.repository.AdminRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -38,6 +41,7 @@ public class MasterAdminInitializer implements ApplicationRunner {
                 .passwordHash(passwordEncoder.encode(properties.password()))
                 .role(AdminRole.MASTER)
                 .is2faEnabled(false)
+                .isActive(true)
                 .build());
 
         adminNumberRepository.findByAdminNumber(properties.adminNumber())
