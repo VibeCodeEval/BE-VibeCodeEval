@@ -6,10 +6,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.yd.vibecode.domain.admin.application.usecase.CreateExamUseCase;
+import com.yd.vibecode.domain.admin.application.usecase.GetExamsUseCase;
+import com.yd.vibecode.domain.exam.application.dto.request.CreateExamRequest;
 import com.yd.vibecode.domain.exam.application.dto.request.ExtendExamRequest;
+import com.yd.vibecode.domain.exam.application.dto.response.ExamResponse;
 import com.yd.vibecode.domain.exam.application.usecase.EndExamUseCase;
 import com.yd.vibecode.domain.exam.application.usecase.ExtendExamUseCase;
 import com.yd.vibecode.domain.exam.application.usecase.StartExamUseCase;
+import com.yd.vibecode.global.annotation.CurrentUser;
 import com.yd.vibecode.global.common.BaseResponse;
 import com.yd.vibecode.global.swagger.AdminExamApi;
 
@@ -30,6 +35,21 @@ public class AdminExamController implements AdminExamApi {
     private final StartExamUseCase startExamUseCase;
     private final EndExamUseCase endExamUseCase;
     private final ExtendExamUseCase extendExamUseCase;
+    private final GetExamsUseCase getExamsUseCase;
+    private final CreateExamUseCase createExamUseCase;
+
+    @PostMapping
+    public BaseResponse<ExamResponse> createExam(@CurrentUser String adminId,
+                                                  @Valid @RequestBody CreateExamRequest request) {
+        ExamResponse response = createExamUseCase.execute(Long.parseLong(adminId), request);
+        return BaseResponse.onSuccess(response);
+    }
+
+    @GetMapping
+    public BaseResponse<List<ExamResponse>> getExams() {
+        List<ExamResponse> exams = getExamsUseCase.execute();
+        return BaseResponse.onSuccess(exams);
+    }
 
     @PostMapping("/{id}/start")
     public BaseResponse<Void> startExam(@PathVariable Long id) {
