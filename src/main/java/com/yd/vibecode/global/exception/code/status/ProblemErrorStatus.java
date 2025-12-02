@@ -16,7 +16,8 @@ public enum ProblemErrorStatus implements BaseCodeInterface {
     SPEC_NOT_FOUND(HttpStatus.NOT_FOUND, "PROBLEM002", "문제 스펙을 찾을 수 없습니다."),
     PROBLEM_NOT_PUBLISHED(HttpStatus.BAD_REQUEST, "PROBLEM003", "게시되지 않은 문제입니다."),
     SPEC_VERSION_CONFLICT(HttpStatus.CONFLICT, "PROBLEM004", "이미 해당 버전의 스펙이 존재합니다."),
-    NO_ASSIGNED_PROBLEM(HttpStatus.BAD_REQUEST, "PROBLEM005", "배정된 문제가 없습니다.")
+    NO_ASSIGNED_PROBLEM(HttpStatus.BAD_REQUEST, "PROBLEM005", "배정된 문제가 없습니다."),
+    NO_PUBLISHED_PROBLEMS(HttpStatus.BAD_REQUEST, "PROBLEM006", "게시된 문제가 없습니다.")
     ;
 
     private final HttpStatus httpStatus;
