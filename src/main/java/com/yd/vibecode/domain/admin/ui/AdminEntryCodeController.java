@@ -1,5 +1,6 @@
 package com.yd.vibecode.domain.admin.ui;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +14,7 @@ import com.yd.vibecode.domain.admin.application.dto.request.CreateEntryCodeReque
 import com.yd.vibecode.domain.admin.application.dto.request.UpdateEntryCodeRequest;
 import com.yd.vibecode.domain.admin.application.dto.response.EntryCodeResponse;
 import com.yd.vibecode.domain.admin.application.usecase.CreateEntryCodeUseCase;
+import com.yd.vibecode.domain.admin.application.usecase.DeleteEntryCodeUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.GetEntryCodesUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.UpdateEntryCodeUseCase;
 import com.yd.vibecode.global.swagger.AdminEntryCodeApi;
@@ -30,6 +32,7 @@ public class AdminEntryCodeController implements AdminEntryCodeApi {
     private final CreateEntryCodeUseCase createEntryCodeUseCase;
     private final UpdateEntryCodeUseCase updateEntryCodeUseCase;
     private final GetEntryCodesUseCase getEntryCodesUseCase;
+    private final DeleteEntryCodeUseCase deleteEntryCodeUseCase;
 
     @PostMapping
     @Override
@@ -59,5 +62,12 @@ public class AdminEntryCodeController implements AdminEntryCodeApi {
     ) {
         java.util.List<EntryCodeResponse> response = getEntryCodesUseCase.execute(examId, isActive);
         return BaseResponse.onSuccess(response);
+    }
+
+    @DeleteMapping("/{code}")
+    @Override
+    public BaseResponse<Void> deleteEntryCode(@PathVariable String code) {
+        deleteEntryCodeUseCase.execute(code);
+        return BaseResponse.onSuccess();
     }
 }

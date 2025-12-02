@@ -1,6 +1,7 @@
 package com.yd.vibecode.domain.exam.ui;
 
 import java.util.List;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.yd.vibecode.domain.admin.application.usecase.CreateExamUseCase;
+import com.yd.vibecode.domain.admin.application.usecase.DeleteExamUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.GetExamsUseCase;
 import com.yd.vibecode.domain.exam.application.dto.request.CreateExamRequest;
 import com.yd.vibecode.domain.exam.application.dto.request.ExtendExamRequest;
@@ -28,6 +30,7 @@ import lombok.RequiredArgsConstructor;
  * - POST /api/admin/exams/{id}/start: 시험 시작
  * - POST /api/admin/exams/{id}/end: 시험 종료
  * - POST /api/admin/exams/{id}/extend: 시험 시간 연장
+ * - DELETE /api/admin/exams/{id}: 시험 삭제
  */
 @RestController
 @RequiredArgsConstructor
@@ -39,6 +42,7 @@ public class AdminExamController implements AdminExamApi {
     private final ExtendExamUseCase extendExamUseCase;
     private final GetExamsUseCase getExamsUseCase;
     private final CreateExamUseCase createExamUseCase;
+    private final DeleteExamUseCase deleteExamUseCase;
 
     @PostMapping
     public BaseResponse<ExamResponse> createExam(@CurrentUser String adminId,
@@ -69,6 +73,12 @@ public class AdminExamController implements AdminExamApi {
     public BaseResponse<Void> extendExam(@PathVariable Long id, 
                                          @Valid @RequestBody ExtendExamRequest request) {
         extendExamUseCase.execute(id, request.minutes());
+        return BaseResponse.onSuccess();
+    }
+
+    @DeleteMapping("/{id}")
+    public BaseResponse<Void> deleteExam(@PathVariable Long id) {
+        deleteExamUseCase.execute(id);
         return BaseResponse.onSuccess();
     }
 }

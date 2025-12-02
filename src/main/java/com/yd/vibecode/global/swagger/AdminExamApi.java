@@ -1,9 +1,14 @@
 package com.yd.vibecode.global.swagger;
 
+import com.yd.vibecode.domain.exam.application.dto.request.CreateExamRequest;
 import com.yd.vibecode.domain.exam.application.dto.request.ExtendExamRequest;
+import com.yd.vibecode.domain.exam.application.dto.response.ExamResponse;
 import com.yd.vibecode.global.common.BaseResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import java.util.List;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -12,6 +17,35 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "시험 제어 (관리자)", description = "시험 시작/종료/연장 관리 API")
 public interface AdminExamApi extends BaseApi {
+
+    @Operation(
+            summary = "시험 생성",
+            description = "새로운 시험을 생성합니다. 제목, 시작/종료 시각이 필요합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "시험 생성 성공",
+                    content = @Content(schema = @Schema(implementation = BaseResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (입력값 누락 등)",
+                    content = @Content(schema = @Schema(implementation = BaseResponse.class))
+            )
+    })
+    BaseResponse<ExamResponse> createExam(@Parameter(hidden = true) String adminId, @RequestBody CreateExamRequest request);
+
+    @Operation(
+            summary = "시험 목록 조회",
+            description = "등록된 모든 시험의 목록을 조회합니다."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "조회 성공",
+            content = @Content(schema = @Schema(implementation = BaseResponse.class))
+    )
+    BaseResponse<List<ExamResponse>> getExams();
 
     @Operation(
             summary = "시험 시작",
@@ -84,5 +118,23 @@ public interface AdminExamApi extends BaseApi {
             )
     })
     BaseResponse<Void> extendExam(Long id, ExtendExamRequest request);
+
+    @Operation(
+            summary = "시험 삭제",
+            description = "시험을 삭제합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "시험 삭제 성공",
+                    content = @Content(schema = @Schema(implementation = BaseResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "시험을 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = BaseResponse.class))
+            )
+    })
+    BaseResponse<Void> deleteExam(Long id);
 }
 
