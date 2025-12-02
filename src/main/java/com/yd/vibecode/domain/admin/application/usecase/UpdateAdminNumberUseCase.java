@@ -30,14 +30,16 @@ public class UpdateAdminNumberUseCase {
 
         AdminNumber updated = adminNumberService.update(adminNumber, request.label(), request.active(), request.expiresAt());
         
-        // 관리자 번호가 비활성화되면 해당 관리자 번호로 생성된 Admin 계정도 비활성화
-        // 단, 마스터 계정은 비활성화할 수 없음
-        if (request.active() != null && !request.active() && updated.getAssignedAdminId() != null) {
+        // 관리자 번호 상태 변경 시 해당 관리자 번호로 생성된 Admin 계정 상태도 동기화
+        if (request.active() != null && updated.getAssignedAdminId() != null) {
             Admin assignedAdmin = adminService.findById(updated.getAssignedAdminId());
-            if (assignedAdmin.isMaster()) {
+            
+            // 마스터 계정은 비활성화할 수 없음
+            if (!request.active() && assignedAdmin.isMaster()) {
                 throw new RestApiException(AuthErrorStatus.MASTER_ACCOUNT_CANNOT_BE_DEACTIVATED);
             }
-            assignedAdmin.updateActive(false);
+            
+            assignedAdmin.updateActive(request.active());
         }
         
         return AdminNumberResponse.from(updated);
