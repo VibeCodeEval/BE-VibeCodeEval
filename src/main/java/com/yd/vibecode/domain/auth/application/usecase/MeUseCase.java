@@ -8,8 +8,12 @@ import com.yd.vibecode.domain.auth.domain.entity.Admin;
 import com.yd.vibecode.domain.auth.domain.entity.User;
 import com.yd.vibecode.domain.auth.domain.service.AdminService;
 import com.yd.vibecode.domain.auth.domain.service.UserService;
+import com.yd.vibecode.domain.exam.application.dto.response.ExamInfoResponse;
+import com.yd.vibecode.domain.exam.application.dto.response.SessionInfoResponse;
+import com.yd.vibecode.domain.exam.domain.entity.Exam;
 import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
 import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
+import com.yd.vibecode.domain.exam.domain.service.ExamService;
 import com.yd.vibecode.global.exception.RestApiException;
 import com.yd.vibecode.global.exception.code.status.AuthErrorStatus;
 import com.yd.vibecode.global.security.TokenProvider;
@@ -24,7 +28,7 @@ public class MeUseCase {
     private final UserService userService;
     private final AdminService adminService;
     private final ExamParticipantService examParticipantService;
-    private final com.yd.vibecode.domain.exam.domain.service.ExamService examService;
+    private final ExamService examService;
 
     @Transactional(readOnly = true)
     public MeResponse execute(String token) {
@@ -67,7 +71,7 @@ public class MeUseCase {
         // 5. 응답 생성
         if (examParticipant != null) {
             // Exam 정보 조회
-            com.yd.vibecode.domain.exam.domain.entity.Exam exam = examService.findById(examParticipant.getExamId());
+            Exam exam = examService.findById(examParticipant.getExamId());
 
             // 4. 응답 구성
             return new MeResponse(
@@ -77,12 +81,12 @@ public class MeUseCase {
                             user.getName(),
                             user.getPhone()
                     ),
-                    new com.yd.vibecode.domain.exam.application.dto.response.ExamInfoResponse(
+                    new ExamInfoResponse(
                             exam.getId(),
                             exam.getTitle(),
                             exam.getState().name()
                     ),
-                    new com.yd.vibecode.domain.exam.application.dto.response.SessionInfoResponse(
+                    new SessionInfoResponse(
                             examParticipant.getId(),
                             examParticipant.getTokenLimit(),
                             examParticipant.getTokenUsed()
