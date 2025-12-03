@@ -41,7 +41,14 @@ public class ExamParticipantService {
                 .tokenUsed(0)
                 .build();
 
+
         return examParticipantRepository.save(examParticipant);
+    }
+
+    @Transactional
+    public void endAllParticipants(Long examId) {
+        examParticipantRepository.findByExamId(examId)
+                .forEach(participant -> participant.updateState("ENDED"));
     }
 }
 
