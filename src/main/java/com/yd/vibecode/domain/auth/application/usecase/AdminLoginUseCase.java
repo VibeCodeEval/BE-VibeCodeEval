@@ -7,6 +7,8 @@ import com.yd.vibecode.domain.auth.application.dto.request.AdminLoginRequest;
 import com.yd.vibecode.domain.auth.application.dto.response.AdminLoginResponse;
 import com.yd.vibecode.domain.auth.domain.entity.Admin;
 import com.yd.vibecode.domain.auth.domain.service.AdminService;
+import com.yd.vibecode.global.exception.RestApiException;
+import com.yd.vibecode.global.exception.code.status.AuthErrorStatus;
 import com.yd.vibecode.global.security.TokenProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -28,14 +30,19 @@ public class AdminLoginUseCase {
             admin = adminService.findByAdminNumber(request.identifier());
         }
 
-        // 2. 비밀번호 검증
+        // 2. 계정 활성 상태 확인
+        if (!admin.getIsActive()) {
+            throw new RestApiException(AuthErrorStatus.ADMIN_ACCOUNT_INACTIVE);
+        }
+
+        // 3. 비밀번호 검증
         adminService.validatePassword(admin, request.password());
 
-        // 3. JWT 토큰 생성
+        // 4. JWT 토큰 생성
         String accessToken = tokenProvider.createAccessToken(
                 admin.getId().toString(), "ADMIN");
 
-        // 4. 응답 생성
+        // 5. 응답 생성
         return new AdminLoginResponse(
                 accessToken,
                 "ADMIN",

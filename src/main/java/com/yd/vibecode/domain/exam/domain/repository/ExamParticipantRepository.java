@@ -1,11 +1,11 @@
-package com.yd.vibecode.domain.auth.domain.repository;
+package com.yd.vibecode.domain.exam.domain.repository;
 
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.yd.vibecode.domain.auth.domain.entity.ExamParticipant;
+import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
 
 public interface ExamParticipantRepository extends JpaRepository<ExamParticipant, Long> {
 

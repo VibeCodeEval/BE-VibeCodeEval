@@ -1,16 +1,21 @@
 package com.yd.vibecode.domain.admin.ui;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.yd.vibecode.domain.admin.application.dto.request.CreateEntryCodeRequest;
 import com.yd.vibecode.domain.admin.application.dto.request.UpdateEntryCodeRequest;
 import com.yd.vibecode.domain.admin.application.dto.response.EntryCodeResponse;
 import com.yd.vibecode.domain.admin.application.usecase.CreateEntryCodeUseCase;
+import com.yd.vibecode.domain.admin.application.usecase.DeleteEntryCodeUseCase;
+import com.yd.vibecode.domain.admin.application.usecase.GetEntryCodesUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.UpdateEntryCodeUseCase;
 import com.yd.vibecode.global.swagger.AdminEntryCodeApi;
 import com.yd.vibecode.global.annotation.CurrentUser;
@@ -26,6 +31,8 @@ public class AdminEntryCodeController implements AdminEntryCodeApi {
 
     private final CreateEntryCodeUseCase createEntryCodeUseCase;
     private final UpdateEntryCodeUseCase updateEntryCodeUseCase;
+    private final GetEntryCodesUseCase getEntryCodesUseCase;
+    private final DeleteEntryCodeUseCase deleteEntryCodeUseCase;
 
     @PostMapping
     @Override
@@ -45,5 +52,22 @@ public class AdminEntryCodeController implements AdminEntryCodeApi {
     ) {
         EntryCodeResponse response = updateEntryCodeUseCase.execute(code, updateRequest);
         return BaseResponse.onSuccess(response);
+    }
+
+    @GetMapping
+    @Override
+    public BaseResponse<java.util.List<EntryCodeResponse>> getEntryCodes(
+        @RequestParam Long examId,
+        @RequestParam(required = false) Boolean isActive
+    ) {
+        java.util.List<EntryCodeResponse> response = getEntryCodesUseCase.execute(examId, isActive);
+        return BaseResponse.onSuccess(response);
+    }
+
+    @DeleteMapping("/{code}")
+    @Override
+    public BaseResponse<Void> deleteEntryCode(@PathVariable String code) {
+        deleteEntryCodeUseCase.execute(code);
+        return BaseResponse.onSuccess();
     }
 }

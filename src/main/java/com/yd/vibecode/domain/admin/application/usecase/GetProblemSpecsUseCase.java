@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 public class GetProblemSpecsUseCase {
 
     public List<ProblemSpecResponse> execute(Long problemId) {
-        // Mock data for now as Problem domain is empty
+        // Problem 도메인이 비어있으므로 현재는 Mock 데이터 사용
         return List.of(
             new ProblemSpecResponse(1L, 1, "Initial release", LocalDateTime.now().minusDays(10)),
             new ProblemSpecResponse(2L, 2, "Fixed typos", LocalDateTime.now().minusDays(5)),

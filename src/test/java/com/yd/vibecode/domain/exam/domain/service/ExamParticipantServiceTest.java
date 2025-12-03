@@ -1,12 +1,12 @@
-package com.yd.vibecode.domain.auth.domain.service;
+package com.yd.vibecode.domain.exam.domain.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
-import com.yd.vibecode.domain.auth.domain.entity.ExamParticipant;
-import com.yd.vibecode.domain.auth.domain.repository.ExamParticipantRepository;
+import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
+import com.yd.vibecode.domain.exam.domain.repository.ExamParticipantRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

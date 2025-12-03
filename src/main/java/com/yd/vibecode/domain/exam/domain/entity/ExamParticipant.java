@@ -1,4 +1,4 @@
-package com.yd.vibecode.domain.auth.domain.entity;
+package com.yd.vibecode.domain.exam.domain.entity;
 
 import java.time.LocalDateTime;
 

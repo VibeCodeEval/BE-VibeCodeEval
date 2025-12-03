@@ -57,9 +57,14 @@ public class AdminService {
                 .email(email)
                 .passwordHash(passwordHash)
                 .is2faEnabled(false)
+                .isActive(true)
                 .build();
 
         return adminRepository.save(admin);
+    }
+
+    public java.util.List<Admin> findAll() {
+        return adminRepository.findAll();
     }
 }
 

@@ -10,9 +10,11 @@ import com.yd.vibecode.global.annotation.AccessToken;
 import com.yd.vibecode.global.common.BaseResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -89,7 +91,7 @@ public interface AuthApi extends BaseApi {
                     content = @Content(schema = @Schema(implementation = BaseResponse.class))
             )
     })
-    BaseResponse<Void> adminLogout(@AccessToken String token);
+    BaseResponse<Void> adminLogout(@Parameter(hidden = true, in = ParameterIn.HEADER) @AccessToken String token);
 
     @Operation(
             summary = "내 정보 조회",
@@ -102,5 +104,5 @@ public interface AuthApi extends BaseApi {
                     content = @Content(schema = @Schema(implementation = MeResponse.class))
             )
     })
-    BaseResponse<MeResponse> me(@AccessToken String token);
+    BaseResponse<MeResponse> me(@Parameter(hidden = true, in = ParameterIn.HEADER) @AccessToken String token);
 }

@@ -23,6 +23,14 @@ public interface AdminEntryCodeApi extends BaseApi {
     @Operation(summary = "입장 코드 수정", description = "라벨, 만료일 등 입장 코드 정보를 수정합니다.")
     @ApiResponse(responseCode = "200", description = "수정 성공", content = @Content())
     BaseResponse<EntryCodeResponse> updateEntryCode(String code, UpdateEntryCodeRequest request);
+
+    @Operation(summary = "입장 코드 조회", description = "시험 ID로 입장 코드를 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    BaseResponse<java.util.List<EntryCodeResponse>> getEntryCodes(Long examId, Boolean isActive);
+
+    @Operation(summary = "입장 코드 삭제", description = "입장 코드를 삭제합니다.")
+    @ApiResponse(responseCode = "200", description = "삭제 성공")
+    BaseResponse<Void> deleteEntryCode(String code);
 }
 
 

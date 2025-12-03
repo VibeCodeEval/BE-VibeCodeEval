@@ -6,12 +6,16 @@ import org.springframework.transaction.annotation.Transactional;
 import com.yd.vibecode.domain.auth.application.dto.request.EnterRequest;
 import com.yd.vibecode.domain.auth.application.dto.response.EnterResponse;
 import com.yd.vibecode.domain.auth.domain.entity.EntryCode;
-import com.yd.vibecode.domain.auth.domain.entity.ExamParticipant;
 import com.yd.vibecode.domain.auth.domain.entity.User;
-import com.yd.vibecode.domain.auth.domain.repository.ExamParticipantRepository;
 import com.yd.vibecode.domain.auth.domain.service.EntryCodeService;
-import com.yd.vibecode.domain.auth.domain.service.ExamParticipantService;
 import com.yd.vibecode.domain.auth.domain.service.UserService;
+import com.yd.vibecode.domain.exam.application.dto.response.ExamInfoResponse;
+import com.yd.vibecode.domain.exam.application.dto.response.SessionInfoResponse;
+import com.yd.vibecode.domain.exam.domain.entity.Exam;
+import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
+import com.yd.vibecode.domain.exam.domain.repository.ExamParticipantRepository;
+import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
+import com.yd.vibecode.domain.exam.domain.service.ExamService;
 import com.yd.vibecode.global.security.TokenProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -25,6 +29,7 @@ public class EnterUseCase {
     private final ExamParticipantService examParticipantService;
     private final ExamParticipantRepository examParticipantRepository;
     private final TokenProvider tokenProvider;
+    private final ExamService examService;
 
     @Transactional
     public EnterResponse execute(EnterRequest request) {
@@ -64,7 +69,10 @@ public class EnterUseCase {
         entryCodeService.incrementUsedCount(entryCode);
         examParticipantRepository.flush(); // 트랜잭션 커밋 전 flush
 
-        // 6. ResponseDTO 구성
+        // 6. Exam 정보 조회
+        Exam exam = examService.findById(entryCode.getExamId());
+
+        // 7. ResponseDTO 구성
         return new EnterResponse(
                 accessToken,
                 "USER",
@@ -73,12 +81,12 @@ public class EnterUseCase {
                         user.getName(),
                         user.getPhone()
                 ),
-                new EnterResponse.ExamInfo(
-                        entryCode.getExamId(),
-                        "", // TODO: exam 도메인과 연계하여 exam title 조회 필요
-                        "WAITING" // TODO: exam 도메인과 연계하여 exam state 조회 필요
+                new ExamInfoResponse(
+                        exam.getId(),
+                        exam.getTitle(),
+                        exam.getState().name()
                 ),
-                new EnterResponse.SessionInfo(
+                new SessionInfoResponse(
                         examParticipant.getId(),
                         examParticipant.getTokenLimit(),
                         examParticipant.getTokenUsed()

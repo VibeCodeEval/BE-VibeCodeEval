@@ -1,9 +1,12 @@
-package com.yd.vibecode.domain.auth.domain.service;
+package com.yd.vibecode.domain.exam.domain.service;
+
+import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.yd.vibecode.domain.auth.domain.entity.ExamParticipant;
-import com.yd.vibecode.domain.auth.domain.repository.ExamParticipantRepository;
+import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
+import com.yd.vibecode.domain.exam.domain.repository.ExamParticipantRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,7 +41,14 @@ public class ExamParticipantService {
                 .tokenUsed(0)
                 .build();
 
+
         return examParticipantRepository.save(examParticipant);
+    }
+
+    @Transactional
+    public void endAllParticipants(Long examId) {
+        examParticipantRepository.findByExamId(examId)
+                .forEach(participant -> participant.updateState("ENDED"));
     }
 }
 
