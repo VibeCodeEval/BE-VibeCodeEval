@@ -1,6 +1,6 @@
 package com.yd.vibecode.global.swagger;
 
-import com.yd.vibecode.domain.admin.application.dto.request.CreateProblemRequest;
+
 import com.yd.vibecode.domain.admin.application.dto.response.ProblemResponse;
 import com.yd.vibecode.domain.admin.application.dto.response.ProblemSpecResponse;
 import com.yd.vibecode.global.common.BaseResponse;
@@ -14,9 +14,7 @@ import java.util.List;
 @Tag(name = "문제 관리 (관리자)", description = "문제 생성/조회/삭제 및 스펙 관리 API")
 public interface AdminProblemApi extends BaseApi {
 
-    @Operation(summary = "문제 생성", description = "새로운 문제를 생성합니다.")
-    @ApiResponse(responseCode = "200", description = "생성 성공")
-    BaseResponse<ProblemResponse> createProblem(CreateProblemRequest request);
+
 
     @Operation(summary = "문제 목록 조회", description = "전체 문제 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
