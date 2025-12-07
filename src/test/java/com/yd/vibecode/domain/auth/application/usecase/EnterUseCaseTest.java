@@ -18,8 +18,10 @@ import com.yd.vibecode.domain.exam.domain.entity.ExamState;
 import com.yd.vibecode.domain.exam.domain.repository.ExamParticipantRepository;
 import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
 import com.yd.vibecode.domain.exam.domain.service.ExamService;
+import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetItemRepository;
 import com.yd.vibecode.global.security.TokenProvider;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,6 +48,8 @@ class EnterUseCaseTest {
     private TokenProvider tokenProvider;
     @Mock
     private ExamService examService;
+    @Mock
+    private ProblemSetItemRepository problemSetItemRepository;
 
     @Test
     @DisplayName("입장 성공 - 기존 참가자")
@@ -133,7 +137,8 @@ class EnterUseCaseTest {
         given(userService.findByPhone("010-9876-5432")).willReturn(null);
         given(userService.create("김철수", "010-9876-5432")).willReturn(newParticipant);
         given(examParticipantService.findByExamIdAndParticipantId(1L, 101L)).willReturn(null);
-        given(examParticipantService.create(eq(1L), eq(101L), eq(null), eq(10000))).willReturn(newExamParticipant);
+        given(problemSetItemRepository.findByProblemSetId(null)).willReturn(Collections.emptyList());
+        given(examParticipantService.create(eq(1L), eq(101L), eq(null), eq(10000), eq(null))).willReturn(newExamParticipant);
         given(tokenProvider.createAccessToken(anyString(), anyString())).willReturn("accessToken");
         given(examService.findById(1L)).willReturn(exam);
 
@@ -145,6 +150,6 @@ class EnterUseCaseTest {
         assertThat(response.participant().name()).isEqualTo("김철수");
         assertThat(response.session().tokenLimit()).isEqualTo(10000);
         verify(userService).create("김철수", "010-9876-5432");
-        verify(examParticipantService).create(eq(1L), eq(101L), eq(null), eq(10000));
+        verify(examParticipantService).create(eq(1L), eq(101L), eq(null), eq(10000), eq(null));
     }
 }

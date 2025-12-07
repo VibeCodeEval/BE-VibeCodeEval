@@ -16,12 +16,11 @@ import com.yd.vibecode.domain.exam.domain.repository.ExamRepository;
 import com.yd.vibecode.domain.problem.domain.entity.Problem;
 import com.yd.vibecode.domain.problem.domain.entity.ProblemStatus;
 import com.yd.vibecode.domain.problem.domain.repository.ProblemRepository;
-import com.yd.vibecode.domain.problem.infra.ProblemSet;
-import com.yd.vibecode.domain.problem.infra.ProblemSetItem;
-import com.yd.vibecode.domain.problem.infra.ProblemSetItemRepository;
-import com.yd.vibecode.domain.problem.infra.ProblemSetRepository;
+import com.yd.vibecode.domain.problem.infrastructure.entity.ProblemSet;
+import com.yd.vibecode.domain.problem.infrastructure.entity.ProblemSetItem;
+import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetItemRepository;
+import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetRepository;
 import com.yd.vibecode.global.exception.RestApiException;
-import com.yd.vibecode.global.exception.code.status.AuthErrorStatus;
 import com.yd.vibecode.global.exception.code.status.ProblemErrorStatus;
 import com.yd.vibecode.global.util.CodeGenerator;
 

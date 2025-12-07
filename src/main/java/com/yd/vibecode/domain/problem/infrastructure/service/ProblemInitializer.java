@@ -1,4 +1,4 @@
-package com.yd.vibecode.domain.problem.infrastructure;
+package com.yd.vibecode.domain.problem.infrastructure.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yd.vibecode.domain.problem.domain.entity.Difficulty;

@@ -1,14 +1,11 @@
 package com.yd.vibecode.domain.admin.ui;
 
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -17,9 +14,12 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.yd.vibecode.domain.admin.application.dto.response.ProblemSpecResponse;
+import com.yd.vibecode.domain.admin.application.usecase.DeleteProblemUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.GetProblemSpecsUseCase;
+import com.yd.vibecode.domain.admin.application.usecase.GetProblemsUseCase;
 import com.yd.vibecode.global.interceptor.JwtBlacklistInterceptor;
 import com.yd.vibecode.global.security.ExcludeBlacklistPathProperties;
 import com.yd.vibecode.global.security.SecurityConfig;
@@ -34,6 +34,12 @@ class AdminProblemControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockBean
+    private GetProblemsUseCase getProblemsUseCase;
+
+    @MockBean
+    private DeleteProblemUseCase deleteProblemUseCase;
 
     @MockBean
     private GetProblemSpecsUseCase getProblemSpecsUseCase;

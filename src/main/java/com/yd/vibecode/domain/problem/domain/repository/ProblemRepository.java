@@ -7,12 +7,13 @@ import com.yd.vibecode.domain.problem.domain.entity.ProblemStatus;
 import com.yd.vibecode.domain.problem.domain.entity.Difficulty;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ProblemRepository extends JpaRepository<Problem, Long> {
 
-    List<Problem> findByStatus(com.yd.vibecode.domain.problem.domain.entity.ProblemStatus status);
+    List<Problem> findByStatus(ProblemStatus status);
     
-    List<Problem> findByDifficulty(com.yd.vibecode.domain.problem.domain.entity.Difficulty difficulty);
+    List<Problem> findByDifficulty(Difficulty difficulty);
 
-    java.util.Optional<Problem> findByTitle(String title);
+    Optional<Problem> findByTitle(String title);
 }

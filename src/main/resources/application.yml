@@ -35,6 +35,8 @@ exclude-auth-path-patterns:
       method: GET
     - path-pattern: /actuator/**
       method: GET
+    - path-pattern: /ws/**
+      method: GET
     - path-pattern: /**
       method: OPTIONS
 

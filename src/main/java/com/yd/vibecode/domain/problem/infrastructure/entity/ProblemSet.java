@@ -1,4 +1,4 @@
-package com.yd.vibecode.domain.problem.infra;
+package com.yd.vibecode.domain.problem.infrastructure.entity;
 
 import com.yd.vibecode.global.common.BaseEntity;
 

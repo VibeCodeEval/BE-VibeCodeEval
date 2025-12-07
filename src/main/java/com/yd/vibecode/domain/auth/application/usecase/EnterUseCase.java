@@ -16,6 +16,8 @@ import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
 import com.yd.vibecode.domain.exam.domain.repository.ExamParticipantRepository;
 import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
 import com.yd.vibecode.domain.exam.domain.service.ExamService;
+import com.yd.vibecode.domain.problem.infrastructure.entity.ProblemSetItem;
+import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetItemRepository;
 import com.yd.vibecode.global.security.TokenProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class EnterUseCase {
     private final ExamParticipantRepository examParticipantRepository;
     private final TokenProvider tokenProvider;
     private final ExamService examService;
+    private final ProblemSetItemRepository problemSetItemRepository;
 
     @Transactional
     public EnterResponse execute(EnterRequest request) {
@@ -53,11 +56,19 @@ public class EnterUseCase {
                 entryCode.getExamId(), user.getId());
 
         if (examParticipant == null) {
+            // ProblemSetItem에서 해당 문제 세트의 첫 번째 문제 조회
+            Long assignedProblemId = problemSetItemRepository.findByProblemSetId(entryCode.getProblemSetId())
+                    .stream()
+                    .findFirst()
+                    .map(ProblemSetItem::getProblemId)
+                    .orElse(null);
+
             examParticipant = examParticipantService.create(
                     entryCode.getExamId(),
                     user.getId(),
                     entryCode.getProblemSetId(),
-                    entryCode.getMaxUses() > 0 ? entryCode.getMaxUses() * 1000 : 20000 // 기본 토큰 한도
+                    entryCode.getMaxUses() > 0 ? entryCode.getMaxUses() * 1000 : 20000, // 기본 토큰 한도
+                    assignedProblemId
             );
         }
 
