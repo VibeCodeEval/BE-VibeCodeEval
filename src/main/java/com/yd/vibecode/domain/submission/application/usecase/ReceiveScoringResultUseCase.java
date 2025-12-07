@@ -11,7 +11,6 @@ import com.yd.vibecode.domain.submission.domain.entity.SubmissionRun;
 import com.yd.vibecode.domain.submission.domain.repository.ScoreRepository;
 import com.yd.vibecode.domain.submission.domain.repository.SubmissionRunRepository;
 import com.yd.vibecode.domain.submission.domain.service.SubmissionService;
-import com.yd.vibecode.global.sse.SseEmitterService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
  * 채점 결과 수신 및 처리 UseCase
  * - FastAPI로부터 채점 결과 수신
  * - Submission/SubmissionRun/Score 저장
- * - SSE를 통해 Admin/Master에 실시간 알림
  */
 @Slf4j
 @Service
@@ -30,7 +28,6 @@ public class ReceiveScoringResultUseCase {
     private final SubmissionService submissionService;
     private final SubmissionRunRepository submissionRunRepository;
     private final ScoreRepository scoreRepository;
-    private final SseEmitterService sseEmitterService;
 
     @Transactional
     public void execute(Long submissionId, ScoringResultRequest request) {
@@ -52,9 +49,6 @@ public class ReceiveScoringResultUseCase {
                     .build();
             
             submissionRunRepository.save(run);
-            
-            // SSE: 개별 테스트 케이스 결과 전송
-            sseEmitterService.sendEvent(submissionId, "case_result", testCase);
         }
 
         // 3. Score 저장
@@ -69,13 +63,7 @@ public class ReceiveScoringResultUseCase {
             
             score.calculateTotalScore();
             scoreRepository.save(score);
-            
-            // SSE: 최종 점수 전송
-            sseEmitterService.sendEvent(submissionId, "final_score", score);
         }
-
-        // 4. SSE 연결 종료
-        sseEmitterService.complete(submissionId);
         
         log.info("Scoring result received and processed for submissionId={}", submissionId);
     }

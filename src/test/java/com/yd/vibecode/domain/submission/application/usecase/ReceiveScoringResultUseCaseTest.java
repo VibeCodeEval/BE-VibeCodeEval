@@ -1,5 +1,18 @@
 package com.yd.vibecode.domain.submission.application.usecase;
 
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.verify;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.yd.vibecode.domain.submission.application.dto.request.ScoringResultRequest;
 import com.yd.vibecode.domain.submission.domain.entity.Score;
 import com.yd.vibecode.domain.submission.domain.entity.Submission;
@@ -9,21 +22,6 @@ import com.yd.vibecode.domain.submission.domain.entity.Verdict;
 import com.yd.vibecode.domain.submission.domain.repository.ScoreRepository;
 import com.yd.vibecode.domain.submission.domain.repository.SubmissionRunRepository;
 import com.yd.vibecode.domain.submission.domain.service.SubmissionService;
-import com.yd.vibecode.global.sse.SseEmitterService;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class ReceiveScoringResultUseCaseTest {
@@ -40,11 +38,8 @@ class ReceiveScoringResultUseCaseTest {
     @Mock
     private ScoreRepository scoreRepository;
 
-    @Mock
-    private SseEmitterService sseEmitterService;
-
     @Test
-    @DisplayName("채점 결과 수신 및 처리 성공: SSE 이벤트 전송 확인")
+    @DisplayName("채점 결과 수신 및 처리 성공")
     void execute_Success() {
         // given
         Long submissionId = 1L;
@@ -80,10 +75,5 @@ class ReceiveScoringResultUseCaseTest {
         
         // 3. Score saved
         verify(scoreRepository).save(any(Score.class));
-        
-        // 4. SSE events sent
-        verify(sseEmitterService).sendEvent(eq(submissionId), eq("case_result"), eq(testCase));
-        verify(sseEmitterService).sendEvent(eq(submissionId), eq("final_score"), any(Score.class));
-        verify(sseEmitterService).complete(submissionId);
     }
 }
