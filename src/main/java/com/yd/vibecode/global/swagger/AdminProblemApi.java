@@ -1,15 +1,15 @@
 package com.yd.vibecode.global.swagger;
 
 
+import java.util.List;
+
 import com.yd.vibecode.domain.admin.application.dto.response.ProblemResponse;
 import com.yd.vibecode.domain.admin.application.dto.response.ProblemSpecResponse;
 import com.yd.vibecode.global.common.BaseResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.List;
 
 @Tag(name = "문제 관리 (관리자)", description = "문제 생성/조회/삭제 및 스펙 관리 API")
 public interface AdminProblemApi extends BaseApi {
