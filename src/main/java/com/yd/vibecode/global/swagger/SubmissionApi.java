@@ -19,7 +19,7 @@ public interface SubmissionApi extends BaseApi {
             summary = "코드 제출",
             description = "시험에 코드를 제출합니다. 제출은 비동기로 처리되며, " +
                     "202 Accepted 응답과 함께 제출 ID와 초기 상태(QUEUED)를 반환합니다. " +
-                    "채점은 백그라운드에서 진행되며, 결과는 SSE를 통해 실시간으로 전송됩니다."
+                    "채점은 백그라운드에서 진행되며, 결과는 제출 상세 조회 API를 통해 주기적으로 확인할 수 있습니다."
     )
     @ApiResponses(value = {
             @ApiResponse(
