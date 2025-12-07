@@ -66,6 +66,9 @@ public class SecurityConfig {
 						"/actuator/**",
 						"/favicon.ico"
 				).permitAll()
+				.requestMatchers(
+						"/ws/**"  // WebSocket 엔드포인트 (자체 JWT 검증)
+				).permitAll()
 				.requestMatchers(HttpMethod.POST, "/users/token").authenticated() // 토큰 재발급
 				// Authenticated
 				.anyRequest().authenticated()

@@ -1,20 +1,15 @@
 package com.yd.vibecode.domain.exam.application.usecase;
 
-import com.yd.vibecode.domain.exam.domain.entity.Exam;
-import com.yd.vibecode.domain.exam.domain.entity.ExamState;
-import com.yd.vibecode.domain.exam.domain.service.ExamService;
-import com.yd.vibecode.global.websocket.ExamBroadcastService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.verify;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
-
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
+import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
+import com.yd.vibecode.domain.exam.domain.service.ExamService;
 
 @ExtendWith(MockitoExtension.class)
 class EndExamUseCaseTest {
@@ -26,28 +21,19 @@ class EndExamUseCaseTest {
     private ExamService examService;
 
     @Mock
-    private ExamBroadcastService examBroadcastService;
+    private ExamParticipantService examParticipantService;
 
     @Test
-    @DisplayName("시험 종료 UseCase 성공: 서비스 호출 및 브로드캐스트 확인")
+    @DisplayName("시험 종료 UseCase 성공: 서비스 호출 확인")
     void execute_Success() {
         // given
         Long examId = 1L;
-        Exam exam = Exam.builder()
-                .title("Test Exam")
-                .state(ExamState.ENDED)
-                .startsAt(LocalDateTime.now())
-                .endsAt(LocalDateTime.now().plusHours(1))
-                .createdBy(1L)
-                .build();
-
-        given(examService.findById(examId)).willReturn(exam);
 
         // when
         endExamUseCase.execute(examId);
 
         // then
         verify(examService).endExam(examId);
-        verify(examBroadcastService).broadcastExamEnded(exam);
+        verify(examParticipantService).endAllParticipants(examId);
     }
 }
