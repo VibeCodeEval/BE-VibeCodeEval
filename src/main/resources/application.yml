@@ -8,7 +8,7 @@ spring:
   data:
     redis:
       host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      port: ${REDIS_PORT:6378}
       timeout: 2000ms
       lettuce:
         pool:
@@ -34,6 +34,8 @@ exclude-auth-path-patterns:
     - path-pattern: /v3/api-docs/**
       method: GET
     - path-pattern: /actuator/**
+      method: GET
+    - path-pattern: /ws/**
       method: GET
     - path-pattern: /**
       method: OPTIONS
@@ -64,9 +66,9 @@ exclude-blacklist-path-patterns:
 
 # CORS 설정
 cors:
-  allowed-origins: "http://localhost:5173,http://localhost:3000"
-  allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
-  allowed-headers: "Authorization,Content-Type,Accept"
+  allowed-origins: "http://localhost:5173,http://localhost:3000,http://localhost:8080,http://127.0.0.1:8080,http://localhost:8000,http://127.0.0.1:8000"
+  allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD"
+  allowed-headers: "Authorization,Content-Type,Accept,Origin,X-Requested-With,Access-Control-Request-Method,Access-Control-Request-Headers"
   max-age: 3600
 
 # Swagger 설정

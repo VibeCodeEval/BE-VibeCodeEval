@@ -38,7 +38,7 @@ class ExamParticipantServiceTest {
         given(examParticipantRepository.save(any(ExamParticipant.class))).willReturn(examParticipant);
 
         // when
-        ExamParticipant result = examParticipantService.create(examId, participantId, null, 20000);
+        ExamParticipant result = examParticipantService.create(examId, participantId, null, 20000, null);
 
         // then
         assertThat(result.getExamId()).isEqualTo(examId);

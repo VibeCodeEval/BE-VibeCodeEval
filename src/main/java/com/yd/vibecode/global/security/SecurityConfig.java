@@ -1,15 +1,8 @@
 package com.yd.vibecode.global.security;
 
-import com.yd.vibecode.domain.auth.domain.service.RefreshTokenService;
-import com.yd.vibecode.domain.auth.domain.service.TokenWhitelistService;
-import com.yd.vibecode.global.config.properties.CorsProperties;
-import com.yd.vibecode.global.exception.code.BaseCode;
-import com.yd.vibecode.global.exception.code.status.GlobalErrorStatus;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -25,6 +18,16 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.yd.vibecode.domain.auth.domain.service.RefreshTokenService;
+import com.yd.vibecode.domain.auth.domain.service.TokenWhitelistService;
+import com.yd.vibecode.global.config.properties.CorsProperties;
+import com.yd.vibecode.global.exception.code.BaseCode;
+import com.yd.vibecode.global.exception.code.status.GlobalErrorStatus;
+
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Configuration
@@ -66,6 +69,9 @@ public class SecurityConfig {
 						"/actuator/**",
 						"/favicon.ico"
 				).permitAll()
+				.requestMatchers(
+						"/ws/**"  // WebSocket 엔드포인트 (자체 JWT 검증)
+				).permitAll()
 				.requestMatchers(HttpMethod.POST, "/users/token").authenticated() // 토큰 재발급
 				// Authenticated
 				.anyRequest().authenticated()
@@ -98,6 +104,8 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
         // pre-flight 캐시 시간 (초)
         config.setMaxAge(corsProperties.getMaxAge());
+        // 노출할 응답 헤더
+        config.setExposedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Total-Count"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         // 모든 경로에 대해 위 정책을 적용

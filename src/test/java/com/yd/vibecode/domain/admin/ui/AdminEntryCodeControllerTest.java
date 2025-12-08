@@ -1,16 +1,12 @@
 package com.yd.vibecode.domain.admin.ui;
 
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -19,9 +15,12 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.yd.vibecode.domain.admin.application.dto.response.EntryCodeResponse;
 import com.yd.vibecode.domain.admin.application.usecase.CreateEntryCodeUseCase;
+import com.yd.vibecode.domain.admin.application.usecase.DeleteEntryCodeUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.GetEntryCodesUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.UpdateEntryCodeUseCase;
 import com.yd.vibecode.global.interceptor.JwtBlacklistInterceptor;
@@ -47,6 +46,9 @@ class AdminEntryCodeControllerTest {
 
     @MockBean
     private GetEntryCodesUseCase getEntryCodesUseCase;
+
+    @MockBean
+    private DeleteEntryCodeUseCase deleteEntryCodeUseCase;
 
     @MockBean
     private JwtBlacklistInterceptor jwtBlacklistInterceptor;

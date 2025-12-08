@@ -32,15 +32,15 @@ public class ExamParticipantService {
         return examParticipantRepository.existsByExamIdAndParticipantId(examId, participantId);
     }
 
-    public ExamParticipant create(Long examId, Long participantId, Long specId, Integer tokenLimit) {
+    public ExamParticipant create(Long examId, Long participantId, Long specId, Integer tokenLimit, Long assignedProblemId) {
         ExamParticipant examParticipant = ExamParticipant.builder()
                 .examId(examId)
                 .participantId(participantId)
                 .specId(specId)
                 .tokenLimit(tokenLimit != null ? tokenLimit : 20000)
                 .tokenUsed(0)
+                .assignedProblemId(assignedProblemId)
                 .build();
-
 
         return examParticipantRepository.save(examParticipant);
     }
@@ -49,6 +49,14 @@ public class ExamParticipantService {
     public void endAllParticipants(Long examId) {
         examParticipantRepository.findByExamId(examId)
                 .forEach(participant -> participant.updateState("ENDED"));
+    }
+
+    @Transactional
+    public void addTokenUsed(Long examId, Long participantId, Integer tokens) {
+        ExamParticipant participant = findByExamIdAndParticipantId(examId, participantId);
+        if (participant != null) {
+            participant.addTokenUsed(tokens);
+        }
     }
 }
 
