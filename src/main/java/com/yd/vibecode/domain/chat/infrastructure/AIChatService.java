@@ -38,21 +38,44 @@ public class AIChatService {
     }
 
     public SendMessageResponse sendMessage(AISendMessageRequest request) {
-        log.info("Sending message to AI: session={}, participant={}, turn={}", 
+        log.info("Sending message to AI: session={}, participantId={}, turn={}", 
                 request.sessionId(), request.participantId(), request.turnId());
         
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<AISendMessageRequest> entity = new HttpEntity<>(request, headers);
         
-        ResponseEntity<SendMessageResponse> response = restTemplate.exchange(
+        // AI 서버는 { "aiMessage": { ... } } 형태로 응답하므로, Map으로 받아서 추출
+        @SuppressWarnings("unchecked")
+        ResponseEntity<java.util.Map<String, Object>> response = restTemplate.exchange(
                 aiServerUrl + "/api/chat/messages",
                 HttpMethod.POST,
                 entity,
-                SendMessageResponse.class
+                (Class<java.util.Map<String, Object>>) (Class<?>) java.util.Map.class
         );
         
-        return response.getBody();
+        // aiMessage 객체 추출
+        java.util.Map<String, Object> responseBody = response.getBody();
+        if (responseBody == null) {
+            throw new RuntimeException("AI 서버 응답이 null입니다.");
+        }
+        
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> aiMessage = (java.util.Map<String, Object>) responseBody.get("aiMessage");
+        if (aiMessage == null) {
+            throw new RuntimeException("AI 서버 응답에 aiMessage가 없습니다.");
+        }
+        
+        // AIMessageInfo를 SendMessageResponse로 변환
+        // AI 서버: totalToken, BE: totalCount
+        return new SendMessageResponse(
+                ((Number) aiMessage.get("sessionId")).longValue(),
+                ((Number) aiMessage.get("turn")).intValue(),
+                (String) aiMessage.get("role"),
+                (String) aiMessage.get("content"),
+                ((Number) aiMessage.get("tokenCount")).intValue(),
+                ((Number) aiMessage.get("totalToken")).intValue()  // totalToken -> totalCount
+        );
     }
 
     public void submitEvaluation(AISubmitEvaluationRequest request) {

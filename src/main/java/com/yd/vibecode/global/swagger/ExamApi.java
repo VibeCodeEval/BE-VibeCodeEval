@@ -31,5 +31,6 @@ public interface ExamApi extends BaseApi {
             )
     })
     BaseResponse<ExamStateResponse> getExamState(Long examId);
+
 }
 
