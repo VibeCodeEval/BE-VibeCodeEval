@@ -24,8 +24,10 @@ public class ExamController implements ExamApi {
     private final GetExamStateUseCase getExamStateUseCase;
 
     @GetMapping("/{examId}/state")
+    @Override
     public BaseResponse<ExamStateResponse> getExamState(@PathVariable Long examId) {
         ExamStateResponse response = getExamStateUseCase.execute(examId);
         return BaseResponse.onSuccess(response);
     }
+
 }
