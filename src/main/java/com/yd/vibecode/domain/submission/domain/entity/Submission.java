@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
  * Submission 엔티티
  * - 사용자의 코드 제출
  * - Redis Queue를 통한 비동기 채점
+ * - 한 참가자는 한 번만 제출 가능 (exam_id, participant_id unique constraint)
  */
 @Entity
 @Table(name = "submissions",

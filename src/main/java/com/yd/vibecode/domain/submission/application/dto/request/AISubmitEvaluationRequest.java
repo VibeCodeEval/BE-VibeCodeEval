@@ -10,7 +10,11 @@ import jakarta.validation.constraints.NotNull;
  */
 @Schema(description = "AI 서버 제출 평가 요청")
 public record AISubmitEvaluationRequest(
-    @Schema(description = "참가자 ID", example = "9001", required = true)
+    @Schema(description = "시험 ID", example = "1", required = true)
+    @NotNull(message = "examId는 필수입니다")
+    Long examId,
+
+    @Schema(description = "참가자 ID (participants.id)", example = "1", required = true)
     @NotNull(message = "participantId는 필수입니다")
     Long participantId,
 
@@ -18,9 +22,9 @@ public record AISubmitEvaluationRequest(
     @NotNull(message = "problemId는 필수입니다")
     Long problemId,
 
-    @Schema(description = "스펙 버전 ID", example = "1", required = true)
-    @NotNull(message = "specVersion은 필수입니다")
-    Long specVersion,
+    @Schema(description = "스펙 ID (problem_specs.id)", example = "1", required = true)
+    @NotNull(message = "specId는 필수입니다")
+    Long specId,
 
     @Schema(description = "최종 제출 코드", example = "def solution(): ...", required = true)
     @NotBlank(message = "finalCode는 필수입니다")

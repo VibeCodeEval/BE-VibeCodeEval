@@ -1,5 +1,7 @@
 package com.yd.vibecode.domain.chat.domain.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,8 +11,6 @@ import com.yd.vibecode.global.exception.RestApiException;
 import com.yd.vibecode.global.exception.code.status.GlobalErrorStatus;
 
 import lombok.RequiredArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -48,7 +48,10 @@ public class PromptSessionService {
         if (existing != null) {
             return existing;
         }
-        return create(examId, participantId, specId);
+        PromptSession session = create(examId, participantId, specId);
+        // flush를 호출하여 즉시 DB에 반영 (다른 트랜잭션에서도 조회 가능하도록)
+        promptSessionRepository.flush();
+        return session;
     }
 
     @Transactional

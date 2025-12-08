@@ -16,6 +16,8 @@ import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
 import com.yd.vibecode.domain.exam.domain.repository.ExamParticipantRepository;
 import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
 import com.yd.vibecode.domain.exam.domain.service.ExamService;
+import com.yd.vibecode.domain.problem.domain.entity.Problem;
+import com.yd.vibecode.domain.problem.domain.service.ProblemService;
 import com.yd.vibecode.domain.problem.infrastructure.entity.ProblemSetItem;
 import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetItemRepository;
 import com.yd.vibecode.global.security.TokenProvider;
@@ -33,6 +35,7 @@ public class EnterUseCase {
     private final TokenProvider tokenProvider;
     private final ExamService examService;
     private final ProblemSetItemRepository problemSetItemRepository;
+    private final ProblemService problemService;
 
     @Transactional
     public EnterResponse execute(EnterRequest request) {
@@ -63,10 +66,17 @@ public class EnterUseCase {
                     .map(ProblemSetItem::getProblemId)
                     .orElse(null);
 
+            // 문제의 currentSpecId를 가져와서 specId로 설정
+            Long specId = null;
+            if (assignedProblemId != null) {
+                Problem problem = problemService.findById(assignedProblemId);
+                specId = problem.getCurrentSpecId();
+            }
+
             examParticipant = examParticipantService.create(
                     entryCode.getExamId(),
                     user.getId(),
-                    entryCode.getProblemSetId(),
+                    specId,
                     entryCode.getMaxUses() > 0 ? entryCode.getMaxUses() * 1000 : 20000, // 기본 토큰 한도
                     assignedProblemId
             );
