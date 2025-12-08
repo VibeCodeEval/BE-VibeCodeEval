@@ -1,0 +1,90 @@
+spring:
+  application:
+    name: vibecode
+  config:
+    import: optional:classpath:application-secret.yml
+    
+  # Redis 설정
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6378}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+# 인증 제외 경로 (JWT 필터 제외)
+exclude-auth-path-patterns:
+  paths:
+    - path-pattern: /api/auth/enter
+      method: POST
+    - path-pattern: /api/auth/admin/signup
+      method: POST
+    - path-pattern: /api/auth/admin/login
+      method: POST
+    - path-pattern: /swagger-ui.html
+      method: GET
+    - path-pattern: /swagger-ui/**
+      method: GET
+    - path-pattern: /v3/api-docs
+      method: GET
+    - path-pattern: /v3/api-docs/**
+      method: GET
+    - path-pattern: /actuator/**
+      method: GET
+    - path-pattern: /ws/**
+      method: GET
+    - path-pattern: /**
+      method: OPTIONS
+
+# 블랙리스트 제외 경로
+exclude-blacklist-path-patterns:
+  paths:
+    - path-pattern: /api/auth/enter
+      method: POST
+    - path-pattern: /api/auth/admin/signup
+      method: POST
+    - path-pattern: /api/auth/admin/login
+      method: POST
+    - path-pattern: /api/auth/reissue
+      method: POST
+    - path-pattern: /swagger-ui.html
+      method: GET
+    - path-pattern: /swagger-ui/**
+      method: GET
+    - path-pattern: /v3/api-docs
+      method: GET
+    - path-pattern: /v3/api-docs/**
+      method: GET
+    - path-pattern: /actuator/**
+      method: GET
+    - path-pattern: /**
+      method: OPTIONS
+
+# CORS 설정
+cors:
+  allowed-origins: "http://localhost:5173,http://localhost:3000,http://localhost:8080,http://127.0.0.1:8080,http://localhost:8000,http://127.0.0.1:8000"
+  allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD"
+  allowed-headers: "Authorization,Content-Type,Accept,Origin,X-Requested-With,Access-Control-Request-Method,Access-Control-Request-Headers"
+  max-age: 3600
+
+# Swagger 설정
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    groups-order: DESC
+    tags-sorter: alpha
+    operations-sorter: method
+    enabled: true
+  paths-to-match:
+    - /api/**
+    
+# 로그 레벨
+logging:
+  level:
+    com.yd.vibecode: DEBUG
+    org.hibernate.SQL: DEBUG
