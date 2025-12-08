@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.yd.vibecode.domain.chat.application.dto.request.SaveChatMessageRequest;
 import com.yd.vibecode.domain.chat.application.dto.request.UpdateTokenUsageRequest;
 import com.yd.vibecode.domain.chat.application.dto.response.ChatHistoryResponse;
+import com.yd.vibecode.domain.chat.application.dto.response.SendMessageResponse;
 import com.yd.vibecode.domain.chat.application.usecase.GetChatHistoryUseCase;
 import com.yd.vibecode.domain.chat.application.usecase.SaveChatMessageUseCase;
 import com.yd.vibecode.domain.chat.application.usecase.UpdateTokenUsageUseCase;
@@ -34,9 +35,10 @@ public class ChatController implements ChatApi {
     private final UpdateTokenUsageUseCase updateTokenUsageUseCase;
 
     @PostMapping("/messages")
-    public BaseResponse<Void> saveChatMessage(@Valid @RequestBody SaveChatMessageRequest request) {
-        saveChatMessageUseCase.execute(request);
-        return BaseResponse.onSuccess();
+    public BaseResponse<SendMessageResponse> saveChatMessage(@Valid @RequestBody SaveChatMessageRequest request) {
+        SendMessageResponse response = saveChatMessageUseCase.execute(request);
+        // 사용자 메시지인 경우 AI 응답 반환, 아닌 경우 null 반환
+        return BaseResponse.onSuccess(response);
     }
 
     @GetMapping("/history")

@@ -3,6 +3,7 @@ package com.yd.vibecode.global.swagger;
 import com.yd.vibecode.domain.chat.application.dto.request.SaveChatMessageRequest;
 import com.yd.vibecode.domain.chat.application.dto.request.UpdateTokenUsageRequest;
 import com.yd.vibecode.domain.chat.application.dto.response.ChatHistoryResponse;
+import com.yd.vibecode.domain.chat.application.dto.response.SendMessageResponse;
 import com.yd.vibecode.global.common.BaseResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,14 +17,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public interface ChatApi extends BaseApi {
 
     @Operation(
-            summary = "채팅 메시지 저장",
-            description = "대화 메시지를 저장합니다."
+            summary = "채팅 메시지 저장 및 AI 응답",
+            description = "대화 메시지를 저장합니다. 사용자 메시지(role='USER')인 경우 AI 서버로 전송하여 응답을 받고 저장합니다."
     )
     @ApiResponse(
             responseCode = "200",
-            description = "저장 성공"
+            description = "저장 성공 (사용자 메시지인 경우 AI 응답 포함)",
+            content = @Content(schema = @Schema(implementation = SendMessageResponse.class))
     )
-    BaseResponse<Void> saveChatMessage(SaveChatMessageRequest request);
+    BaseResponse<SendMessageResponse> saveChatMessage(SaveChatMessageRequest request);
 
     @Operation(
             summary = "채팅 히스토리 조회",
