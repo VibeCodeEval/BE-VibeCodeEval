@@ -44,17 +44,20 @@ public class SaveChatMessageUseCase {
             throw new RestApiException(GlobalErrorStatus._NOT_FOUND);
         }
 
-        // 2. 세션 가져오기 또는 생성
-        // 세션은 BE에서 생성하고, getOrCreateSession 내부에서 flush()를 호출하여
-        // AI 서버에서도 즉시 조회 가능하도록 함
+        // 2. 세션 가져오기 또는 생성 (별도 트랜잭션으로 즉시 커밋)
+        // AI 서버에서 세션을 조회할 수 있도록 별도 트랜잭션으로 처리하여 즉시 커밋
         PromptSession session;
         if (request.sessionId() != null) {
-            // sessionId가 제공되면 해당 세션 사용
-            session = promptSessionService.findById(request.sessionId());
+            // sessionId가 제공되면 해당 세션 사용 (별도 트랜잭션으로 조회)
+            session = promptSessionService.findByIdWithNewTransaction(request.sessionId());
+            // 세션이 요청한 examId와 participantId와 일치하는지 검증
+            if (!session.getExamId().equals(request.examId()) || 
+                !session.getParticipantId().equals(request.participantId())) {
+                throw new RestApiException(GlobalErrorStatus._NOT_FOUND);
+            }
         } else {
-            // sessionId가 없으면 examId와 participantId로 세션 조회/생성
-            // getOrCreateSession 내부에서 flush()를 호출하여 DB에 즉시 반영
-            session = promptSessionService.getOrCreateSession(
+            // sessionId가 없으면 examId와 participantId로 세션 조회/생성 (별도 트랜잭션으로 즉시 커밋)
+            session = promptSessionService.getOrCreateSessionWithNewTransaction(
                     request.examId(), request.participantId(), examParticipant.getSpecId());
         }
 
