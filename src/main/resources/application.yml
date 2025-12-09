@@ -37,6 +37,8 @@ exclude-auth-path-patterns:
       method: GET
     - path-pattern: /ws/**
       method: GET
+    - path-pattern: /api/callbacks/ai/**
+      method: POST
     - path-pattern: /**
       method: OPTIONS
 
