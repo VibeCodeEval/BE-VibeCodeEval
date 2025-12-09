@@ -11,8 +11,14 @@ import jakarta.validation.constraints.NotNull;
  * - FE → BE: POST /api/chat/messages
  * - ChatController.saveChatMessage()에서 사용
  * - SaveChatMessageUseCase.execute()에서 사용
+ * 
+ * 참고:
+ * - sessionId가 제공되면 해당 세션 사용, 없으면 examId와 participantId로 세션 조회/생성
  */
 public record SaveChatMessageRequest(
+    @Schema(description = "세션 ID (선택)", example = "1")
+    Long sessionId,
+
     @Schema(description = "시험 ID", example = "1", required = true)
     @NotNull(message = "examId는 필수입니다")
     Long examId,

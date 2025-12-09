@@ -45,8 +45,18 @@ public class SaveChatMessageUseCase {
         }
 
         // 2. 세션 가져오기 또는 생성
-        PromptSession session = promptSessionService.getOrCreateSession(
-                request.examId(), request.participantId(), examParticipant.getSpecId());
+        // 세션은 BE에서 생성하고, getOrCreateSession 내부에서 flush()를 호출하여
+        // AI 서버에서도 즉시 조회 가능하도록 함
+        PromptSession session;
+        if (request.sessionId() != null) {
+            // sessionId가 제공되면 해당 세션 사용
+            session = promptSessionService.findById(request.sessionId());
+        } else {
+            // sessionId가 없으면 examId와 participantId로 세션 조회/생성
+            // getOrCreateSession 내부에서 flush()를 호출하여 DB에 즉시 반영
+            session = promptSessionService.getOrCreateSession(
+                    request.examId(), request.participantId(), examParticipant.getSpecId());
+        }
 
         // 3. 다음 turn 계산 (사용자가 보낸 turn은 무시하고 DB에서 자동 계산)
         Integer nextTurn = promptMessageService.getNextTurn(session.getId());
