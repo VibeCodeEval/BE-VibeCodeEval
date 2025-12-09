@@ -46,12 +46,13 @@ public class MeUseCase {
         }
 
         // 2. 역할에 따라 다른 서비스로 정보 조회
-        if ("ADMIN".equals(role)) {
+        if ("ADMIN".equals(role) || "MASTER".equals(role)) {
             // 관리자 정보 조회
             Admin admin = adminService.findById(id);
             
+            // 실제 DB의 role을 사용하여 반환 (토큰의 role이 아닌)
             return new MeResponse(
-                    role,
+                    admin.getRole().name(),
                     new MeResponse.ParticipantInfo(
                             admin.getId(),
                             admin.getAdminNumber(),  // name 필드에 adminNumber 사용

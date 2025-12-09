@@ -38,14 +38,14 @@ public class AdminLoginUseCase {
         // 3. 비밀번호 검증
         adminService.validatePassword(admin, request.password());
 
-        // 4. JWT 토큰 생성
+        // 4. JWT 토큰 생성 (실제 Admin의 role 사용)
         String accessToken = tokenProvider.createAccessToken(
-                admin.getId().toString(), "ADMIN");
+                admin.getId().toString(), admin.getRole().name());
 
         // 5. 응답 생성
         return new AdminLoginResponse(
                 accessToken,
-                "ADMIN",
+                admin.getRole().name(),
                 new AdminLoginResponse.AdminInfo(
                         admin.getId(),
                         admin.getAdminNumber(),
