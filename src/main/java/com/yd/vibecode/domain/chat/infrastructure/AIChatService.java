@@ -38,44 +38,108 @@ public class AIChatService {
     }
 
     public SendMessageResponse sendMessage(AISendMessageRequest request) {
-        log.info("Sending message to AI: session={}, participantId={}, turn={}", 
-                request.sessionId(), request.participantId(), request.turnId());
+        String url = aiServerUrl + "/api/chat/messages";
+        log.info("[AIChatService] Sending message to AI: URL={}, sessionId={}, participantId={}, turnId={}", 
+                url, request.sessionId(), request.participantId(), request.turnId());
         
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<AISendMessageRequest> entity = new HttpEntity<>(request, headers);
-        
-        // AI 서버는 { "aiMessage": { ... } } 형태로 응답하므로, Map으로 받아서 추출
-        @SuppressWarnings("unchecked")
-        ResponseEntity<java.util.Map<String, Object>> response = restTemplate.exchange(
-                aiServerUrl + "/api/chat/messages",
-                HttpMethod.POST,
-                entity,
-                (Class<java.util.Map<String, Object>>) (Class<?>) java.util.Map.class
-        );
-        
-        // aiMessage 객체 추출
-        java.util.Map<String, Object> responseBody = response.getBody();
-        if (responseBody == null) {
-            throw new RuntimeException("AI 서버 응답이 null입니다.");
+        try {
+            // FastAPI 요청 형식에 맞게 변환
+            // FastAPI는 ChatMessagesRequest를 기대: { sessionId, participantId, turnId, role, content, context }
+            java.util.Map<String, Object> fastApiRequest = new java.util.HashMap<>();
+            fastApiRequest.put("sessionId", request.sessionId());
+            fastApiRequest.put("participantId", request.participantId());
+            fastApiRequest.put("turnId", request.turnId());
+            fastApiRequest.put("role", request.role());
+            fastApiRequest.put("content", request.content());
+            fastApiRequest.put("context", request.context());
+            
+            // 요청 로그 (개발 모드)
+            try {
+                String requestJson = objectMapper.writeValueAsString(fastApiRequest);
+                log.debug("[AIChatService] Request payload: {}", requestJson);
+            } catch (Exception e) {
+                log.warn("[AIChatService] Failed to serialize request for logging: {}", e.getMessage());
+            }
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<java.util.Map<String, Object>> entity = new HttpEntity<>(fastApiRequest, headers);
+            
+            // AI 서버는 { "aiMessage": { ... } } 형태로 응답하므로, Map으로 받아서 추출
+            @SuppressWarnings("unchecked")
+            ResponseEntity<java.util.Map<String, Object>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    entity,
+                    (Class<java.util.Map<String, Object>>) (Class<?>) java.util.Map.class
+            );
+            
+            // HTTP 상태 코드 확인
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                log.error("[AIChatService] AI 서버 응답 실패: status={}, body={}", 
+                        response.getStatusCode(), response.getBody());
+                throw new RuntimeException(
+                        String.format("AI 서버 응답 실패: HTTP %s", response.getStatusCode().value()));
+            }
+            
+            // aiMessage 객체 추출
+            java.util.Map<String, Object> responseBody = response.getBody();
+            if (responseBody == null) {
+                log.error("[AIChatService] AI 서버 응답이 null입니다.");
+                throw new RuntimeException("AI 서버 응답이 null입니다.");
+            }
+            
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, Object> aiMessage = (java.util.Map<String, Object>) responseBody.get("aiMessage");
+            if (aiMessage == null) {
+                log.error("[AIChatService] AI 서버 응답에 aiMessage가 없습니다. responseBody={}", responseBody);
+                throw new RuntimeException("AI 서버 응답에 aiMessage가 없습니다.");
+            }
+            
+            // AIMessageInfo를 SendMessageResponse로 변환
+            // FastAPI: totalToken, BE: totalCount
+            Long sessionId = ((Number) aiMessage.get("sessionId")).longValue();
+            Integer turn = ((Number) aiMessage.get("turn")).intValue();
+            String role = (String) aiMessage.get("role");
+            String content = (String) aiMessage.get("content");
+            Integer tokenCount = aiMessage.get("tokenCount") != null ? 
+                    ((Number) aiMessage.get("tokenCount")).intValue() : null;
+            Integer totalToken = aiMessage.get("totalToken") != null ? 
+                    ((Number) aiMessage.get("totalToken")).intValue() : null;
+            
+            log.info("[AIChatService] AI 응답 수신 성공: sessionId={}, turn={}, role={}, tokenCount={}, totalToken={}", 
+                    sessionId, turn, role, tokenCount, totalToken);
+            
+            return new SendMessageResponse(
+                    sessionId,
+                    turn,
+                    role != null ? role : "AI",
+                    content != null ? content : "",
+                    tokenCount,
+                    totalToken  // totalToken -> totalCount로 매핑
+            );
+            
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            log.error("[AIChatService] AI 서버 HTTP 클라이언트 에러: status={}, responseBody={}", 
+                    e.getStatusCode(), e.getResponseBodyAsString(), e);
+            throw new RuntimeException(
+                    String.format("AI 서버 요청 실패: HTTP %s - %s", 
+                            e.getStatusCode().value(), e.getResponseBodyAsString()), e);
+        } catch (org.springframework.web.client.HttpServerErrorException e) {
+            log.error("[AIChatService] AI 서버 HTTP 서버 에러: status={}, responseBody={}", 
+                    e.getStatusCode(), e.getResponseBodyAsString(), e);
+            throw new RuntimeException(
+                    String.format("AI 서버 내부 오류: HTTP %s - %s", 
+                            e.getStatusCode().value(), e.getResponseBodyAsString()), e);
+        } catch (RestClientException e) {
+            log.error("[AIChatService] AI 서버 통신 실패: URL={}, error={}", url, e.getMessage(), e);
+            throw new RuntimeException(
+                    String.format("AI 서버에 연결할 수 없습니다: %s", e.getMessage()), e);
+        } catch (Exception e) {
+            log.error("[AIChatService] 예상치 못한 오류 발생: URL={}, error={}", url, e.getMessage(), e);
+            throw new RuntimeException(
+                    String.format("AI 서버 호출 중 오류 발생: %s", e.getMessage()), e);
         }
-        
-        @SuppressWarnings("unchecked")
-        java.util.Map<String, Object> aiMessage = (java.util.Map<String, Object>) responseBody.get("aiMessage");
-        if (aiMessage == null) {
-            throw new RuntimeException("AI 서버 응답에 aiMessage가 없습니다.");
-        }
-        
-        // AIMessageInfo를 SendMessageResponse로 변환
-        // AI 서버: totalToken, BE: totalCount
-        return new SendMessageResponse(
-                ((Number) aiMessage.get("sessionId")).longValue(),
-                ((Number) aiMessage.get("turn")).intValue(),
-                (String) aiMessage.get("role"),
-                (String) aiMessage.get("content"),
-                ((Number) aiMessage.get("tokenCount")).intValue(),
-                ((Number) aiMessage.get("totalToken")).intValue()  // totalToken -> totalCount
-        );
     }
 
     public void submitEvaluation(AISubmitEvaluationRequest request) {
