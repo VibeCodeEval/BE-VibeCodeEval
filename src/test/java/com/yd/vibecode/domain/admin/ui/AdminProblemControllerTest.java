@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.yd.vibecode.domain.admin.application.usecase.CreateProblemUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.DeleteProblemUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.GetProblemSpecsUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.GetProblemsUseCase;
@@ -37,6 +38,9 @@ class AdminProblemControllerTest {
 
     @MockBean
     private GetProblemsUseCase getProblemsUseCase;
+
+    @MockBean
+    private CreateProblemUseCase createProblemUseCase;
 
     @MockBean
     private DeleteProblemUseCase deleteProblemUseCase;

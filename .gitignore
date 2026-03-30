@@ -111,3 +111,5 @@ buildNumber.properties
 ### Application specific ###
 /src/main/resources/application-secret.yml
 /docs/
+
+.claude/
