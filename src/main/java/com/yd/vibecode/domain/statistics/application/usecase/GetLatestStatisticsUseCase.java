@@ -6,6 +6,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.yd.vibecode.domain.statistics.application.dto.response.ExamStatisticResponse;
 import com.yd.vibecode.domain.statistics.domain.entity.ExamStatistic;
 import com.yd.vibecode.domain.statistics.domain.service.ExamStatisticService;
+import com.yd.vibecode.global.exception.RestApiException;
+import com.yd.vibecode.global.exception.code.status.StatisticsErrorStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,9 +20,9 @@ public class GetLatestStatisticsUseCase {
     @Transactional(readOnly = true)
     public ExamStatisticResponse execute(Long examId) {
         ExamStatistic statistic = examStatisticService.findLatestByExamId(examId);
-        
+
         if (statistic == null) {
-            return null;
+            throw new RestApiException(StatisticsErrorStatus.STATISTICS_NOT_FOUND);
         }
 
         return toResponse(statistic);

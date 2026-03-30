@@ -1,5 +1,6 @@
 package com.yd.vibecode.domain.submission.application.usecase;
 
+import com.yd.vibecode.domain.submission.domain.entity.Submission;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -11,7 +12,7 @@ import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
 import com.yd.vibecode.domain.submission.application.dto.request.AISubmitEvaluationRequest;
 import com.yd.vibecode.domain.submission.application.dto.request.SubmitRequest;
 import com.yd.vibecode.domain.submission.application.dto.response.SubmitResponse;
-import com.yd.vibecode.domain.submission.domain.entity.Submission;
+import com.yd.vibecode.domain.submission.domain.service.OutboxEventService;
 import com.yd.vibecode.domain.submission.domain.service.SubmissionService;
 import com.yd.vibecode.global.exception.RestApiException;
 import com.yd.vibecode.global.exception.code.status.ProblemErrorStatus;
@@ -33,7 +34,7 @@ public class SubmitUseCase {
     private final ExamParticipantService examParticipantService;
     private final SubmissionService submissionService;
     private final PromptSessionService promptSessionService;
-    private final AIChatService aiChatService;
+    private final OutboxEventService outboxEventService;
 
     @Transactional
     public SubmitResponse execute(Long examId, Long userId, SubmitRequest request) {
@@ -57,33 +58,25 @@ public class SubmitUseCase {
         promptSessionService.getOrCreateSession(
                 examId, userId, examParticipant.getSpecId());
 
-        // 4. 트랜잭션 커밋 후 AI 서버로 평가 요청 전송
-        // 세션이 DB에 커밋된 후 AI 서버에서 조회할 수 있도록 트랜잭션 커밋 후 실행
-        TransactionSynchronizationManager.registerSynchronization(
-            new org.springframework.transaction.support.TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    try {
-                        AISubmitEvaluationRequest aiRequest = new AISubmitEvaluationRequest(
-                                examId,
-                                userId,  // participantId
-                                examParticipant.getAssignedProblemId(),
-                                examParticipant.getSpecId(),
-                                request.code(),
-                                request.lang(),
-                                submission.getId()
-                        );
-
-                        aiChatService.submitEvaluation(aiRequest);
-                        log.info("AI evaluation request sent after transaction commit: submissionId={}", submission.getId());
-                    } catch (Exception e) {
-                        log.error("Failed to send AI evaluation request after transaction commit: submissionId={}", 
-                                submission.getId(), e);
-                        // AI 서버 요청 실패는 로그만 남기고 제출은 성공으로 처리
-                    }
-                }
-            }
+        // 4. AI 평가 요청을 Outbox에 저장 (같은 트랜잭션 내에서 처리되어 유실 방지)
+        AISubmitEvaluationRequest aiRequest = new AISubmitEvaluationRequest(
+                examId,
+                userId,  // participantId
+                examParticipant.getAssignedProblemId(),
+                examParticipant.getSpecId(),
+                request.code(),
+                request.lang(),
+                submission.getId()
         );
+
+        outboxEventService.saveEvent(
+                "SUBMISSION",
+                submission.getId(),
+                "AI_EVAL_REQUEST",
+                aiRequest
+        );
+
+        log.info("AI evaluation request saved to outbox: submissionId={}", submission.getId());
 
         // 5. 응답 반환 (202 Accepted)
         return new SubmitResponse(submission.getId(), submission.getStatus());

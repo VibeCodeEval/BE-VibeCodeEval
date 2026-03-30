@@ -27,24 +27,28 @@ public class ExamService {
         return examRepository.save(exam);
     }
 
-    // 시험 시작
-    public void startExam(Long examId) {
+    public Exam save(Exam exam) {
+        return examRepository.save(exam);
+    }
+
+    // 시험 시작: WAITING -> RUNNING, version++
+    public Exam startExam(Long examId) {
         Exam exam = findById(examId);
         exam.start();
-        examRepository.save(exam);
+        return examRepository.save(exam);
     }
 
-    // 시험 종료
-    public void endExam(Long examId) {
+    // 시험 종료: RUNNING -> ENDED, version++
+    public Exam endExam(Long examId) {
         Exam exam = findById(examId);
         exam.end();
-        examRepository.save(exam);
+        return examRepository.save(exam);
     }
 
-    // 시험 연장
-    public void extendExam(Long examId, int minutes) {
+    // 시험 연장: endsAt += minutes, version++
+    public Exam extendExam(Long examId, int minutes) {
         Exam exam = findById(examId);
         exam.extend(minutes);
-        examRepository.save(exam);
+        return examRepository.save(exam);
     }
 }
