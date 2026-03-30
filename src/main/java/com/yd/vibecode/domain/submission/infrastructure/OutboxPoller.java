@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -31,11 +32,8 @@ public class OutboxPoller {
 
     @Scheduled(fixedDelay = 5000)
     public void pollAndProcess() {
-        List<OutboxEvent> events = outboxEventRepository.findPendingEvents(
-                OutboxStatus.PENDING,
-                LocalDateTime.now(),
-                PageRequest.of(0, BATCH_SIZE, Sort.by("nextRetryAt").ascending())
-        );
+        // 1. 선점 처리: 상태를 PROCESSING으로 변경 (Lock과 함께 수행)
+        List<OutboxEvent> events = fetchAndLockEvents();
 
         if (events.isEmpty()) {
             return;
@@ -47,26 +45,41 @@ public class OutboxPoller {
         }
     }
 
+    @Transactional
+    public List<OutboxEvent> fetchAndLockEvents() {
+        List<OutboxEvent> events = outboxEventRepository.findPendingEvents(
+                OutboxStatus.PENDING,
+                LocalDateTime.now(),
+                PageRequest.of(0, BATCH_SIZE, Sort.by("nextRetryAt").ascending())
+        );
+
+        events.forEach(OutboxEvent::markAsProcessing);
+        return events;
+    }
+
     private void processEvent(OutboxEvent event) {
         if ("AI_EVAL_REQUEST".equals(event.getEventType())) {
             try {
                 AISubmitEvaluationRequest request = objectMapper.readValue(
                         event.getPayload(), AISubmitEvaluationRequest.class);
 
-                // AI 서버 호출
-                aiChatService.submitEvaluation(request);
-
-                // 성공 시 상태 업데이트
-                updateEventAsProcessed(event.getId());
+                // AI 서버 호출 (개별 트랜잭션 내에서 처리)
+                executeProcessing(event.getId(), request);
                 log.info("Outbox event processed successfully: id={}", event.getId());
             } catch (Exception e) {
-                log.error("Failed to process outbox event: id={}, error={}", event.getId(), e.getMessage());
+                log.error("Failed to process outbox event: id={}, error={}", event.getId(), e.getMessage(), e);
                 handleProcessingFailure(event.getId());
             }
         } else {
             log.warn("Unknown event type: {}", event.getEventType());
-            updateEventAsProcessed(event.getId()); // 알 수 없는 타입은 처리 완료로 간주
+            updateEventAsProcessed(event.getId());
         }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void executeProcessing(Long eventId, AISubmitEvaluationRequest request) {
+        aiChatService.submitEvaluation(request);
+        updateEventAsProcessed(eventId);
     }
 
     @Transactional

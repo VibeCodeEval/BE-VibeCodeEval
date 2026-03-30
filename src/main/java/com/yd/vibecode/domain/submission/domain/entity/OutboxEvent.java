@@ -55,6 +55,10 @@ public class OutboxEvent extends BaseEntity {
         this.nextRetryAt = LocalDateTime.now();
     }
 
+    public void markAsProcessing() {
+        this.status = OutboxStatus.PROCESSING;
+    }
+
     public void markAsProcessed() {
         this.status = OutboxStatus.PROCESSED;
         this.processedAt = LocalDateTime.now();
