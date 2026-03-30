@@ -64,6 +64,15 @@ public class OutboxEvent extends BaseEntity {
         this.processedAt = LocalDateTime.now();
     }
 
+    /**
+     * 서버 크래시 등으로 PROCESSING에 고착된 이벤트를 PENDING으로 복구한다.
+     * nextRetryAt을 즉시(now)로 설정하여 Poller가 즉시 재처리하도록 함.
+     */
+    public void resetToRetry() {
+        this.status = OutboxStatus.PENDING;
+        this.nextRetryAt = LocalDateTime.now();
+    }
+
     public void incrementAttempts(int maxAttempts) {
         this.attempts++;
         if (this.attempts >= maxAttempts) {
@@ -72,6 +81,8 @@ public class OutboxEvent extends BaseEntity {
             // Exponential backoff: 2^attempts * 1 second
             long delaySeconds = (long) Math.pow(2, this.attempts);
             this.nextRetryAt = LocalDateTime.now().plusSeconds(delaySeconds);
+            // PENDING으로 복귀: Poller는 PENDING 상태만 조회하므로 반드시 리셋해야 재시도됨
+            this.status = OutboxStatus.PENDING;
         }
     }
 }

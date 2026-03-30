@@ -8,6 +8,7 @@ import com.yd.vibecode.domain.admin.application.dto.response.ProblemSpecResponse
 import com.yd.vibecode.global.common.BaseResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -16,7 +17,8 @@ public interface AdminProblemApi extends BaseApi {
 
     @Operation(summary = "문제 생성", description = "새로운 문제를 DRAFT 상태로 생성합니다.")
     @ApiResponse(responseCode = "201", description = "생성 성공")
-    BaseResponse<ProblemResponse> createProblem(CreateProblemRequest request);
+    BaseResponse<ProblemResponse> createProblem(
+            @RequestBody(description = "문제 생성 요청", required = true) CreateProblemRequest request);
 
     @Operation(summary = "문제 목록 조회", description = "전체 문제 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")

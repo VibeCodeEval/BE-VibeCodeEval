@@ -25,4 +25,16 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> 
             @Param("now") LocalDateTime now,
             Pageable pageable
     );
+
+    /**
+     * 2분 이상 PROCESSING 상태로 고착된 이벤트 조회 (서버 크래시 복구용)
+     * 이 이벤트들은 PENDING으로 초기화하여 Poller가 재처리할 수 있도록 함
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "3000")})
+    @Query("SELECT e FROM OutboxEvent e WHERE e.status = :status AND e.updatedAt <= :staleThreshold")
+    List<OutboxEvent> findStaleProcessingEvents(
+            @Param("status") OutboxStatus status,
+            @Param("staleThreshold") LocalDateTime staleThreshold
+    );
 }

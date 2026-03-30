@@ -29,6 +29,25 @@ public class OutboxPoller {
 
     private static final int MAX_ATTEMPTS = 5;
     private static final int BATCH_SIZE = 10;
+    /** PROCESSING 상태가 이 시간(분)을 초과하면 서버 크래시로 간주하고 복구 */
+    private static final long STALE_PROCESSING_MINUTES = 2;
+
+    /**
+     * 서버 크래시 등으로 PROCESSING에 고착된 이벤트를 PENDING으로 복구한다.
+     * 1분마다 실행하여 고착 이벤트를 조기에 탐지한다.
+     */
+    @Scheduled(fixedDelay = 60_000)
+    @Transactional
+    public void recoverStaleProcessingEvents() {
+        LocalDateTime staleThreshold = LocalDateTime.now().minusMinutes(STALE_PROCESSING_MINUTES);
+        List<OutboxEvent> staleEvents = outboxEventRepository.findStaleProcessingEvents(
+                OutboxStatus.PROCESSING, staleThreshold);
+        if (!staleEvents.isEmpty()) {
+            log.warn("Recovering {} stale PROCESSING outbox events (stuck > {}min)",
+                    staleEvents.size(), STALE_PROCESSING_MINUTES);
+            staleEvents.forEach(OutboxEvent::resetToRetry);
+        }
+    }
 
     @Scheduled(fixedDelay = 5000)
     public void pollAndProcess() {

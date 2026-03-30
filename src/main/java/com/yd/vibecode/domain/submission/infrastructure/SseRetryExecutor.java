@@ -5,6 +5,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Component;
 
 import com.yd.vibecode.domain.submission.application.event.ScoringResultSseEvent;
@@ -55,6 +56,24 @@ public class SseRetryExecutor {
                 return t;
             }
     );
+
+    /**
+     * 애플리케이션 종료 시 retryScheduler를 graceful shutdown한다.
+     * 실행 중인 재시도 작업이 완료될 수 있도록 최대 5초 대기 후 강제 종료.
+     */
+    @PreDestroy
+    public void shutdown() {
+        retryScheduler.shutdown();
+        try {
+            if (!retryScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                retryScheduler.shutdownNow();
+                log.warn("[SSE Outbox] retryScheduler force-shutdown after 5s");
+            }
+        } catch (InterruptedException e) {
+            retryScheduler.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+    }
 
     /**
      * SSE 이벤트를 전송한다. 실패 시 지수 백오프로 재시도.

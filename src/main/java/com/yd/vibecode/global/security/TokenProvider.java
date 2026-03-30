@@ -7,10 +7,12 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import com.yd.vibecode.global.exception.RestApiException;
@@ -90,8 +92,12 @@ public class TokenProvider {
 
     public Authentication getAuthentication(String token) {
         Claims claims = getClaims(token);
-        // 권한 없이 인증된 사용자로만 처리
-        return new UsernamePasswordAuthenticationToken(claims.get(ID_CLAIM, String.class), "", Collections.emptyList());
+        String role = claims.get(ROLE_CLAIM, String.class);
+        // role 클레임을 GrantedAuthority로 변환 (ROLE_ prefix → hasAnyRole("ADMIN","MASTER")로 검사)
+        List<SimpleGrantedAuthority> authorities = (role != null)
+                ? List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                : Collections.emptyList();
+        return new UsernamePasswordAuthenticationToken(claims.get(ID_CLAIM, String.class), "", authorities);
     }
 
     public Optional<String> getId(String token) {
