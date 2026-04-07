@@ -10,6 +10,8 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import java.util.Map;
+
 @Slf4j
 @Controller
 @RequiredArgsConstructor
@@ -50,7 +52,18 @@ public class ChatWebSocketController {
             
         } catch (Exception e) {
             log.error("[WS Chat] Failed to process message: {}", e.getMessage(), e);
-            // 에러 발생 시 에러 메시지 전송 로직 추가 가능
+            // 에러 응답을 FE에 전송하여 무한 로딩 방지
+            if (request.participantId() != null) {
+                try {
+                    messagingTemplate.convertAndSendToUser(
+                            request.participantId().toString(),
+                            "/queue/chat-error",
+                            Map.of("error", true, "message", e.getMessage() != null ? e.getMessage() : "AI 응답 처리 실패")
+                    );
+                } catch (Exception sendError) {
+                    log.error("[WS Chat] 에러 응답 전송 실패: {}", sendError.getMessage());
+                }
+            }
         }
     }
 }
