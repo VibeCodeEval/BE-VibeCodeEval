@@ -46,7 +46,10 @@ public class StompPrincipalInterceptor implements ChannelInterceptor {
                         log.debug("[STOMP] Principal 설정: userId={}", userId);
                     });
                 } else {
-                    log.warn("[STOMP] 유효하지 않은 JWT 토큰으로 CONNECT 시도");
+                    log.warn("[STOMP] 유효하지 않은 JWT 토큰으로 CONNECT 시도 - 연결 거부");
+                    // Principal 미설정 시 convertAndSendToUser가 무음 실패하므로 명시적 거부
+                    throw new org.springframework.messaging.MessageDeliveryException(
+                            message, "Invalid or expired JWT token");
                 }
             }
         }
