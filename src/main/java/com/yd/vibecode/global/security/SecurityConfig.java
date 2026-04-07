@@ -73,6 +73,8 @@ public class SecurityConfig {
 						"/ws/**"  // WebSocket 엔드포인트 (자체 JWT 검증)
 				).permitAll()
 				.requestMatchers(HttpMethod.POST, "/users/token").authenticated() // 토큰 재발급
+				// Admin/Master 전용 엔드포인트 (role 기반 제한)
+				.requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "MASTER")
 				// Authenticated
 				.anyRequest().authenticated()
 		);

@@ -22,11 +22,11 @@ public class GetChatHistoryUseCase {
 
     @Transactional(readOnly = true)
     public ChatHistoryResponse execute(Long examId, Long participantId) {
-        // 1. 세션 조회
+        // 1. 세션 조회. 세션이 없으면 빈 히스토리 반환 (아직 채팅하지 않은 경우)
         PromptSession session = promptSessionService.findByExamIdAndParticipantId(examId, participantId);
-        
+
         if (session == null) {
-            return null;
+            return new ChatHistoryResponse(null, examId, participantId, 0, List.of());
         }
 
         // 2. 메시지 목록 조회

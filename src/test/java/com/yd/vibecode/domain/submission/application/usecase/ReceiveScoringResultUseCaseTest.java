@@ -12,8 +12,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.verify;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.yd.vibecode.domain.submission.application.dto.request.ScoringResultRequest;
+import com.yd.vibecode.domain.submission.application.event.ScoringResultSseEvent;
 import com.yd.vibecode.domain.submission.domain.entity.Score;
 import com.yd.vibecode.domain.submission.domain.entity.Submission;
 import com.yd.vibecode.domain.submission.domain.entity.SubmissionRun;
@@ -38,8 +40,11 @@ class ReceiveScoringResultUseCaseTest {
     @Mock
     private ScoreRepository scoreRepository;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     @Test
-    @DisplayName("채점 결과 수신 및 처리 성공")
+    @DisplayName("채점 결과 수신 및 처리 성공 - DB 저장 및 SSE 이벤트 발행 확인")
     void execute_Success() {
         // given
         Long submissionId = 1L;
@@ -50,7 +55,7 @@ class ReceiveScoringResultUseCaseTest {
         ScoringResultRequest.TestCaseResult testCase = new ScoringResultRequest.TestCaseResult(
             0, "SAMPLE", Verdict.AC, 100, 1024, 0, 0
         );
-        
+
         ScoringResultRequest.ScoreData scoreResult = new ScoringResultRequest.ScoreData(
             new BigDecimal("30.0"), new BigDecimal("30.0"), new BigDecimal("40.0"), "{}"
         );
@@ -67,13 +72,8 @@ class ReceiveScoringResultUseCaseTest {
         receiveScoringResultUseCase.execute(submissionId, request);
 
         // then
-        // 1. Submission status updated
-        // (Verify via mock or if we could spy the entity, but here we trust the service call logic)
-        
-        // 2. SubmissionRun saved
         verify(submissionRunRepository).save(any(SubmissionRun.class));
-        
-        // 3. Score saved
         verify(scoreRepository).save(any(Score.class));
+        verify(eventPublisher).publishEvent(any(ScoringResultSseEvent.class));
     }
 }

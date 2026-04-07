@@ -7,6 +7,7 @@ import com.yd.vibecode.domain.submission.application.dto.request.SubmitRequest;
 import com.yd.vibecode.domain.submission.application.dto.response.SubmitResponse;
 import com.yd.vibecode.domain.submission.domain.entity.Submission;
 import com.yd.vibecode.domain.submission.domain.entity.SubmissionStatus;
+import com.yd.vibecode.domain.submission.domain.service.OutboxEventService;
 import com.yd.vibecode.domain.submission.domain.service.SubmissionService;
 import com.yd.vibecode.global.exception.RestApiException;
 import com.yd.vibecode.global.exception.code.status.ProblemErrorStatus;
@@ -36,6 +37,9 @@ class SubmitUseCaseTest {
 
     @Mock
     private PromptSessionService promptSessionService;
+
+    @Mock
+    private OutboxEventService outboxEventService;
 
     @Test
     @DisplayName("제출 성공")
