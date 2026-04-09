@@ -38,7 +38,7 @@ public class PromptSession extends BaseEntity {
     @Column(nullable = false)
     private Long participantId;
 
-    @Column(nullable = false)
+    @Column
     private Long specId;
 
     @Column(nullable = false)
