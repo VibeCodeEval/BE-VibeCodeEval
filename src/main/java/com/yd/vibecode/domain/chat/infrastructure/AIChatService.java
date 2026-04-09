@@ -6,6 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -33,8 +34,13 @@ public class AIChatService {
     
     public AIChatService(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-        // RestTemplate 사용 - Uvicorn과의 호환성 문제 해결
-        this.restTemplate = new RestTemplate();
+        // RestTemplate 타임아웃 설정
+        // - connectTimeout: AI 서버 연결 대기 (5초)
+        // - readTimeout: AI 응답 대기 (90초) — LLM 처리 시간 고려
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5_000);
+        factory.setReadTimeout(90_000);
+        this.restTemplate = new RestTemplate(factory);
     }
 
     public SendMessageResponse sendMessage(AISendMessageRequest request) {
