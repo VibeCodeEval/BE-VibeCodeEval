@@ -1,0 +1,96 @@
+# 온프레미스 프로덕션 배포용 Docker Compose
+# 서버의 /opt/vibecode/.env 파일에서 환경변수를 읽습니다.
+# 사용법: docker compose -f docker-compose.prod.yml up -d
+
+services:
+
+  # ─── BE 애플리케이션 ──────────────────────────────────────────────────
+  app:
+    image: ${DOCKERHUB_USERNAME}/vibecode:latest
+    container_name: vibecode-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Database (postgres 서비스명을 호스트로 사용)
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ai_vibe_coding_test
+      DB_SCHEMA: ai_vibe_coding_test
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JPA_DDL_AUTO: update
+      # JWT
+      JWT_KEY: ${JWT_KEY}
+      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION:-3600000}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-86400000}
+      # Redis (redis 서비스명을 호스트로 사용)
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # CORS / Cookie
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      COOKIE_SECURE: "true"
+      # Master Admin
+      MASTER_ADMIN_NUMBER: ${MASTER_ADMIN_NUMBER}
+      MASTER_ADMIN_EMAIL: ${MASTER_ADMIN_EMAIL}
+      MASTER_ADMIN_PASSWORD: ${MASTER_ADMIN_PASSWORD}
+      # AI Server — 호스트에서 실행 중인 AI 서버 접근 (Linux host-gateway)
+      AI_SERVER_URL: ${AI_SERVER_URL:-http://host.docker.internal:8000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Linux에서 host.docker.internal 활성화
+    networks:
+      - vibecode-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ─── PostgreSQL ───────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: vibecode_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ai_vibe_coding_test
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vibecode-net
+
+  # ─── Redis ────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: vibecode-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - vibecode-net
+
+volumes:
+  postgres_data:
+  redis-data:
+
+networks:
+  vibecode-net:
+    driver: bridge
