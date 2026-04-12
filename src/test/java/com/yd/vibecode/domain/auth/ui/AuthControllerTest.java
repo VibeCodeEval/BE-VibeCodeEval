@@ -1,31 +1,32 @@
 package com.yd.vibecode.domain.auth.ui;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import org.junit.jupiter.api.Disabled;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yd.vibecode.domain.auth.application.dto.request.AdminLoginRequest;
-import com.yd.vibecode.domain.auth.application.dto.request.AdminSignupRequest;
 import com.yd.vibecode.domain.auth.application.dto.request.EnterRequest;
 import com.yd.vibecode.domain.auth.application.dto.response.AdminLoginResponse;
 import com.yd.vibecode.domain.auth.application.dto.response.EnterResponse;
 import com.yd.vibecode.domain.auth.application.dto.response.MeResponse;
 import com.yd.vibecode.domain.auth.application.usecase.AdminLoginUseCase;
+import com.yd.vibecode.domain.auth.application.usecase.AdminLogoutUseCase;
 import com.yd.vibecode.domain.auth.application.usecase.AdminSignupUseCase;
 import com.yd.vibecode.domain.auth.application.usecase.EnterUseCase;
 import com.yd.vibecode.domain.auth.application.usecase.MeUseCase;
-import com.yd.vibecode.domain.auth.domain.service.TokenBlacklistService;
-import com.yd.vibecode.global.interceptor.JwtBlacklistInterceptor;
-import com.yd.vibecode.global.security.ExcludeBlacklistPathProperties;
+import com.yd.vibecode.global.security.JwtProperties;
 import com.yd.vibecode.global.security.TokenProvider;
+import com.yd.vibecode.global.util.CookieUtils;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,11 +34,18 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.web.servlet.MockMvc;
 
+/**
+ * AuthController 단위 테스트
+ *
+ * - HttpOnly 쿠키 전환 이후 Set-Cookie 헤더 검증
+ * - @AccessToken 리졸버는 WebMvcTest 컨텍스트에서 TokenProvider mock으로 동작
+ * - CookieUtils / JwtProperties 는 MockBean으로 주입해 실제 쿠키 세팅 없이 호출 여부만 확인
+ */
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc(addFilters = false) // Security Filter 비활성화
-@Disabled("WebMvcTest requires additional configuration for interceptors and properties")
 class AuthControllerTest {
 
     @Autowired
@@ -46,6 +54,7 @@ class AuthControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    // ---- UseCase MockBeans ----
     @MockBean
     private EnterUseCase enterUseCase;
     @MockBean
@@ -53,16 +62,35 @@ class AuthControllerTest {
     @MockBean
     private AdminLoginUseCase adminLoginUseCase;
     @MockBean
+    private AdminLogoutUseCase adminLogoutUseCase;
+    @MockBean
     private MeUseCase meUseCase;
+
+    // ---- Infrastructure MockBeans ----
     @MockBean
     private TokenProvider tokenProvider;
+    @MockBean
+    private CookieUtils cookieUtils;
+    @MockBean
+    private JwtProperties jwtProperties;
+
+    @BeforeEach
+    void setUpJwtProperties() {
+        // accessTokenExpirationPeriodDay = 3,600,000 ms (1시간) 기본값 설정
+        given(jwtProperties.getAccessTokenExpirationPeriodDay()).willReturn(3_600_000L);
+        // CookieUtils는 void 메서드 — 기본적으로 아무것도 하지 않으므로 별도 stub 불필요
+    }
+
+    // =========================================================================
+    // 1. POST /api/auth/enter — 사용자 입장
+    // =========================================================================
 
     @Test
-    @DisplayName("입장 API 테스트")
+    @DisplayName("입장 API — 응답 바디에 accessToken 포함, cookieUtils.setAccessTokenCookie 호출 확인")
     void enter_api_success() throws Exception {
         // given
         EnterRequest request = new EnterRequest("CODE", "홍길동", "010-1234-5678");
-        EnterResponse response = new EnterResponse("token", "USER", null, null, null);
+        EnterResponse response = new EnterResponse("test-token", "USER", null, null, null);
         given(enterUseCase.execute(any(EnterRequest.class))).willReturn(response);
 
         // when & then
@@ -70,15 +98,38 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.accessToken").value("token"));
+                .andExpect(jsonPath("$.result.accessToken").value("test-token"));
+
+        // CookieUtils.setAccessTokenCookie 가 호출됐는지 검증
+        verify(cookieUtils).setAccessTokenCookie(
+                any(HttpServletResponse.class),
+                eq("test-token"),
+                eq(3600) // 3_600_000 ms / 1000
+        );
     }
 
     @Test
-    @DisplayName("관리자 로그인 API 테스트")
+    @DisplayName("입장 API — 요청 필드 누락 시 400 Bad Request")
+    void enter_api_missing_fields_returns_400() throws Exception {
+        // 이름 필드가 null인 요청
+        String body = "{\"code\":\"CODE\",\"phone\":\"010-1234-5678\"}";
+
+        mockMvc.perform(post("/api/auth/enter")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    // =========================================================================
+    // 2. POST /api/auth/admin/login — 관리자 로그인
+    // =========================================================================
+
+    @Test
+    @DisplayName("관리자 로그인 API — 응답 바디에 accessToken 포함, cookieUtils.setAccessTokenCookie 호출 확인")
     void admin_login_api_success() throws Exception {
         // given
         AdminLoginRequest request = new AdminLoginRequest("admin", "password");
-        AdminLoginResponse response = new AdminLoginResponse("token", "ADMIN", null);
+        AdminLoginResponse response = new AdminLoginResponse("admin-token", "ADMIN", null);
         given(adminLoginUseCase.execute(any(AdminLoginRequest.class))).willReturn(response);
 
         // when & then
@@ -86,16 +137,76 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.accessToken").value("token"));
+                .andExpect(jsonPath("$.result.accessToken").value("admin-token"));
+
+        verify(cookieUtils).setAccessTokenCookie(
+                any(HttpServletResponse.class),
+                eq("admin-token"),
+                eq(3600)
+        );
+    }
+
+    // =========================================================================
+    // 3. POST /api/auth/admin/logout — 관리자 로그아웃
+    // =========================================================================
+
+    @Test
+    @DisplayName("관리자 로그아웃 API — clearAccessTokenCookie 호출, 200 OK")
+    void admin_logout_api_success() throws Exception {
+        // given — @AccessToken 리졸버가 TokenProvider.getToken() 으로 토큰을 꺼냄
+        String token = "valid-admin-token";
+        given(tokenProvider.getToken(any())).willReturn(Optional.of(token));
+        given(tokenProvider.isAccessToken(token)).willReturn(true);
+        willDoNothing().given(adminLogoutUseCase).execute(token);
+
+        // when & then
+        mockMvc.perform(post("/api/auth/admin/logout")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        verify(adminLogoutUseCase).execute(token);
+        verify(cookieUtils).clearAccessTokenCookie(any(HttpServletResponse.class));
     }
 
     @Test
-    @DisplayName("내 정보 조회 API 테스트")
-    void me_api_success() throws Exception {
-        // given
-        String token = "token";
+    @DisplayName("관리자 로그아웃 API — 토큰 없을 시 401 Unauthorized")
+    void admin_logout_api_no_token_returns_401() throws Exception {
+        // given — 토큰이 없으면 리졸버가 RestApiException(_UNAUTHORIZED) 를 던짐
+        given(tokenProvider.getToken(any())).willReturn(Optional.empty());
+
+        mockMvc.perform(post("/api/auth/admin/logout"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
+    // 4. GET /api/auth/me — 내 정보 조회
+    // =========================================================================
+
+    @Test
+    @DisplayName("내 정보 조회 API — 쿠키 토큰으로 조회 성공")
+    void me_api_success_with_cookie_token() throws Exception {
+        // given — 쿠키 우선 경로 시뮬레이션
+        String token = "cookie-token";
         MeResponse response = new MeResponse("USER", null, null, null);
         given(tokenProvider.getToken(any())).willReturn(Optional.of(token));
+        given(tokenProvider.isAccessToken(token)).willReturn(true);
+        given(meUseCase.execute(token)).willReturn(response);
+
+        // when & then — 쿠키로 요청 (Authorization 헤더 없음)
+        mockMvc.perform(get("/api/auth/me")
+                        .cookie(new jakarta.servlet.http.Cookie("access_token", token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.role").value("USER"));
+    }
+
+    @Test
+    @DisplayName("내 정보 조회 API — Authorization 헤더 폴백 성공")
+    void me_api_success_with_bearer_token() throws Exception {
+        // given — 쿠키 없이 Bearer 헤더만 있을 때
+        String token = "header-token";
+        MeResponse response = new MeResponse("USER", null, null, null);
+        given(tokenProvider.getToken(any())).willReturn(Optional.of(token));
+        given(tokenProvider.isAccessToken(token)).willReturn(true);
         given(meUseCase.execute(token)).willReturn(response);
 
         // when & then
@@ -103,5 +214,106 @@ class AuthControllerTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.role").value("USER"));
+    }
+
+    @Test
+    @DisplayName("내 정보 조회 API — 토큰 없을 시 401 Unauthorized")
+    void me_api_no_token_returns_401() throws Exception {
+        given(tokenProvider.getToken(any())).willReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // =========================================================================
+    // 5. 토큰 우선순위 엣지 케이스 — TokenProvider getToken 로직 단위 검증
+    // =========================================================================
+
+    @Test
+    @DisplayName("TokenProvider — 쿠키와 Bearer 헤더 동시 존재 시 쿠키 우선")
+    void token_provider_prefers_cookie_over_header() {
+        // given
+        TokenProvider realProvider = buildRealTokenProvider();
+        MockHttpServletRequest request = new MockHttpServletRequest();
+
+        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("access_token", "cookie-val");
+        request.setCookies(cookie);
+        request.addHeader("Authorization", "Bearer header-val");
+
+        // when
+        Optional<String> token = realProvider.getToken(request);
+
+        // then
+        assert token.isPresent();
+        assert "cookie-val".equals(token.get()) : "쿠키가 헤더보다 우선되어야 한다";
+    }
+
+    @Test
+    @DisplayName("TokenProvider — 빈 쿠키 값일 때 Bearer 헤더 폴백")
+    void token_provider_falls_back_to_header_when_cookie_blank() {
+        // given
+        TokenProvider realProvider = buildRealTokenProvider();
+        MockHttpServletRequest request = new MockHttpServletRequest();
+
+        jakarta.servlet.http.Cookie blankCookie = new jakarta.servlet.http.Cookie("access_token", "   ");
+        request.setCookies(blankCookie);
+        request.addHeader("Authorization", "Bearer header-val");
+
+        // when
+        Optional<String> token = realProvider.getToken(request);
+
+        // then
+        assert token.isPresent();
+        assert "header-val".equals(token.get()) : "빈 쿠키 값이면 헤더로 폴백해야 한다";
+    }
+
+    @Test
+    @DisplayName("TokenProvider — 쿠키도 헤더도 없을 때 Optional.empty()")
+    void token_provider_returns_empty_when_no_token() {
+        // given
+        TokenProvider realProvider = buildRealTokenProvider();
+        MockHttpServletRequest request = new MockHttpServletRequest();
+
+        // when
+        Optional<String> token = realProvider.getToken(request);
+
+        // then
+        assert token.isEmpty() : "토큰이 없을 때 Optional.empty() 여야 한다";
+    }
+
+    @Test
+    @DisplayName("TokenProvider — null 쿠키 값일 때 Bearer 헤더 폴백")
+    void token_provider_falls_back_to_header_when_cookie_value_null() {
+        // given
+        TokenProvider realProvider = buildRealTokenProvider();
+        MockHttpServletRequest request = new MockHttpServletRequest();
+
+        // MockHttpServletRequest는 null 쿠키 값을 직접 지원하지 않으므로
+        // 쿠키 없이 헤더만 설정해 폴백 경로 검증
+        request.addHeader("Authorization", "Bearer fallback-token");
+
+        // when
+        Optional<String> token = realProvider.getToken(request);
+
+        // then
+        assert token.isPresent();
+        assert "fallback-token".equals(token.get());
+    }
+
+    // =========================================================================
+    // Helper
+    // =========================================================================
+
+    /**
+     * TokenProvider 우선순위 로직 단위 검증에 사용할 실제 인스턴스를 생성한다.
+     * JwtProperties는 key/expiration 값이 불필요한 getToken() 경로만 테스트하므로
+     * 더미 값으로 구성한다.
+     */
+    private TokenProvider buildRealTokenProvider() {
+        JwtProperties props = new JwtProperties();
+        props.setKey("test-secret-key-32-characters-long!!");
+        props.setAccessTokenExpirationPeriodDay(3_600_000L);
+        props.setRefreshTokenExpirationPeriodDay(86_400_000L);
+        return new TokenProvider(props);
     }
 }
