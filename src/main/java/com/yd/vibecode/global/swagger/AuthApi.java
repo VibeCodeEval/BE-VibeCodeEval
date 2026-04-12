@@ -8,6 +8,7 @@ import com.yd.vibecode.domain.auth.application.dto.response.EnterResponse;
 import com.yd.vibecode.domain.auth.application.dto.response.MeResponse;
 import com.yd.vibecode.global.annotation.AccessToken;
 import com.yd.vibecode.global.common.BaseResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -38,7 +39,7 @@ public interface AuthApi extends BaseApi {
                     content = @Content(schema = @Schema(implementation = BaseResponse.class))
             )
     })
-    BaseResponse<EnterResponse> enter(EnterRequest request);
+    BaseResponse<EnterResponse> enter(EnterRequest request, HttpServletResponse httpResponse);
 
     @Operation(
             summary = "관리자 회원가입",
@@ -74,7 +75,7 @@ public interface AuthApi extends BaseApi {
                     content = @Content(schema = @Schema(implementation = BaseResponse.class))
             )
     })
-    BaseResponse<AdminLoginResponse> adminLogin(AdminLoginRequest request);
+    BaseResponse<AdminLoginResponse> adminLogin(AdminLoginRequest request, HttpServletResponse httpResponse);
 
     @Operation(
         summary = "관리자 로그아웃",
@@ -91,7 +92,7 @@ public interface AuthApi extends BaseApi {
                     content = @Content(schema = @Schema(implementation = BaseResponse.class))
             )
     })
-    BaseResponse<Void> adminLogout(@Parameter(hidden = true, in = ParameterIn.HEADER) @AccessToken String token);
+    BaseResponse<Void> adminLogout(@Parameter(hidden = true, in = ParameterIn.HEADER) @AccessToken String token, HttpServletResponse httpResponse);
 
     @Operation(
             summary = "내 정보 조회",
