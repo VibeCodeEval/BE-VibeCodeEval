@@ -13,6 +13,17 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success'
     env:
       DEPLOY_DIR: /home/${{ secrets.DEPLOY_USER }}/vibecode
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      JWT_KEY: ${{ secrets.JWT_KEY }}
+      JWT_ACCESS_EXPIRATION: ${{ secrets.JWT_ACCESS_EXPIRATION }}
+      JWT_REFRESH_EXPIRATION: ${{ secrets.JWT_REFRESH_EXPIRATION }}
+      CORS_ALLOWED_ORIGINS: ${{ secrets.CORS_ALLOWED_ORIGINS }}
+      MASTER_ADMIN_NUMBER: ${{ secrets.MASTER_ADMIN_NUMBER }}
+      MASTER_ADMIN_EMAIL: ${{ secrets.MASTER_ADMIN_EMAIL }}
+      MASTER_ADMIN_PASSWORD: ${{ secrets.MASTER_ADMIN_PASSWORD }}
+      AI_SERVER_URL: ${{ secrets.AI_SERVER_URL }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,19 +46,35 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT || 22 }}
+          envs: DEPLOY_DIR,DOCKERHUB_USERNAME,DB_USERNAME,DB_PASSWORD,JWT_KEY,JWT_ACCESS_EXPIRATION,JWT_REFRESH_EXPIRATION,CORS_ALLOWED_ORIGINS,MASTER_ADMIN_NUMBER,MASTER_ADMIN_EMAIL,MASTER_ADMIN_PASSWORD,AI_SERVER_URL
           script: |
             set -e
             mkdir -p "${{ env.DEPLOY_DIR }}"
             cd "${{ env.DEPLOY_DIR }}"
+            umask 077
+
+            cat > .env <<EOF
+            DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME
+            DB_USERNAME=$DB_USERNAME
+            DB_PASSWORD=$DB_PASSWORD
+            JWT_KEY=$JWT_KEY
+            JWT_ACCESS_EXPIRATION=${JWT_ACCESS_EXPIRATION:-3600000}
+            JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION:-86400000}
+            CORS_ALLOWED_ORIGINS=$CORS_ALLOWED_ORIGINS
+            MASTER_ADMIN_NUMBER=$MASTER_ADMIN_NUMBER
+            MASTER_ADMIN_EMAIL=$MASTER_ADMIN_EMAIL
+            MASTER_ADMIN_PASSWORD=$MASTER_ADMIN_PASSWORD
+            AI_SERVER_URL=${AI_SERVER_URL:-http://host.docker.internal:8000}
+            EOF
 
             echo ">>> Pulling latest app image..."
-            docker compose -f docker-compose.prod.yml pull app
+            docker compose --env-file .env -f docker-compose.prod.yml pull app
 
             echo ">>> Restarting containers..."
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker compose --env-file .env -f docker-compose.prod.yml up -d --remove-orphans
 
             echo ">>> Pruning old images..."
             docker image prune -f
 
             echo ">>> Deploy complete. Container status:"
-            docker compose -f docker-compose.prod.yml ps
+            docker compose --env-file .env -f docker-compose.prod.yml ps
