@@ -1,0 +1,49 @@
+name: CD Pipeline
+
+on:
+  workflow_run:
+    workflows: [ "CI Pipeline" ]
+    branches: [ main ]
+    types: [ completed ]
+
+jobs:
+  deploy:
+    name: Deploy to On-Premises
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy docker-compose.prod.yml to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          source: docker-compose.prod.yml
+          target: /opt/vibecode/
+
+      - name: Pull latest image & restart containers
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script: |
+            set -e
+            cd /opt/vibecode
+
+            echo ">>> Pulling latest app image..."
+            docker compose -f docker-compose.prod.yml pull app
+
+            echo ">>> Restarting containers..."
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+            echo ">>> Pruning old images..."
+            docker image prune -f
+
+            echo ">>> Deploy complete. Container status:"
+            docker compose -f docker-compose.prod.yml ps
