@@ -27,7 +27,9 @@ import com.yd.vibecode.global.security.ExcludeBlacklistPathProperties;
 import com.yd.vibecode.global.security.JwtProperties;
 import com.yd.vibecode.global.security.TokenProvider;
 import com.yd.vibecode.global.util.CookieUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Collections;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -83,10 +85,17 @@ class AuthControllerTest {
     private ExcludeBlacklistPathProperties excludeBlacklistPathProperties;
 
     @BeforeEach
-    void setUpJwtProperties() {
-        // accessTokenExpirationPeriodDay = 3,600,000 ms (1시간) 기본값 설정
+    void setUp() {
+        // JwtProperties: accessToken 만료시간 설정
         given(jwtProperties.getAccessTokenExpirationPeriodDay()).willReturn(3_600_000L);
-        // CookieUtils는 void 메서드 — 기본적으로 아무것도 하지 않으므로 별도 stub 불필요
+        // JwtBlacklistInterceptor: preHandle 기본값이 false → true로 설정해 컨트롤러에 요청이 도달하도록 함
+        given(jwtBlacklistInterceptor.preHandle(
+                any(HttpServletRequest.class),
+                any(HttpServletResponse.class),
+                any()
+        )).willReturn(true);
+        // ExcludeBlacklistPathProperties: getExcludeAuthPaths() 기본값 null → 빈 리스트로 설정
+        given(excludeBlacklistPathProperties.getExcludeAuthPaths()).willReturn(Collections.emptyList());
     }
 
     // =========================================================================
