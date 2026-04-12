@@ -23,6 +23,8 @@ import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import com.yd.vibecode.global.util.CookieUtils;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
@@ -119,9 +121,22 @@ public class TokenProvider {
 
 
     public Optional<String> getToken(HttpServletRequest request) {
+        // 1) HttpOnly 쿠키 우선
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (CookieUtils.ACCESS_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
+                    String value = cookie.getValue();
+                    if (value != null && !value.isBlank()) {
+                        return Optional.of(value);
+                    }
+                }
+            }
+        }
+        // 2) Authorization: Bearer 헤더 폴백 (STOMP 등 하위 호환)
         return Optional.ofNullable(request.getHeader(TOKEN_HEADER))
                 .filter(token -> token.startsWith(BEARER))
-                .map(token -> token.replace(BEARER, ""));
+                .map(token -> token.substring(BEARER.length()));
     }
 
     private Claims getClaims(String token) {

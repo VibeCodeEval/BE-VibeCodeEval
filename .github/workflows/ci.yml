@@ -7,6 +7,7 @@ on:
 
 jobs:
   build:
+    name: Build & Push Docker Image
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -22,18 +23,56 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
+      # application-secret.yml은 .gitignore에 포함되어 있으므로 CI에서 생성
+      # ${VAR:secret_value} 형식: 런타임 env가 있으면 env 우선, 없으면 시크릿 값 사용
+      - name: Create application-secret.yml from GitHub Secrets
+        run: |
+          cat > src/main/resources/application-secret.yml << 'EOF'
+          spring:
+            datasource:
+              url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5435}/${DB_NAME:ai_vibe_coding_test}
+              username: ${DB_USERNAME:${{ secrets.DB_USERNAME }}}
+              password: ${DB_PASSWORD:${{ secrets.DB_PASSWORD }}}
+              driver-class-name: org.postgresql.Driver
+
+            jpa:
+              hibernate:
+                ddl-auto: ${JPA_DDL_AUTO:update}
+              properties:
+                hibernate:
+                  dialect: org.hibernate.dialect.PostgreSQLDialect
+                  format_sql: true
+                  default_schema: ${DB_SCHEMA:ai_vibe_coding_test}
+              show-sql: false
+
+          jwt:
+            key: ${JWT_KEY:${{ secrets.JWT_KEY }}}
+            access:
+              expiration: ${JWT_ACCESS_EXPIRATION:3600000}
+            refresh:
+              expiration: ${JWT_REFRESH_EXPIRATION:86400000}
+
+          master:
+            admin:
+              admin-number: ${MASTER_ADMIN_NUMBER:${{ secrets.MASTER_ADMIN_NUMBER }}}
+              email: ${MASTER_ADMIN_EMAIL:${{ secrets.MASTER_ADMIN_EMAIL }}}
+              password: ${MASTER_ADMIN_PASSWORD:${{ secrets.MASTER_ADMIN_PASSWORD }}}
+
+          ai:
+            server:
+              url: ${AI_SERVER_URL:${{ secrets.AI_SERVER_URL }}}
+          EOF
+
+      - name: Build with Gradle (tests included)
         run: ./gradlew clean build
 
       - name: Log in to Docker Hub
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build & Push Docker Image
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
         uses: docker/build-push-action@v5
         with:
           context: .

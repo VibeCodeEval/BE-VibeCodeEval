@@ -12,9 +12,15 @@ public record ExamResponse(
     LocalDateTime startsAt,
     LocalDateTime endsAt,
     Integer version,
-    Long createdBy
+    Long createdBy,
+    long participantCount,
+    long completedCount
 ) {
     public static ExamResponse from(Exam exam) {
+        return from(exam, 0L, 0L);
+    }
+
+    public static ExamResponse from(Exam exam, long participantCount, long completedCount) {
         return new ExamResponse(
             exam.getId(),
             exam.getTitle(),
@@ -22,7 +28,9 @@ public record ExamResponse(
             exam.getStartsAt(),
             exam.getEndsAt(),
             exam.getVersion(),
-            exam.getCreatedBy()
+            exam.getCreatedBy(),
+            participantCount,
+            completedCount
         );
     }
 }

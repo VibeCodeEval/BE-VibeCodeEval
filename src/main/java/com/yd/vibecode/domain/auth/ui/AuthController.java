@@ -14,6 +14,9 @@ import com.yd.vibecode.domain.auth.application.usecase.MeUseCase;
 import com.yd.vibecode.global.annotation.AccessToken;
 import com.yd.vibecode.global.swagger.AuthApi;
 import com.yd.vibecode.global.common.BaseResponse;
+import com.yd.vibecode.global.security.JwtProperties;
+import com.yd.vibecode.global.util.CookieUtils;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,10 +35,19 @@ public class AuthController implements AuthApi {
     private final AdminLoginUseCase adminLoginUseCase;
     private final AdminLogoutUseCase adminLogoutUseCase;
     private final MeUseCase meUseCase;
+    private final CookieUtils cookieUtils;
+    private final JwtProperties jwtProperties;
 
     @PostMapping("/enter")
-    public BaseResponse<EnterResponse> enter(@Valid @RequestBody EnterRequest request) {
+    public BaseResponse<EnterResponse> enter(
+            @Valid @RequestBody EnterRequest request,
+            HttpServletResponse httpResponse) {
         EnterResponse response = enterUseCase.execute(request);
+        int maxAge = Math.toIntExact(jwtProperties.getAccessTokenExpirationPeriodDay() / 1000);
+        cookieUtils.setAccessTokenCookie(httpResponse, response.accessToken(), maxAge);
+        // accessToken is intentionally kept in the response body so the FE can store it
+        // in Zustand memory for STOMP WebSocket authentication (HttpOnly cookies are
+        // not readable by JavaScript and therefore cannot be used in STOMP connectHeaders).
         return BaseResponse.onSuccess(response);
     }
 
@@ -46,15 +58,21 @@ public class AuthController implements AuthApi {
     }
 
     @PostMapping("/admin/login")
-    public BaseResponse<AdminLoginResponse> adminLogin(@Valid @RequestBody AdminLoginRequest request) {
+    public BaseResponse<AdminLoginResponse> adminLogin(
+            @Valid @RequestBody AdminLoginRequest request,
+            HttpServletResponse httpResponse) {
         AdminLoginResponse response = adminLoginUseCase.execute(request);
+        int maxAge = Math.toIntExact(jwtProperties.getAccessTokenExpirationPeriodDay() / 1000);
+        cookieUtils.setAccessTokenCookie(httpResponse, response.accessToken(), maxAge);
         return BaseResponse.onSuccess(response);
     }
 
     @PostMapping("/admin/logout")
-    @Override
-    public BaseResponse<Void> adminLogout(@AccessToken String token) {
+    public BaseResponse<Void> adminLogout(
+            @AccessToken String token,
+            HttpServletResponse httpResponse) {
         adminLogoutUseCase.execute(token);
+        cookieUtils.clearAccessTokenCookie(httpResponse);
         return BaseResponse.onSuccess();
     }
 

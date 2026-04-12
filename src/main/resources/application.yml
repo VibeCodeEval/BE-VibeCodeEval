@@ -68,10 +68,14 @@ exclude-blacklist-path-patterns:
 
 # CORS 설정
 cors:
-  allowed-origins: "http://localhost:5173,http://localhost:3000,http://localhost:8080,http://127.0.0.1:8080,http://localhost:8000,http://127.0.0.1:8000"
+  allowed-origins: "${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080,http://127.0.0.1:8080,http://localhost:8000,http://127.0.0.1:8000,https://vibetest.codes,https://www.vibetest.codes}"
   allowed-methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD"
   allowed-headers: "Authorization,Content-Type,Accept,Origin,X-Requested-With,Access-Control-Request-Method,Access-Control-Request-Headers"
   max-age: 3600
+
+# 쿠키 설정
+cookie:
+  secure: ${COOKIE_SECURE:true}
 
 # Swagger 설정
 springdoc:
