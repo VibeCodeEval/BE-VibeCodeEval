@@ -1,5 +1,6 @@
 HELP.md
 .gradle
+.gradle-local/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
@@ -113,3 +114,4 @@ buildNumber.properties
 /docs/
 
 .claude/
+.env
