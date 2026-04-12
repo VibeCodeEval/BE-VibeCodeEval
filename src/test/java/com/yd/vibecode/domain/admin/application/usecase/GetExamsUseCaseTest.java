@@ -58,12 +58,13 @@ class GetExamsUseCaseTest {
             .build();
         org.springframework.test.util.ReflectionTestUtils.setField(exam2, "id", 2L);
 
+        List<Long> examIds = List.of(1L, 2L);
         given(examRepository.findAll())
             .willReturn(List.of(exam1, exam2));
-        given(examParticipantRepository.countByExamId(1L)).willReturn(3L);
-        given(examParticipantRepository.countByExamId(2L)).willReturn(5L);
-        given(submissionRepository.countByExamId(1L)).willReturn(1L);
-        given(submissionRepository.countByExamId(2L)).willReturn(4L);
+        given(examParticipantRepository.countGroupByExamIdIn(examIds))
+            .willReturn(List.of(new Object[]{1L, 3L}, new Object[]{2L, 5L}));
+        given(submissionRepository.countGroupByExamIdIn(examIds))
+            .willReturn(List.of(new Object[]{1L, 1L}, new Object[]{2L, 4L}));
 
         // when
         List<ExamResponse> result = getExamsUseCase.execute();
@@ -79,10 +80,8 @@ class GetExamsUseCaseTest {
         assertThat(result.get(1).participantCount()).isEqualTo(5L);
         assertThat(result.get(1).completedCount()).isEqualTo(4L);
         verify(examRepository).findAll();
-        verify(examParticipantRepository).countByExamId(1L);
-        verify(examParticipantRepository).countByExamId(2L);
-        verify(submissionRepository).countByExamId(1L);
-        verify(submissionRepository).countByExamId(2L);
+        verify(examParticipantRepository).countGroupByExamIdIn(examIds);
+        verify(submissionRepository).countGroupByExamIdIn(examIds);
     }
 
     @Test

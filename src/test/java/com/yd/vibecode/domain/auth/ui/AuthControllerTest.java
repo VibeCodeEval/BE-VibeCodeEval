@@ -22,6 +22,8 @@ import com.yd.vibecode.domain.auth.application.usecase.AdminLogoutUseCase;
 import com.yd.vibecode.domain.auth.application.usecase.AdminSignupUseCase;
 import com.yd.vibecode.domain.auth.application.usecase.EnterUseCase;
 import com.yd.vibecode.domain.auth.application.usecase.MeUseCase;
+import com.yd.vibecode.global.interceptor.JwtBlacklistInterceptor;
+import com.yd.vibecode.global.security.ExcludeBlacklistPathProperties;
 import com.yd.vibecode.global.security.JwtProperties;
 import com.yd.vibecode.global.security.TokenProvider;
 import com.yd.vibecode.global.util.CookieUtils;
@@ -74,6 +76,11 @@ class AuthControllerTest {
     private CookieUtils cookieUtils;
     @MockBean
     private JwtProperties jwtProperties;
+    // WebMvcConfig 가 JwtBlacklistInterceptor, ExcludeBlacklistPathProperties 를 주입받으므로 필요
+    @MockBean
+    private JwtBlacklistInterceptor jwtBlacklistInterceptor;
+    @MockBean
+    private ExcludeBlacklistPathProperties excludeBlacklistPathProperties;
 
     @BeforeEach
     void setUpJwtProperties() {
