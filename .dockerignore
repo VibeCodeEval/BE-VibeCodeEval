@@ -36,5 +36,6 @@ Thumbs.db
 logs/
 
 # Application config (secrets)
+.env
+.env.*
 src/main/resources/application-secret.yml
-
