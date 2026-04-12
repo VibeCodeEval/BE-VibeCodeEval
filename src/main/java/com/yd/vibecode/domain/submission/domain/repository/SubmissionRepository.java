@@ -14,4 +14,6 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     List<Submission> findByExamId(Long examId);
     
     List<Submission> findByParticipantId(Long participantId);
+
+    long countByExamId(Long examId);
 }

@@ -20,5 +20,6 @@ public interface ExamParticipantRepository extends JpaRepository<ExamParticipant
     List<ExamParticipant> findByParticipantIdOrderByJoinedAtDesc(Long participantId);
 
     boolean existsByExamIdAndParticipantId(Long examId, Long participantId);
-}
 
+    long countByExamId(Long examId);
+}
