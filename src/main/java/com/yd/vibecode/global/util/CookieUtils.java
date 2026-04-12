@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class CookieUtils {
 
-    private static final String ACCESS_TOKEN_COOKIE_NAME = "access_token";
+    public static final String ACCESS_TOKEN_COOKIE_NAME = "access_token";
 
     @Value("${cookie.secure:true}")
     private boolean secure;

@@ -45,6 +45,9 @@ public class AuthController implements AuthApi {
         EnterResponse response = enterUseCase.execute(request);
         int maxAge = Math.toIntExact(jwtProperties.getAccessTokenExpirationPeriodDay() / 1000);
         cookieUtils.setAccessTokenCookie(httpResponse, response.accessToken(), maxAge);
+        // accessToken is intentionally kept in the response body so the FE can store it
+        // in Zustand memory for STOMP WebSocket authentication (HttpOnly cookies are
+        // not readable by JavaScript and therefore cannot be used in STOMP connectHeaders).
         return BaseResponse.onSuccess(response);
     }
 

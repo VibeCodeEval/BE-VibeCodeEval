@@ -1,5 +1,6 @@
 package com.yd.vibecode.domain.auth.ui;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -244,8 +245,8 @@ class AuthControllerTest {
         Optional<String> token = realProvider.getToken(request);
 
         // then
-        assert token.isPresent();
-        assert "cookie-val".equals(token.get()) : "쿠키가 헤더보다 우선되어야 한다";
+        assertThat(token).isPresent();
+        assertThat(token.get()).isEqualTo("cookie-val");
     }
 
     @Test
@@ -263,8 +264,8 @@ class AuthControllerTest {
         Optional<String> token = realProvider.getToken(request);
 
         // then
-        assert token.isPresent();
-        assert "header-val".equals(token.get()) : "빈 쿠키 값이면 헤더로 폴백해야 한다";
+        assertThat(token).isPresent();
+        assertThat(token.get()).isEqualTo("header-val");
     }
 
     @Test
@@ -278,7 +279,7 @@ class AuthControllerTest {
         Optional<String> token = realProvider.getToken(request);
 
         // then
-        assert token.isEmpty() : "토큰이 없을 때 Optional.empty() 여야 한다";
+        assertThat(token).isEmpty();
     }
 
     @Test
@@ -296,8 +297,8 @@ class AuthControllerTest {
         Optional<String> token = realProvider.getToken(request);
 
         // then
-        assert token.isPresent();
-        assert "fallback-token".equals(token.get());
+        assertThat(token).isPresent();
+        assertThat(token.get()).isEqualTo("fallback-token");
     }
 
     // =========================================================================
