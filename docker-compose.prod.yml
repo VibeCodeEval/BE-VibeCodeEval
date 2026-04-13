@@ -14,16 +14,23 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # Database (postgres 서비스명을 호스트로 사용)
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: ai_vibe_coding_test
-      DB_SCHEMA: ai_vibe_coding_test
-      JPA_DDL_AUTO: update
-      # JWT
+      # Spring DataSource (application-secret.yml 없이 직접 주입)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ai_vibe_coding_test
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-validate}
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: ai_vibe_coding_test
+      # JWT (Spring relaxed binding: JWT_KEY → jwt.key)
+      JWT_KEY: ${JWT_KEY}
       JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION:-3600000}
       JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-86400000}
-      # Redis (redis 서비스명을 호스트로 사용)
+      # Master Admin (relaxed binding: MASTER_ADMIN_ADMIN_NUMBER → master.admin.admin-number)
+      MASTER_ADMIN_ADMIN_NUMBER: ${MASTER_ADMIN_NUMBER}
+      MASTER_ADMIN_EMAIL: ${MASTER_ADMIN_EMAIL}
+      MASTER_ADMIN_PASSWORD: ${MASTER_ADMIN_PASSWORD}
+      # Redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
       # CORS / Cookie
