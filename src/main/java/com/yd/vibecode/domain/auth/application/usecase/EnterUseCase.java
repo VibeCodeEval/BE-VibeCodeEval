@@ -77,7 +77,7 @@ public class EnterUseCase {
                     entryCode.getExamId(),
                     user.getId(),
                     specId,
-                    entryCode.getMaxUses() > 0 ? entryCode.getMaxUses() * 1000 : 20000, // 기본 토큰 한도
+                    entryCode.getTokenLimit(),
                     assignedProblemId
             );
         }

@@ -45,11 +45,15 @@ public class EntryCode extends BaseEntity {
     private Integer usedCount = 0;
 
     @Column(nullable = false)
+    private Integer tokenLimit = 20000;
+
+    @Column(nullable = false)
     private Boolean isActive = true;
 
     @Builder
     public EntryCode(String code, Long examId, Long problemSetId, Long createdBy, String label,
-                     LocalDateTime expiresAt, Integer maxUses, Integer usedCount, Boolean isActive) {
+                     LocalDateTime expiresAt, Integer maxUses, Integer usedCount, Boolean isActive,
+                     Integer tokenLimit) {
         this.code = code;
         this.examId = examId;
         this.problemSetId = problemSetId;
@@ -59,6 +63,7 @@ public class EntryCode extends BaseEntity {
         this.maxUses = maxUses != null ? maxUses : 0;
         this.usedCount = usedCount != null ? usedCount : 0;
         this.isActive = isActive != null ? isActive : true;
+        this.tokenLimit = tokenLimit != null ? tokenLimit : 20000;
     }
 
     public void incrementUsedCount() {
@@ -72,6 +77,12 @@ public class EntryCode extends BaseEntity {
     public void update(Boolean isActive) {
         if (isActive != null) {
             this.isActive = isActive;
+        }
+    }
+
+    public void updateTokenLimit(Integer tokenLimit) {
+        if (tokenLimit != null && tokenLimit > 0) {
+            this.tokenLimit = tokenLimit;
         }
     }
 

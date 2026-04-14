@@ -46,6 +46,14 @@ public class ExamParticipantService {
     }
 
     @Transactional
+    public void syncSpecIdForExam(Long examId, Long problemId, Long currentSpecId) {
+        examParticipantRepository.findByExamId(examId).stream()
+                .filter(p -> problemId.equals(p.getAssignedProblemId()))
+                .filter(p -> !currentSpecId.equals(p.getSpecId()))
+                .forEach(p -> p.updateSpecId(currentSpecId));
+    }
+
+    @Transactional
     public void endAllParticipants(Long examId) {
         examParticipantRepository.findByExamId(examId)
                 .forEach(participant -> participant.updateState("ENDED"));
