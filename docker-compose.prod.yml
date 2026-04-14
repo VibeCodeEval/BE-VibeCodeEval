@@ -34,6 +34,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       # CORS / Cookie
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://vibetest.codes,https://www.vibetest.codes}
       COOKIE_SECURE: "true"
       # AI Server — 호스트에서 실행 중인 AI 서버 접근 (Linux host-gateway)
       AI_SERVER_URL: ${AI_SERVER_URL:-http://host.docker.internal:8000}
