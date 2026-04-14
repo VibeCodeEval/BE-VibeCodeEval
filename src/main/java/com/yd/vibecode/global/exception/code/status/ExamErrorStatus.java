@@ -17,7 +17,8 @@ public enum ExamErrorStatus implements BaseCodeInterface {
     CANNOT_EXTEND_EXAM(HttpStatus.BAD_REQUEST, "EXAM003", "진행 중인 시험만 연장할 수 있습니다."),
     EXAM_ALREADY_STARTED(HttpStatus.BAD_REQUEST, "EXAM004", "이미 시작된 시험입니다."),
     EXAM_ALREADY_ENDED(HttpStatus.BAD_REQUEST, "EXAM005", "이미 종료된 시험입니다."),
-    EXAM_NOT_STARTED(HttpStatus.BAD_REQUEST, "EXAM006", "시험이 아직 시작되지 않았습니다.")
+    EXAM_NOT_STARTED(HttpStatus.BAD_REQUEST, "EXAM006", "시험이 아직 시작되지 않았습니다."),
+    PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "EXAM007", "시험 참가자를 찾을 수 없습니다.")
     ;
 
     private final HttpStatus httpStatus;

@@ -11,7 +11,8 @@ public record EntryCodeResponse(
     LocalDateTime expiresAt,
     Integer maxUses,
     Integer usedCount,
-    Boolean isActive
+    Boolean isActive,
+    Integer tokenLimit
 ) {
     public static EntryCodeResponse from(EntryCode entryCode) {
         return new EntryCodeResponse(
@@ -22,7 +23,8 @@ public record EntryCodeResponse(
             entryCode.getExpiresAt(),
             entryCode.getMaxUses(),
             entryCode.getUsedCount(),
-            entryCode.getIsActive()
+            entryCode.getIsActive(),
+            entryCode.getTokenLimit()
         );
     }
 }

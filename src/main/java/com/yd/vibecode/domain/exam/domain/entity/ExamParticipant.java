@@ -89,6 +89,12 @@ public class ExamParticipant extends BaseEntity {
         this.assignedProblemId = problemId;
     }
 
+    public void updateTokenLimit(Integer tokenLimit) {
+        if (tokenLimit != null && tokenLimit > 0) {
+            this.tokenLimit = tokenLimit;
+        }
+    }
+
     public boolean isTokenLimitExceeded() {
         return tokenUsed >= tokenLimit;
     }
