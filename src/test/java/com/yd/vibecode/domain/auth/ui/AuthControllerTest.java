@@ -22,6 +22,7 @@ import com.yd.vibecode.domain.auth.application.usecase.AdminLogoutUseCase;
 import com.yd.vibecode.domain.auth.application.usecase.AdminSignupUseCase;
 import com.yd.vibecode.domain.auth.application.usecase.EnterUseCase;
 import com.yd.vibecode.domain.auth.application.usecase.MeUseCase;
+import com.yd.vibecode.domain.auth.domain.service.RefreshTokenService;
 import com.yd.vibecode.global.interceptor.JwtBlacklistInterceptor;
 import com.yd.vibecode.global.security.ExcludeBlacklistPathProperties;
 import com.yd.vibecode.global.security.JwtProperties;
@@ -29,6 +30,7 @@ import com.yd.vibecode.global.security.TokenProvider;
 import com.yd.vibecode.global.util.CookieUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -78,6 +80,8 @@ class AuthControllerTest {
     private CookieUtils cookieUtils;
     @MockBean
     private JwtProperties jwtProperties;
+    @MockBean
+    private RefreshTokenService refreshTokenService;
     // WebMvcConfig 가 JwtBlacklistInterceptor, ExcludeBlacklistPathProperties 를 주입받으므로 필요
     @MockBean
     private JwtBlacklistInterceptor jwtBlacklistInterceptor;
@@ -88,6 +92,7 @@ class AuthControllerTest {
     void setUp() {
         // JwtProperties: accessToken 만료시간 설정
         given(jwtProperties.getAccessTokenExpirationPeriodDay()).willReturn(3_600_000L);
+        given(jwtProperties.getRefreshTokenExpirationPeriodDay()).willReturn(86_400_000L);
         // JwtBlacklistInterceptor: preHandle 기본값이 false → true로 설정해 컨트롤러에 요청이 도달하도록 함
         given(jwtBlacklistInterceptor.preHandle(
                 any(HttpServletRequest.class),
@@ -148,6 +153,8 @@ class AuthControllerTest {
         AdminLoginRequest request = new AdminLoginRequest("admin", "password");
         AdminLoginResponse response = new AdminLoginResponse("admin-token", "ADMIN", null);
         given(adminLoginUseCase.execute(any(AdminLoginRequest.class))).willReturn(response);
+        given(tokenProvider.getId("admin-token")).willReturn(Optional.of("1"));
+        given(tokenProvider.createRefreshToken("1")).willReturn("refresh-token");
 
         // when & then
         mockMvc.perform(post("/api/auth/admin/login")
@@ -161,6 +168,34 @@ class AuthControllerTest {
                 eq("admin-token"),
                 eq(3600)
         );
+        verify(refreshTokenService).saveRefreshToken(eq("1"), eq("refresh-token"), eq(Duration.ofMillis(86_400_000L)));
+        verify(cookieUtils).setRefreshTokenCookie(
+                any(HttpServletResponse.class),
+                eq("refresh-token"),
+                eq(86400)
+        );
+    }
+
+    @Test
+    @DisplayName("관리자 토큰 재발급 API — refresh token 검증 후 access/refresh 쿠키 재발급")
+    void admin_reissue_api_success() throws Exception {
+        // given
+        given(cookieUtils.getRefreshTokenFromRequest(any(HttpServletRequest.class))).willReturn("old-refresh");
+        given(tokenProvider.validateToken("old-refresh")).willReturn(true);
+        given(tokenProvider.getId("old-refresh")).willReturn(Optional.of("1"));
+        given(refreshTokenService.isExist("old-refresh", "1")).willReturn(true);
+        given(tokenProvider.createAccessToken("1", "ADMIN")).willReturn("new-access");
+        given(tokenProvider.createRefreshToken("1")).willReturn("new-refresh");
+        given(tokenProvider.getRemainingDuration("old-refresh")).willReturn(Optional.of(Duration.ofSeconds(120)));
+
+        // when & then
+        mockMvc.perform(post("/api/auth/admin/reissue"))
+                .andExpect(status().isOk());
+
+        verify(refreshTokenService).deleteRefreshToken("1");
+        verify(refreshTokenService).saveRefreshToken("1", "new-refresh", Duration.ofSeconds(120));
+        verify(cookieUtils).setAccessTokenCookie(any(HttpServletResponse.class), eq("new-access"), eq(3600));
+        verify(cookieUtils).setRefreshTokenCookie(any(HttpServletResponse.class), eq("new-refresh"), eq(120));
     }
 
     // =========================================================================
@@ -183,6 +218,7 @@ class AuthControllerTest {
 
         verify(adminLogoutUseCase).execute(token);
         verify(cookieUtils).clearAccessTokenCookie(any(HttpServletResponse.class));
+        verify(cookieUtils).clearRefreshTokenCookie(any(HttpServletResponse.class));
     }
 
     @Test

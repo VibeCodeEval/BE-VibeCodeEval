@@ -25,6 +25,9 @@ public record CreateEntryCodeRequest(
     LocalDateTime expiresAt,
     
     @Min(value = 0, message = "최대 사용 횟수는 0 이상이어야 합니다.")
-    Integer maxUses
+    Integer maxUses,
+
+    @Min(value = 1, message = "토큰 한도는 1 이상이어야 합니다.")
+    Integer tokenLimit
 ) {
 }

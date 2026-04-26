@@ -20,6 +20,7 @@ public class UpdateEntryCodeUseCase {
 
         // request.isActive() 값에 따라 활성/비활성 처리 (코드 재발급 없음)
         entryCode.update(request.isActive());
+        entryCode.updateTokenLimit(request.tokenLimit());
 
         return EntryCodeResponse.from(entryCode);
     }

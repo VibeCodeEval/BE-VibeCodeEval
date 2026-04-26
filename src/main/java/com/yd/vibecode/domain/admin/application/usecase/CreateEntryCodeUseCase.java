@@ -38,6 +38,7 @@ public class CreateEntryCodeUseCase {
             .label(request.label())
             .expiresAt(request.expiresAt())
             .maxUses(request.maxUses())
+            .tokenLimit(request.tokenLimit())
             .isActive(true)
             .build();
 

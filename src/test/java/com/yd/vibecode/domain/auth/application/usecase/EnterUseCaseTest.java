@@ -110,6 +110,7 @@ class EnterUseCaseTest {
                 .code("CODE123")
                 .examId(1L)
                 .maxUses(10)
+                .tokenLimit(10000)
                 .build();
 
         User newParticipant = User.builder()

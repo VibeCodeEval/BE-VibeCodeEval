@@ -72,7 +72,7 @@ class UpdateEntryCodeUseCaseTest {
         EntryCode entryCode = buildActiveEntryCode(code);
         given(entryCodeService.findByCode(code)).willReturn(entryCode);
 
-        UpdateEntryCodeRequest request = new UpdateEntryCodeRequest(false);
+        UpdateEntryCodeRequest request = new UpdateEntryCodeRequest(false, null);
 
         // when
         EntryCodeResponse response = updateEntryCodeUseCase.execute(code, request);
@@ -95,7 +95,7 @@ class UpdateEntryCodeUseCaseTest {
         EntryCode entryCode = buildInactiveEntryCode(code);
         given(entryCodeService.findByCode(code)).willReturn(entryCode);
 
-        UpdateEntryCodeRequest request = new UpdateEntryCodeRequest(true);
+        UpdateEntryCodeRequest request = new UpdateEntryCodeRequest(true, null);
 
         // when
         EntryCodeResponse response = updateEntryCodeUseCase.execute(code, request);
@@ -118,7 +118,7 @@ class UpdateEntryCodeUseCaseTest {
         EntryCode entryCode = buildActiveEntryCode(code);
         given(entryCodeService.findByCode(code)).willReturn(entryCode);
 
-        UpdateEntryCodeRequest request = new UpdateEntryCodeRequest(true);
+        UpdateEntryCodeRequest request = new UpdateEntryCodeRequest(true, null);
 
         // when
         EntryCodeResponse response = updateEntryCodeUseCase.execute(code, request);
@@ -140,7 +140,7 @@ class UpdateEntryCodeUseCaseTest {
         EntryCode entryCode = buildActiveEntryCode(code);
         given(entryCodeService.findByCode(code)).willReturn(entryCode);
 
-        UpdateEntryCodeRequest request = new UpdateEntryCodeRequest(null);
+        UpdateEntryCodeRequest request = new UpdateEntryCodeRequest(null, null);
 
         // when
         EntryCodeResponse response = updateEntryCodeUseCase.execute(code, request);
@@ -162,7 +162,7 @@ class UpdateEntryCodeUseCaseTest {
         given(entryCodeService.findByCode(unknownCode))
                 .willThrow(new RestApiException(AuthErrorStatus.INVALID_CODE));
 
-        UpdateEntryCodeRequest request = new UpdateEntryCodeRequest(false);
+        UpdateEntryCodeRequest request = new UpdateEntryCodeRequest(false, null);
 
         // when & then
         RestApiException ex = assertThrows(RestApiException.class,
@@ -194,7 +194,7 @@ class UpdateEntryCodeUseCaseTest {
                 .build();
         given(entryCodeService.findByCode(code)).willReturn(entryCode);
 
-        UpdateEntryCodeRequest request = new UpdateEntryCodeRequest(false);
+        UpdateEntryCodeRequest request = new UpdateEntryCodeRequest(false, null);
 
         // when
         EntryCodeResponse response = updateEntryCodeUseCase.execute(code, request);

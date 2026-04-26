@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -40,6 +41,7 @@ public class TokenProvider {
     private static final String BEARER = "Bearer ";
     private static final String ID_CLAIM = "id";
     private static final String ROLE_CLAIM = "role";
+    private static final String JTI_CLAIM = "jti";
 
 
     public String createAccessToken(String id, String role) {
@@ -77,6 +79,7 @@ public class TokenProvider {
                 ))
                 .setSubject(REFRESH_TOKEN_SUBJECT)
                 .claim(ID_CLAIM, id)
+                .claim(JTI_CLAIM, UUID.randomUUID().toString())
                 .signWith(Keys.hmacShaKeyFor(jwtProperties.getKey().getBytes(StandardCharsets.UTF_8)), SignatureAlgorithm.HS256)
                 .compact();
     }
