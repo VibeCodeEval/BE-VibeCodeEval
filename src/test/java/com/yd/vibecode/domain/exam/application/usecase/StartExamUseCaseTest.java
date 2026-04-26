@@ -12,12 +12,16 @@ import static org.mockito.Mockito.verify;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+import com.yd.vibecode.domain.auth.domain.repository.EntryCodeRepository;
 import com.yd.vibecode.domain.exam.application.dto.event.ExamStateEvent;
 import com.yd.vibecode.domain.exam.domain.entity.Exam;
 import com.yd.vibecode.domain.exam.domain.entity.ExamState;
+import com.yd.vibecode.domain.exam.domain.repository.ExamParticipantRepository;
 import com.yd.vibecode.domain.exam.domain.service.ExamService;
+import com.yd.vibecode.domain.problem.domain.repository.ProblemRepository;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 
 @ExtendWith(MockitoExtension.class)
 class StartExamUseCaseTest {
@@ -30,6 +34,12 @@ class StartExamUseCaseTest {
 
     @Mock
     private SimpMessagingTemplate messagingTemplate;
+    @Mock
+    private ExamParticipantRepository examParticipantRepository;
+    @Mock
+    private ProblemRepository problemRepository;
+    @Mock
+    private EntryCodeRepository entryCodeRepository;
 
     @Test
     @DisplayName("시험 시작 UseCase 성공: 서비스 호출 및 WS 브로드캐스트 확인")
@@ -46,6 +56,7 @@ class StartExamUseCaseTest {
                 .build();
 
         given(examService.startExam(examId)).willReturn(exam);
+        given(examParticipantRepository.findByExamId(examId)).willReturn(Collections.emptyList());
 
         // when
         startExamUseCase.execute(examId);
