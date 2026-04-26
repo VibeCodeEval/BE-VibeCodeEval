@@ -3,7 +3,7 @@ package com.yd.vibecode.domain.exam.application.dto.response;
 import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
 
 public record ParticipantSessionResponse(
-    Long participantId,
+    Long examParticipantId,
     Long examId,
     Integer tokenLimit,
     Integer tokenUsed,

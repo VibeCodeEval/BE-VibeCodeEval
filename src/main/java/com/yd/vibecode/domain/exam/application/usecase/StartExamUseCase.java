@@ -2,6 +2,7 @@ package com.yd.vibecode.domain.exam.application.usecase;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -67,18 +68,20 @@ public class StartExamUseCase {
             return;
         }
 
-        // 활성 입장 코드에서 tokenLimit 조회
-        List<EntryCode> activeCodes = entryCodeRepository.findByExamIdAndIsActive(examId, true);
-        Integer latestTokenLimit = activeCodes.isEmpty() ? null : activeCodes.get(0).getTokenLimit();
+        // 활성 입장 코드에서 tokenLimit 조회 (가장 최근 생성된 코드 기준)
+        Optional<EntryCode> latestCode = entryCodeRepository.findTopByExamIdAndIsActiveOrderByCreatedAtDesc(examId, true);
+        Integer latestTokenLimit = latestCode.map(EntryCode::getTokenLimit).orElse(null);
 
         // 참가자가 배정받은 문제 ID를 수집해 IN 쿼리 1회로 일괄 조회 (N+1 방지)
         Set<Long> problemIds = participants.stream()
                 .map(ExamParticipant::getAssignedProblemId)
                 .filter(id -> id != null)
                 .collect(Collectors.toSet());
-        Map<Long, Long> problemIdToSpecId = problemRepository.findAllById(problemIds).stream()
-                .filter(p -> p.getCurrentSpecId() != null)
-                .collect(Collectors.toMap(Problem::getId, Problem::getCurrentSpecId));
+        Map<Long, Long> problemIdToSpecId = problemIds.isEmpty()
+                ? Map.of()
+                : problemRepository.findAllById(problemIds).stream()
+                        .filter(p -> p.getCurrentSpecId() != null)
+                        .collect(Collectors.toMap(Problem::getId, Problem::getCurrentSpecId));
 
         int syncedSpecId = 0;
         int syncedTokenLimit = 0;

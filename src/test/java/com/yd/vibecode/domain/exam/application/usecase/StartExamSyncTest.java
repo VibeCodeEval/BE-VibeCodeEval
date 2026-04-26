@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.yd.vibecode.domain.auth.domain.entity.EntryCode;
 import com.yd.vibecode.domain.auth.domain.repository.EntryCodeRepository;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -97,8 +99,8 @@ class StartExamSyncTest {
                 .build();
 
         given(examParticipantRepository.findByExamId(examId)).willReturn(List.of(participant));
-        given(entryCodeRepository.findByExamIdAndIsActive(examId, true)).willReturn(Collections.emptyList());
-        given(problemRepository.findById(problemId)).willReturn(Optional.of(problem));
+        given(entryCodeRepository.findTopByExamIdAndIsActiveOrderByCreatedAtDesc(examId, true)).willReturn(Optional.empty());
+        given(problemRepository.findAllById(Set.of(problemId))).willReturn(List.of(problem));
         given(examService.startExam(examId)).willReturn(exam);
 
         // when
@@ -145,8 +147,8 @@ class StartExamSyncTest {
                 .build();
 
         given(examParticipantRepository.findByExamId(examId)).willReturn(List.of(participant));
-        given(entryCodeRepository.findByExamIdAndIsActive(examId, true)).willReturn(Collections.emptyList());
-        given(problemRepository.findById(problemId)).willReturn(Optional.of(problem));
+        given(entryCodeRepository.findTopByExamIdAndIsActiveOrderByCreatedAtDesc(examId, true)).willReturn(Optional.empty());
+        given(problemRepository.findAllById(Set.of(problemId))).willReturn(List.of(problem));
         given(examService.startExam(examId)).willReturn(exam);
 
         // when
@@ -182,14 +184,14 @@ class StartExamSyncTest {
                 .build();
 
         given(examParticipantRepository.findByExamId(examId)).willReturn(List.of(participant));
-        given(entryCodeRepository.findByExamIdAndIsActive(examId, true)).willReturn(Collections.emptyList());
+        given(entryCodeRepository.findTopByExamIdAndIsActiveOrderByCreatedAtDesc(examId, true)).willReturn(Optional.empty());
         given(examService.startExam(examId)).willReturn(exam);
 
         // when
         startExamUseCase.execute(examId);
 
         // then — problemRepository 조회가 전혀 발생하지 않아야 함
-        verify(problemRepository, never()).findById(any());
+        verifyNoInteractions(problemRepository);
         assertThat(participant.getSpecId()).isNull();
     }
 
@@ -230,7 +232,7 @@ class StartExamSyncTest {
                 .build();
 
         given(examParticipantRepository.findByExamId(examId)).willReturn(List.of(participant));
-        given(entryCodeRepository.findByExamIdAndIsActive(examId, true)).willReturn(List.of(activeCode));
+        given(entryCodeRepository.findTopByExamIdAndIsActiveOrderByCreatedAtDesc(examId, true)).willReturn(Optional.of(activeCode));
         given(examService.startExam(examId)).willReturn(exam);
 
         // when
@@ -264,7 +266,7 @@ class StartExamSyncTest {
                 .build();
 
         given(examParticipantRepository.findByExamId(examId)).willReturn(List.of(participant));
-        given(entryCodeRepository.findByExamIdAndIsActive(examId, true)).willReturn(Collections.emptyList());
+        given(entryCodeRepository.findTopByExamIdAndIsActiveOrderByCreatedAtDesc(examId, true)).willReturn(Optional.empty());
         given(examService.startExam(examId)).willReturn(exam);
 
         // when
@@ -306,7 +308,7 @@ class StartExamSyncTest {
                 .build();
 
         given(examParticipantRepository.findByExamId(examId)).willReturn(List.of(participant));
-        given(entryCodeRepository.findByExamIdAndIsActive(examId, true)).willReturn(List.of(activeCode));
+        given(entryCodeRepository.findTopByExamIdAndIsActiveOrderByCreatedAtDesc(examId, true)).willReturn(Optional.of(activeCode));
         given(examService.startExam(examId)).willReturn(exam);
 
         // when
@@ -364,8 +366,8 @@ class StartExamSyncTest {
                 .build();
 
         given(examParticipantRepository.findByExamId(examId)).willReturn(List.of(participant));
-        given(entryCodeRepository.findByExamIdAndIsActive(examId, true)).willReturn(List.of(activeCode));
-        given(problemRepository.findById(problemId)).willReturn(Optional.of(problem));
+        given(entryCodeRepository.findTopByExamIdAndIsActiveOrderByCreatedAtDesc(examId, true)).willReturn(Optional.of(activeCode));
+        given(problemRepository.findAllById(Set.of(problemId))).willReturn(List.of(problem));
         given(examService.startExam(examId)).willReturn(exam);
 
         // when
@@ -441,8 +443,8 @@ class StartExamSyncTest {
                 .version(1).createdBy(1L).build();
 
         given(examParticipantRepository.findByExamId(examId)).willReturn(List.of(participant1, participant2));
-        given(entryCodeRepository.findByExamIdAndIsActive(examId, true)).willReturn(Collections.emptyList());
-        given(problemRepository.findById(problemId)).willReturn(Optional.of(problem));
+        given(entryCodeRepository.findTopByExamIdAndIsActiveOrderByCreatedAtDesc(examId, true)).willReturn(Optional.empty());
+        given(problemRepository.findAllById(Set.of(problemId))).willReturn(List.of(problem));
         given(examService.startExam(examId)).willReturn(exam);
 
         // when

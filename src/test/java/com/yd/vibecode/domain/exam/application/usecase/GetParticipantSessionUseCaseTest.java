@@ -65,7 +65,7 @@ class GetParticipantSessionUseCaseTest {
         ParticipantSessionResponse response = getParticipantSessionUseCase.execute(examId, participantId);
 
         // then
-        assertThat(response.participantId()).isEqualTo(999L);
+        assertThat(response.examParticipantId()).isEqualTo(999L);
         assertThat(response.examId()).isEqualTo(examId);
         assertThat(response.specId()).isEqualTo(specId);
         assertThat(response.assignedProblemId()).isEqualTo(assignedProblemId);
@@ -161,7 +161,7 @@ class GetParticipantSessionUseCaseTest {
     // -------------------------------------------------------------------------
 
     @Test
-    @DisplayName("참가자 세션 조회 실패 — 해당 시험에 참가자가 없으면 EXAM_NOT_FOUND 예외 발생")
+    @DisplayName("참가자 세션 조회 실패 — 해당 시험에 참가자가 없으면 PARTICIPANT_NOT_FOUND 예외 발생")
     void execute_throws_when_participant_not_found() {
         // given
         Long examId = 5L;
@@ -176,12 +176,12 @@ class GetParticipantSessionUseCaseTest {
                 .satisfies(ex -> {
                     RestApiException restEx = (RestApiException) ex;
                     assertThat(restEx.getErrorCode().getCode())
-                            .isEqualTo(ExamErrorStatus.EXAM_NOT_FOUND.getCode().getCode());
+                            .isEqualTo(ExamErrorStatus.PARTICIPANT_NOT_FOUND.getCode().getCode());
                 });
     }
 
     @Test
-    @DisplayName("참가자 세션 조회 실패 — 다른 시험 ID 로 조회하면 EXAM_NOT_FOUND 예외 발생")
+    @DisplayName("참가자 세션 조회 실패 — 다른 시험 ID 로 조회하면 PARTICIPANT_NOT_FOUND 예외 발생")
     void execute_throws_when_wrong_examId_is_provided() {
         // given — participantId 는 존재하지만 examId 가 다른 경우
         Long wrongExamId = 99L;
@@ -196,7 +196,7 @@ class GetParticipantSessionUseCaseTest {
                 .satisfies(ex -> {
                     RestApiException restEx = (RestApiException) ex;
                     assertThat(restEx.getErrorCode().getCode())
-                            .isEqualTo(ExamErrorStatus.EXAM_NOT_FOUND.getCode().getCode());
+                            .isEqualTo(ExamErrorStatus.PARTICIPANT_NOT_FOUND.getCode().getCode());
                 });
     }
 
@@ -222,7 +222,7 @@ class GetParticipantSessionUseCaseTest {
         ParticipantSessionResponse response = ParticipantSessionResponse.from(participant);
 
         // then
-        assertThat(response.participantId()).isEqualTo(50L);
+        assertThat(response.examParticipantId()).isEqualTo(50L);
         assertThat(response.examId()).isEqualTo(10L);
         assertThat(response.specId()).isEqualTo(30L);
         assertThat(response.assignedProblemId()).isEqualTo(40L);
