@@ -25,6 +25,8 @@ exclude-auth-path-patterns:
       method: POST
     - path-pattern: /api/auth/admin/login
       method: POST
+    - path-pattern: /api/auth/admin/reissue
+      method: POST
     - path-pattern: /swagger-ui.html
       method: GET
     - path-pattern: /swagger-ui/**

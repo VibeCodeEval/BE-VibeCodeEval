@@ -14,5 +14,7 @@ public interface EntryCodeRepository extends JpaRepository<EntryCode, String> {
     List<EntryCode> findByExamId(Long examId);
 
     List<EntryCode> findByExamIdAndIsActive(Long examId, Boolean isActive);
+
+    Optional<EntryCode> findTopByExamIdAndIsActiveOrderByCreatedAtDesc(Long examId, Boolean isActive);
 }
 

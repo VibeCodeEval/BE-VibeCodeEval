@@ -67,7 +67,7 @@ class AdminEntryCodeControllerTest {
         Long examId = 1L;
         Boolean isActive = true;
         EntryCodeResponse response = new EntryCodeResponse(
-            "CODE123", examId, 100L, "Test Label", LocalDateTime.now().plusDays(1), 10, 0, true
+            "CODE123", examId, 100L, "Test Label", LocalDateTime.now().plusDays(1), 10, 0, true, 20000
         );
 
         given(getEntryCodesUseCase.execute(eq(examId), eq(isActive)))

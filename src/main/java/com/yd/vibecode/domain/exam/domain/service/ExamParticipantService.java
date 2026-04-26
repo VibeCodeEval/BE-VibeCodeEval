@@ -1,6 +1,7 @@
 package com.yd.vibecode.domain.exam.domain.service;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +44,17 @@ public class ExamParticipantService {
                 .build();
 
         return examParticipantRepository.save(examParticipant);
+    }
+
+    @Transactional
+    public void syncSpecIdForExam(Long examId, Long problemId, Long currentSpecId) {
+        if (problemId == null || currentSpecId == null) {
+            return;
+        }
+        examParticipantRepository.findByExamId(examId).stream()
+                .filter(p -> Objects.equals(problemId, p.getAssignedProblemId()))
+                .filter(p -> !Objects.equals(currentSpecId, p.getSpecId()))
+                .forEach(p -> p.updateSpecId(currentSpecId));
     }
 
     @Transactional
