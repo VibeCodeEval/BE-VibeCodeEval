@@ -3,8 +3,6 @@ package com.yd.vibecode.global.security;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -49,12 +47,7 @@ public class TokenProvider {
         return Jwts.builder()
                 .setHeaderParam(Header.TYPE, Header.JWT_TYPE)
                 .setIssuedAt(now)
-                .setExpiration(Date.from(
-                        LocalDateTime.now()
-                                .plus(Duration.ofMillis(jwtProperties.getAccessTokenExpirationPeriodDay()))
-                                .atZone(ZoneId.of("Asia/Seoul"))
-                                .toInstant()
-                ))
+                .setExpiration(Date.from(Instant.now().plusMillis(jwtProperties.getAccessTokenExpirationPeriodDay())))
                 .setSubject(ACCESS_TOKEN_SUBJECT)
                 .claim(ID_CLAIM, id)
                 .claim(ROLE_CLAIM, role)
@@ -71,12 +64,7 @@ public class TokenProvider {
         return Jwts.builder()
                 .setHeaderParam(Header.TYPE, Header.JWT_TYPE)
                 .setIssuedAt(now)
-                .setExpiration(Date.from(
-                        LocalDateTime.now()
-                                .plus(Duration.ofMillis(jwtProperties.getRefreshTokenExpirationPeriodDay()))
-                                .atZone(ZoneId.of("Asia/Seoul"))
-                                .toInstant()
-                ))
+                .setExpiration(Date.from(Instant.now().plusMillis(jwtProperties.getRefreshTokenExpirationPeriodDay())))
                 .setSubject(REFRESH_TOKEN_SUBJECT)
                 .claim(ID_CLAIM, id)
                 .claim(JTI_CLAIM, UUID.randomUUID().toString())
