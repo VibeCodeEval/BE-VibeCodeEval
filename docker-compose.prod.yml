@@ -97,4 +97,5 @@ volumes:
 
 networks:
   vibecode-net:
+    name: vibecode-net
     driver: bridge
