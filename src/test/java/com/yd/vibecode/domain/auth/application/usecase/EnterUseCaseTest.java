@@ -18,10 +18,16 @@ import com.yd.vibecode.domain.exam.domain.entity.ExamState;
 import com.yd.vibecode.domain.exam.domain.repository.ExamParticipantRepository;
 import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
 import com.yd.vibecode.domain.exam.domain.service.ExamService;
+import com.yd.vibecode.domain.problem.domain.entity.Difficulty;
+import com.yd.vibecode.domain.problem.domain.entity.Problem;
+import com.yd.vibecode.domain.problem.domain.entity.ProblemStatus;
+import com.yd.vibecode.domain.problem.domain.service.ProblemService;
+import com.yd.vibecode.domain.problem.infrastructure.entity.ProblemSetItem;
 import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetItemRepository;
 import com.yd.vibecode.global.security.TokenProvider;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,6 +56,8 @@ class EnterUseCaseTest {
     private ExamService examService;
     @Mock
     private ProblemSetItemRepository problemSetItemRepository;
+    @Mock
+    private ProblemService problemService;
 
     @Test
     @DisplayName("입장 성공 - 기존 참가자")
@@ -59,6 +67,7 @@ class EnterUseCaseTest {
         EntryCode entryCode = EntryCode.builder()
                 .code("CODE123")
                 .examId(1L)
+                .problemSetId(50L)
                 .maxUses(0)
                 .build();
         
@@ -71,6 +80,8 @@ class EnterUseCaseTest {
         ExamParticipant examParticipant = ExamParticipant.builder()
                 .examId(1L)
                 .participantId(100L)
+                .specId(10L)
+                .assignedProblemId(5L)
                 .tokenLimit(20000)
                 .tokenUsed(0)
                 .build();
@@ -87,6 +98,7 @@ class EnterUseCaseTest {
         given(entryCodeService.findByCode("CODE123")).willReturn(entryCode);
         given(userService.findByPhone("010-1234-5678")).willReturn(participant);
         given(examParticipantService.findByExamIdAndParticipantId(1L, 100L)).willReturn(examParticipant);
+        given(problemSetItemRepository.findByProblemSetId(50L)).willReturn(Collections.emptyList());
         given(tokenProvider.createAccessToken(anyString(), anyString())).willReturn("accessToken");
         given(examService.findById(1L)).willReturn(exam);
 
@@ -109,6 +121,7 @@ class EnterUseCaseTest {
         EntryCode entryCode = EntryCode.builder()
                 .code("CODE123")
                 .examId(1L)
+                .problemSetId(51L)
                 .maxUses(10)
                 .tokenLimit(10000)
                 .build();
@@ -137,9 +150,19 @@ class EnterUseCaseTest {
         given(entryCodeService.findByCode("CODE123")).willReturn(entryCode);
         given(userService.findByPhone("010-9876-5432")).willReturn(null);
         given(userService.create("김철수", "010-9876-5432")).willReturn(newParticipant);
+        ProblemSetItem item = ProblemSetItem.builder().problemSetId(51L).problemId(7L).build();
+        Problem problem = Problem.builder()
+                .title("P")
+                .difficulty(Difficulty.EASY)
+                .status(ProblemStatus.PUBLISHED)
+                .currentSpecId(70L)
+                .build();
+        ReflectionTestUtils.setField(problem, "id", 7L);
+
         given(examParticipantService.findByExamIdAndParticipantId(1L, 101L)).willReturn(null);
-        given(problemSetItemRepository.findByProblemSetId(null)).willReturn(Collections.emptyList());
-        given(examParticipantService.create(eq(1L), eq(101L), eq(null), eq(10000), eq(null))).willReturn(newExamParticipant);
+        given(problemSetItemRepository.findByProblemSetId(51L)).willReturn(List.of(item));
+        given(problemService.findById(7L)).willReturn(problem);
+        given(examParticipantService.create(eq(1L), eq(101L), eq(70L), eq(10000), eq(7L))).willReturn(newExamParticipant);
         given(tokenProvider.createAccessToken(anyString(), anyString())).willReturn("accessToken");
         given(examService.findById(1L)).willReturn(exam);
 
@@ -151,6 +174,6 @@ class EnterUseCaseTest {
         assertThat(response.participant().name()).isEqualTo("김철수");
         assertThat(response.session().tokenLimit()).isEqualTo(10000);
         verify(userService).create("김철수", "010-9876-5432");
-        verify(examParticipantService).create(eq(1L), eq(101L), eq(null), eq(10000), eq(null));
+        verify(examParticipantService).create(eq(1L), eq(101L), eq(70L), eq(10000), eq(7L));
     }
 }

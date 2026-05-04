@@ -20,6 +20,8 @@ import com.yd.vibecode.domain.problem.domain.entity.Problem;
 import com.yd.vibecode.domain.problem.domain.service.ProblemService;
 import com.yd.vibecode.domain.problem.infrastructure.entity.ProblemSetItem;
 import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetItemRepository;
+import com.yd.vibecode.global.exception.RestApiException;
+import com.yd.vibecode.global.exception.code.status.ProblemErrorStatus;
 import com.yd.vibecode.global.security.TokenProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -58,28 +60,29 @@ public class EnterUseCase {
         ExamParticipant examParticipant = examParticipantService.findByExamIdAndParticipantId(
                 entryCode.getExamId(), user.getId());
 
+        Assignment assignment = resolveAssignment(entryCode.getProblemSetId());
+
         if (examParticipant == null) {
-            // ProblemSetItem에서 해당 문제 세트의 첫 번째 문제 조회
-            Long assignedProblemId = problemSetItemRepository.findByProblemSetId(entryCode.getProblemSetId())
-                    .stream()
-                    .findFirst()
-                    .map(ProblemSetItem::getProblemId)
-                    .orElse(null);
-
-            // 문제의 currentSpecId를 가져와서 specId로 설정
-            Long specId = null;
-            if (assignedProblemId != null) {
-                Problem problem = problemService.findById(assignedProblemId);
-                specId = problem.getCurrentSpecId();
+            if (assignment.problemId() == null || assignment.specId() == null) {
+                throw new RestApiException(ProblemErrorStatus.NO_ASSIGNED_PROBLEM);
             }
-
             examParticipant = examParticipantService.create(
                     entryCode.getExamId(),
                     user.getId(),
-                    specId,
+                    assignment.specId(),
                     entryCode.getTokenLimit(),
-                    assignedProblemId
+                    assignment.problemId()
             );
+        } else if (examParticipant.getSpecId() == null || examParticipant.getAssignedProblemId() == null) {
+            if (assignment.problemId() != null) {
+                examParticipant.updateAssignedProblemId(assignment.problemId());
+            }
+            if (assignment.specId() != null) {
+                examParticipant.updateSpecId(assignment.specId());
+            }
+            if (examParticipant.getSpecId() == null || examParticipant.getAssignedProblemId() == null) {
+                throw new RestApiException(ProblemErrorStatus.NO_ASSIGNED_PROBLEM);
+            }
         }
 
         // 4. JWT 생성
@@ -113,6 +116,24 @@ public class EnterUseCase {
                         examParticipant.getTokenUsed()
                 )
         );
+    }
+
+    private Assignment resolveAssignment(Long problemSetId) {
+        if (problemSetId == null) {
+            return new Assignment(null, null);
+        }
+        Long problemId = problemSetItemRepository.findByProblemSetId(problemSetId).stream()
+                .findFirst()
+                .map(ProblemSetItem::getProblemId)
+                .orElse(null);
+        if (problemId == null) {
+            return new Assignment(null, null);
+        }
+        Problem problem = problemService.findById(problemId);
+        return new Assignment(problemId, problem.getCurrentSpecId());
+    }
+
+    private record Assignment(Long problemId, Long specId) {
     }
 }
 
