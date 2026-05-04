@@ -47,6 +47,9 @@ public class PromptSessionService {
     public PromptSession getOrCreateSession(Long examId, Long participantId, Long specId) {
         PromptSession existing = findByExamIdAndParticipantId(examId, participantId);
         if (existing != null) {
+            if (existing.getSpecId() == null && specId != null) {
+                existing.updateSpecId(specId);
+            }
             return existing;
         }
         PromptSession session = create(examId, participantId, specId);
@@ -77,6 +80,9 @@ public class PromptSessionService {
         PromptSession existing = promptSessionRepository.findByExamIdAndParticipantId(examId, participantId)
                 .orElse(null);
         if (existing != null) {
+            if (existing.getSpecId() == null && specId != null) {
+                existing.updateSpecId(specId);
+            }
             return existing;
         }
         PromptSession session = PromptSession.builder()
@@ -96,5 +102,20 @@ public class PromptSessionService {
     public PromptSession findByIdWithNewTransaction(Long id) {
         return promptSessionRepository.findById(id)
                 .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+    }
+
+    /**
+     * 기존 세션에 spec_id가 비어 있고 인자로 유효한 specId가 오면 채움 (NULL 세션 보정).
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void ensureSessionSpecId(Long sessionId, Long specId) {
+        if (sessionId == null || specId == null) {
+            return;
+        }
+        PromptSession session = promptSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
+        if (session.getSpecId() == null) {
+            session.updateSpecId(specId);
+        }
     }
 }

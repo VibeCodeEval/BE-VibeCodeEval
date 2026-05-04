@@ -1,5 +1,6 @@
 package com.yd.vibecode.domain.exam.application.usecase;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,6 +20,8 @@ import com.yd.vibecode.domain.exam.domain.repository.ExamParticipantRepository;
 import com.yd.vibecode.domain.exam.domain.service.ExamService;
 import com.yd.vibecode.domain.problem.domain.entity.Problem;
 import com.yd.vibecode.domain.problem.domain.repository.ProblemRepository;
+import com.yd.vibecode.domain.problem.infrastructure.entity.ProblemSetItem;
+import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetItemRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +43,7 @@ public class StartExamUseCase {
     private final ExamParticipantRepository examParticipantRepository;
     private final ProblemRepository problemRepository;
     private final EntryCodeRepository entryCodeRepository;
+    private final ProblemSetItemRepository problemSetItemRepository;
 
     @Transactional
     public void execute(Long examId) {
@@ -72,6 +76,20 @@ public class StartExamUseCase {
         Optional<EntryCode> latestCode = entryCodeRepository.findTopByExamIdAndIsActiveOrderByCreatedAtDesc(examId, true);
         Integer latestTokenLimit = latestCode.map(EntryCode::getTokenLimit).orElse(null);
 
+        Long fallbackProblemId = latestCode
+                .map(EntryCode::getProblemSetId)
+                .filter(id -> id != null)
+                .flatMap(psid -> problemSetItemRepository.findByProblemSetId(psid).stream()
+                        .findFirst()
+                        .map(ProblemSetItem::getProblemId))
+                .orElse(null);
+        Long fallbackSpecId = null;
+        if (fallbackProblemId != null) {
+            fallbackSpecId = problemRepository.findById(fallbackProblemId)
+                    .map(Problem::getCurrentSpecId)
+                    .orElse(null);
+        }
+
         // 참가자가 배정받은 문제 ID를 수집해 IN 쿼리 1회로 일괄 조회 (N+1 방지)
         Set<Long> problemIds = participants.stream()
                 .map(ExamParticipant::getAssignedProblemId)
@@ -83,10 +101,29 @@ public class StartExamUseCase {
                         .filter(p -> p.getCurrentSpecId() != null)
                         .collect(Collectors.toMap(Problem::getId, Problem::getCurrentSpecId));
 
+        if (fallbackProblemId != null) {
+            Map<Long, Long> merged = new HashMap<>(problemIdToSpecId);
+            problemRepository.findById(fallbackProblemId).ifPresent(p -> {
+                if (p.getCurrentSpecId() != null) {
+                    merged.put(p.getId(), p.getCurrentSpecId());
+                }
+            });
+            problemIdToSpecId = merged;
+        }
+
         int syncedSpecId = 0;
         int syncedTokenLimit = 0;
+        int syncedAssignment = 0;
 
         for (ExamParticipant participant : participants) {
+            if (participant.getAssignedProblemId() == null && fallbackProblemId != null) {
+                participant.updateAssignedProblemId(fallbackProblemId);
+                if (fallbackSpecId != null) {
+                    participant.updateSpecId(fallbackSpecId);
+                }
+                syncedAssignment++;
+            }
+
             // specId 동기화
             Long assignedProblemId = participant.getAssignedProblemId();
             if (assignedProblemId != null) {
@@ -104,7 +141,7 @@ public class StartExamUseCase {
             }
         }
 
-        log.info("Participant sync completed: examId={}, totalParticipants={}, specIdSynced={}, tokenLimitSynced={}",
-                examId, participants.size(), syncedSpecId, syncedTokenLimit);
+        log.info("Participant sync completed: examId={}, totalParticipants={}, assignmentBackfilled={}, specIdSynced={}, tokenLimitSynced={}",
+                examId, participants.size(), syncedAssignment, syncedSpecId, syncedTokenLimit);
     }
 }

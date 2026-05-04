@@ -17,6 +17,7 @@ import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
 import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
 import com.yd.vibecode.global.exception.RestApiException;
 import com.yd.vibecode.global.exception.code.status.GlobalErrorStatus;
+import com.yd.vibecode.global.exception.code.status.ProblemErrorStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,6 +44,9 @@ public class SaveChatMessageUseCase {
         if (examParticipant == null) {
             throw new RestApiException(GlobalErrorStatus._NOT_FOUND);
         }
+        if (examParticipant.getSpecId() == null || examParticipant.getAssignedProblemId() == null) {
+            throw new RestApiException(ProblemErrorStatus.NO_ASSIGNED_PROBLEM);
+        }
 
         // 2. 세션 가져오기 또는 생성 (별도 트랜잭션으로 즉시 커밋)
         // AI 서버에서 세션을 조회할 수 있도록 별도 트랜잭션으로 처리하여 즉시 커밋
@@ -55,6 +59,8 @@ public class SaveChatMessageUseCase {
                 !session.getParticipantId().equals(request.participantId())) {
                 throw new RestApiException(GlobalErrorStatus._NOT_FOUND);
             }
+            promptSessionService.ensureSessionSpecId(session.getId(), examParticipant.getSpecId());
+            session = promptSessionService.findByIdWithNewTransaction(request.sessionId());
         } else {
             // sessionId가 없으면 examId와 participantId로 세션 조회/생성 (별도 트랜잭션으로 즉시 커밋)
             session = promptSessionService.getOrCreateSessionWithNewTransaction(

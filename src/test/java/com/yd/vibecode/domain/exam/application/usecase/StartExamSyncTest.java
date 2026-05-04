@@ -20,17 +20,20 @@ import com.yd.vibecode.domain.problem.domain.entity.Difficulty;
 import com.yd.vibecode.domain.problem.domain.entity.Problem;
 import com.yd.vibecode.domain.problem.domain.entity.ProblemStatus;
 import com.yd.vibecode.domain.problem.domain.repository.ProblemRepository;
+import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetItemRepository;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.lenient;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -58,6 +61,13 @@ class StartExamSyncTest {
     private ProblemRepository problemRepository;
     @Mock
     private EntryCodeRepository entryCodeRepository;
+    @Mock
+    private ProblemSetItemRepository problemSetItemRepository;
+
+    @BeforeEach
+    void stubProblemSetItems() {
+        lenient().when(problemSetItemRepository.findByProblemSetId(any())).thenReturn(Collections.emptyList());
+    }
 
     // -------------------------------------------------------------------------
     // 1. specId 동기화 — 참가자의 specId 가 문제의 currentSpecId 로 갱신되는지 확인

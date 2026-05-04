@@ -79,6 +79,7 @@ class EnterUseCaseTokenLimitTest {
         EntryCode entryCode = EntryCode.builder()
                 .code("CODE-CUSTOM")
                 .examId(1L)
+                .problemSetId(60L)
                 .tokenLimit(customTokenLimit)
                 .maxUses(0)
                 .build();
@@ -108,10 +109,19 @@ class EnterUseCaseTokenLimitTest {
         given(entryCodeService.findByCode("CODE-CUSTOM")).willReturn(entryCode);
         given(userService.findByPhone("010-0000-1111")).willReturn(null);
         given(userService.create("신규사용자", "010-0000-1111")).willReturn(newUser);
+        ProblemSetItem item = ProblemSetItem.builder().problemSetId(60L).problemId(8L).build();
+        Problem problem = Problem.builder()
+                .title("P")
+                .difficulty(Difficulty.MEDIUM)
+                .status(ProblemStatus.PUBLISHED)
+                .currentSpecId(80L)
+                .build();
+        ReflectionTestUtils.setField(problem, "id", 8L);
+
         given(examParticipantService.findByExamIdAndParticipantId(1L, 200L)).willReturn(null);
-        given(problemSetItemRepository.findByProblemSetId(null)).willReturn(Collections.emptyList());
-        // create() 가 customTokenLimit 으로 호출돼야 함
-        given(examParticipantService.create(eq(1L), eq(200L), eq(null), eq(customTokenLimit), eq(null)))
+        given(problemSetItemRepository.findByProblemSetId(60L)).willReturn(List.of(item));
+        given(problemService.findById(8L)).willReturn(problem);
+        given(examParticipantService.create(eq(1L), eq(200L), eq(80L), eq(customTokenLimit), eq(8L)))
                 .willReturn(created);
         given(tokenProvider.createAccessToken(anyString(), anyString())).willReturn("token");
         given(examService.findById(1L)).willReturn(exam);
@@ -123,7 +133,7 @@ class EnterUseCaseTokenLimitTest {
         assertThat(response.session().tokenLimit()).isEqualTo(customTokenLimit);
 
         // ExamParticipantService.create() 에 entryCode.getTokenLimit() 값이 전달됐는지 명시적으로 검증
-        verify(examParticipantService).create(eq(1L), eq(200L), eq(null), eq(customTokenLimit), eq(null));
+        verify(examParticipantService).create(eq(1L), eq(200L), eq(80L), eq(customTokenLimit), eq(8L));
     }
 
     @Test
@@ -138,6 +148,7 @@ class EnterUseCaseTokenLimitTest {
         EntryCode entryCode = EntryCode.builder()
                 .code("CODE-NEW")
                 .examId(2L)
+                .problemSetId(61L)
                 .tokenLimit(newTokenLimit)
                 .maxUses(5)
                 .build();
@@ -167,9 +178,19 @@ class EnterUseCaseTokenLimitTest {
         given(entryCodeService.findByCode("CODE-NEW")).willReturn(entryCode);
         given(userService.findByPhone("010-1111-2222")).willReturn(null);
         given(userService.create("홍길동", "010-1111-2222")).willReturn(newUser);
+        ProblemSetItem item = ProblemSetItem.builder().problemSetId(61L).problemId(9L).build();
+        Problem problem = Problem.builder()
+                .title("P2")
+                .difficulty(Difficulty.MEDIUM)
+                .status(ProblemStatus.PUBLISHED)
+                .currentSpecId(90L)
+                .build();
+        ReflectionTestUtils.setField(problem, "id", 9L);
+
         given(examParticipantService.findByExamIdAndParticipantId(2L, 201L)).willReturn(null);
-        given(problemSetItemRepository.findByProblemSetId(null)).willReturn(Collections.emptyList());
-        given(examParticipantService.create(eq(2L), eq(201L), eq(null), eq(newTokenLimit), eq(null)))
+        given(problemSetItemRepository.findByProblemSetId(61L)).willReturn(List.of(item));
+        given(problemService.findById(9L)).willReturn(problem);
+        given(examParticipantService.create(eq(2L), eq(201L), eq(90L), eq(newTokenLimit), eq(9L)))
                 .willReturn(created);
         given(tokenProvider.createAccessToken(anyString(), anyString())).willReturn("token2");
         given(examService.findById(2L)).willReturn(exam);
@@ -335,6 +356,7 @@ class EnterUseCaseTokenLimitTest {
         EntryCode entryCode = EntryCode.builder()
                 .code("CODE-EXIST")
                 .examId(7L)
+                .problemSetId(62L)
                 .tokenLimit(entryCodeTokenLimit)
                 .maxUses(0)
                 .build();
@@ -348,6 +370,8 @@ class EnterUseCaseTokenLimitTest {
         ExamParticipant existingParticipant = ExamParticipant.builder()
                 .examId(7L)
                 .participantId(203L)
+                .specId(1L)
+                .assignedProblemId(2L)
                 .tokenLimit(existingTokenLimit)
                 .tokenUsed(1000)
                 .build();
@@ -364,6 +388,7 @@ class EnterUseCaseTokenLimitTest {
         given(entryCodeService.findByCode("CODE-EXIST")).willReturn(entryCode);
         given(userService.findByPhone("010-5555-6666")).willReturn(existingUser);
         given(examParticipantService.findByExamIdAndParticipantId(7L, 203L)).willReturn(existingParticipant);
+        given(problemSetItemRepository.findByProblemSetId(62L)).willReturn(Collections.emptyList());
         given(tokenProvider.createAccessToken(anyString(), anyString())).willReturn("token-exist");
         given(examService.findById(7L)).willReturn(exam);
 
