@@ -35,7 +35,6 @@ public class ProblemInitializer implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         initializeProblem("problems/problem1.json");
         initializeProblem("problems/problem2.json");
-        initializeProblem("problems/problem3.json");
     }
 
     private void initializeProblem(String resourcePath) {
