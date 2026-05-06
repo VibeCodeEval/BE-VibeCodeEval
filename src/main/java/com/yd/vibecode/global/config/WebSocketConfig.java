@@ -8,6 +8,7 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 import com.yd.vibecode.global.config.properties.CorsProperties;
+import com.yd.vibecode.global.interceptor.CookieHandshakeInterceptor;
 import com.yd.vibecode.global.security.StompPrincipalInterceptor;
 
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final CorsProperties corsProperties;
     private final StompPrincipalInterceptor stompPrincipalInterceptor;
+    private final CookieHandshakeInterceptor cookieHandshakeInterceptor;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
@@ -45,6 +47,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         String[] allowedOrigins = corsProperties.getAllowedOrigins().split(",");
         registry.addEndpoint("/ws")
+                .addInterceptors(cookieHandshakeInterceptor)
                 .setAllowedOriginPatterns(allowedOrigins)
                 .withSockJS();
     }
