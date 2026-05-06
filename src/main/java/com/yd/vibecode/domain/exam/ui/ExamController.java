@@ -5,8 +5,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.yd.vibecode.domain.exam.application.dto.response.ActiveSessionResponse;
 import com.yd.vibecode.domain.exam.application.dto.response.ExamStateResponse;
 import com.yd.vibecode.domain.exam.application.dto.response.ParticipantSessionResponse;
+import com.yd.vibecode.domain.exam.application.usecase.GetActiveSessionUseCase;
 import com.yd.vibecode.domain.exam.application.usecase.GetExamStateUseCase;
 import com.yd.vibecode.domain.exam.application.usecase.GetParticipantSessionUseCase;
 import com.yd.vibecode.global.annotation.CurrentUser;
@@ -27,6 +29,7 @@ public class ExamController implements ExamApi {
 
     private final GetExamStateUseCase getExamStateUseCase;
     private final GetParticipantSessionUseCase getParticipantSessionUseCase;
+    private final GetActiveSessionUseCase getActiveSessionUseCase;
 
     @GetMapping("/{examId}/state")
     @Override
@@ -40,6 +43,12 @@ public class ExamController implements ExamApi {
             @PathVariable Long examId,
             @CurrentUser String userId) {
         ParticipantSessionResponse response = getParticipantSessionUseCase.execute(examId, Long.parseLong(userId));
+        return BaseResponse.onSuccess(response);
+    }
+
+    @GetMapping("/active-session")
+    public BaseResponse<ActiveSessionResponse> getActiveSession(@CurrentUser String userId) {
+        ActiveSessionResponse response = getActiveSessionUseCase.execute(Long.parseLong(userId));
         return BaseResponse.onSuccess(response);
     }
 
