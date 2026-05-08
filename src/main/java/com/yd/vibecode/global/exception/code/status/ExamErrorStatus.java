@@ -18,7 +18,8 @@ public enum ExamErrorStatus implements BaseCodeInterface {
     EXAM_ALREADY_STARTED(HttpStatus.BAD_REQUEST, "EXAM004", "이미 시작된 시험입니다."),
     EXAM_ALREADY_ENDED(HttpStatus.BAD_REQUEST, "EXAM005", "이미 종료된 시험입니다."),
     EXAM_NOT_STARTED(HttpStatus.BAD_REQUEST, "EXAM006", "시험이 아직 시작되지 않았습니다."),
-    PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "EXAM007", "시험 참가자를 찾을 수 없습니다.")
+    PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "EXAM007", "시험 참가자를 찾을 수 없습니다."),
+    NO_ACTIVE_SESSION(HttpStatus.NOT_FOUND, "EXAM008", "현재 활성화된 시험 세션이 없습니다.")
     ;
 
     private final HttpStatus httpStatus;

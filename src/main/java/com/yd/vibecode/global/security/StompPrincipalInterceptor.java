@@ -1,6 +1,7 @@
 package com.yd.vibecode.global.security;
 
 import java.security.Principal;
+import java.util.Map;
 
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -9,6 +10,8 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
+
+import com.yd.vibecode.global.util.CookieUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,9 +39,8 @@ public class StompPrincipalInterceptor implements ChannelInterceptor {
                 MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
-            String authHeader = accessor.getFirstNativeHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
+            String token = extractToken(accessor);
+            if (token != null) {
                 if (tokenProvider.validateToken(token)) {
                     tokenProvider.getId(token).ifPresent(userId -> {
                         Principal principal = () -> userId;
@@ -47,7 +49,6 @@ public class StompPrincipalInterceptor implements ChannelInterceptor {
                     });
                 } else {
                     log.warn("[STOMP] 유효하지 않은 JWT 토큰으로 CONNECT 시도 - 연결 거부");
-                    // Principal 미설정 시 convertAndSendToUser가 무음 실패하므로 명시적 거부
                     throw new org.springframework.messaging.MessageDeliveryException(
                             message, "Invalid or expired JWT token");
                 }
@@ -55,5 +56,22 @@ public class StompPrincipalInterceptor implements ChannelInterceptor {
         }
 
         return message;
+    }
+
+    private String extractToken(StompHeaderAccessor accessor) {
+        // 1) 쿠키 기반 (CookieHandshakeInterceptor가 핸드셰이크 시 세션 attribute에 저장)
+        Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
+        if (sessionAttributes != null) {
+            Object tokenObj = sessionAttributes.get(CookieUtils.ACCESS_TOKEN_COOKIE_NAME);
+            if (tokenObj instanceof String token && !token.isBlank()) {
+                return token;
+            }
+        }
+        // 2) Authorization: Bearer 헤더 폴백
+        String authHeader = accessor.getFirstNativeHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        return null;
     }
 }
