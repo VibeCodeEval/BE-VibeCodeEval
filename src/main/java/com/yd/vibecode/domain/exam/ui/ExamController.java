@@ -13,6 +13,8 @@ import com.yd.vibecode.domain.exam.application.usecase.GetExamStateUseCase;
 import com.yd.vibecode.domain.exam.application.usecase.GetParticipantSessionUseCase;
 import com.yd.vibecode.global.annotation.CurrentUser;
 import com.yd.vibecode.global.common.BaseResponse;
+import com.yd.vibecode.global.exception.RestApiException;
+import com.yd.vibecode.global.exception.code.status.AuthErrorStatus;
 import com.yd.vibecode.global.swagger.ExamApi;
 
 import lombok.RequiredArgsConstructor;
@@ -42,14 +44,22 @@ public class ExamController implements ExamApi {
     public BaseResponse<ParticipantSessionResponse> getMySession(
             @PathVariable Long examId,
             @CurrentUser String userId) {
-        ParticipantSessionResponse response = getParticipantSessionUseCase.execute(examId, Long.parseLong(userId));
+        ParticipantSessionResponse response = getParticipantSessionUseCase.execute(examId, parseUserId(userId));
         return BaseResponse.onSuccess(response);
     }
 
     @GetMapping("/active-session")
     public BaseResponse<ActiveSessionResponse> getActiveSession(@CurrentUser String userId) {
-        ActiveSessionResponse response = getActiveSessionUseCase.execute(Long.parseLong(userId));
+        ActiveSessionResponse response = getActiveSessionUseCase.execute(parseUserId(userId));
         return BaseResponse.onSuccess(response);
+    }
+
+    private Long parseUserId(String userId) {
+        try {
+            return Long.parseLong(userId);
+        } catch (NumberFormatException e) {
+            throw new RestApiException(AuthErrorStatus.INVALID_ACCESS_TOKEN);
+        }
     }
 
 }

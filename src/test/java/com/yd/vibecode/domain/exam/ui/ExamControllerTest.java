@@ -2,7 +2,6 @@ package com.yd.vibecode.domain.exam.ui;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willReturn;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -22,8 +21,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.yd.vibecode.domain.exam.application.dto.response.ActiveSessionResponse;
-import com.yd.vibecode.domain.exam.application.dto.response.ExamStateResponse;
-import com.yd.vibecode.domain.exam.application.dto.response.ParticipantSessionResponse;
 import com.yd.vibecode.domain.exam.application.usecase.GetActiveSessionUseCase;
 import com.yd.vibecode.domain.exam.application.usecase.GetExamStateUseCase;
 import com.yd.vibecode.domain.exam.application.usecase.GetParticipantSessionUseCase;
