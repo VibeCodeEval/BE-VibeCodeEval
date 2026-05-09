@@ -1,5 +1,6 @@
 package com.yd.vibecode.global.resolver;
 
+import static com.yd.vibecode.global.exception.code.status.AuthErrorStatus.INVALID_ACCESS_TOKEN;
 import static com.yd.vibecode.global.exception.code.status.GlobalErrorStatus._UNAUTHORIZED;
 
 import com.yd.vibecode.global.annotation.CurrentUser;
@@ -20,13 +21,17 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        boolean supported = parameter.getParameterAnnotation(CurrentUser.class) != null
-                && String.class.isAssignableFrom(parameter.getParameterType());
-        return supported;
+        if (parameter.getParameterAnnotation(CurrentUser.class) == null) {
+            return false;
+        }
+        Class<?> type = parameter.getParameterType();
+        return String.class.isAssignableFrom(type)
+                || Long.class.equals(type)
+                || long.class.equals(type);
     }
 
     @Override
-    public String resolveArgument(MethodParameter parameter,
+    public Object resolveArgument(MethodParameter parameter,
                                   ModelAndViewContainer mavContainer,
                                   NativeWebRequest webRequest,
                                   WebDataBinderFactory binderFactory) throws Exception {
@@ -46,6 +51,15 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
                 .orElseThrow(() -> {
                     return new RestApiException(_UNAUTHORIZED);
                 });
+
+        Class<?> paramType = parameter.getParameterType();
+        if (Long.class.equals(paramType) || long.class.equals(paramType)) {
+            try {
+                return Long.parseLong(userId);
+            } catch (NumberFormatException e) {
+                throw new RestApiException(INVALID_ACCESS_TOKEN);
+            }
+        }
 
         return userId;
     }
