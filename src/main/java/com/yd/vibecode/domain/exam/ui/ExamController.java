@@ -54,6 +54,14 @@ public class ExamController implements ExamApi {
         return BaseResponse.onSuccess(response);
     }
 
+    @GetMapping("/{examId}/active-session")
+    public BaseResponse<ActiveSessionResponse> getActiveSessionByExam(
+            @PathVariable Long examId,
+            @CurrentUser String userId) {
+        ActiveSessionResponse response = getActiveSessionUseCase.execute(examId, parseUserId(userId));
+        return BaseResponse.onSuccess(response);
+    }
+
     private Long parseUserId(String userId) {
         try {
             return Long.parseLong(userId);
