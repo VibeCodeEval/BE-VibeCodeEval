@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,17 +64,20 @@ class ExamControllerTest {
     @MockBean
     private TokenProvider tokenProvider;
 
-    @Test
-    @DisplayName("활성 세션 조회 성공 — 200 OK와 세션 정보 반환")
-    void getActiveSession_success() throws Exception {
-        // given — JwtBlacklistInterceptor 통과, TokenProvider 모킹
+    @BeforeEach
+    void setUpAuth() throws Exception {
         given(jwtBlacklistInterceptor.preHandle(any(HttpServletRequest.class), any(HttpServletResponse.class), any()))
                 .willReturn(true);
         given(tokenProvider.getToken(any(HttpServletRequest.class)))
                 .willReturn(Optional.of("mock-token"));
         given(tokenProvider.getId("mock-token"))
                 .willReturn(Optional.of("100"));
+    }
 
+    @Test
+    @DisplayName("활성 세션 조회 성공 — 200 OK와 세션 정보 반환")
+    void getActiveSession_success() throws Exception {
+        // given
         ActiveSessionResponse response = new ActiveSessionResponse(
             1L, 999L, 300L, 200L,
             ExamState.RUNNING,
@@ -96,13 +100,6 @@ class ExamControllerTest {
     @DisplayName("시험 ID 기준 활성 세션 조회 성공 — 200 OK와 세션 정보 반환")
     void getActiveSessionByExam_success() throws Exception {
         // given
-        given(jwtBlacklistInterceptor.preHandle(any(HttpServletRequest.class), any(HttpServletResponse.class), any()))
-                .willReturn(true);
-        given(tokenProvider.getToken(any(HttpServletRequest.class)))
-                .willReturn(Optional.of("mock-token"));
-        given(tokenProvider.getId("mock-token"))
-                .willReturn(Optional.of("100"));
-
         ActiveSessionResponse response = new ActiveSessionResponse(
             1L, 999L, 300L, 200L,
             ExamState.RUNNING,
@@ -124,19 +121,25 @@ class ExamControllerTest {
     @Test
     @DisplayName("활성 세션 조회 실패 — 활성 세션 없으면 404 반환")
     void getActiveSession_not_found() throws Exception {
-        // given
-        given(jwtBlacklistInterceptor.preHandle(any(HttpServletRequest.class), any(HttpServletResponse.class), any()))
-                .willReturn(true);
-        given(tokenProvider.getToken(any(HttpServletRequest.class)))
-                .willReturn(Optional.of("mock-token"));
-        given(tokenProvider.getId("mock-token"))
-                .willReturn(Optional.of("200"));
-
+        // given — @BeforeEach가 세운 "100" 스터빙을 "200"으로 덮어씀
+        given(tokenProvider.getId("mock-token")).willReturn(Optional.of("200"));
         given(getActiveSessionUseCase.execute(200L))
                 .willThrow(new RestApiException(ExamErrorStatus.NO_ACTIVE_SESSION));
 
         // when & then
         mockMvc.perform(get("/api/exams/active-session"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("시험 ID 기준 활성 세션 조회 실패 — 활성 세션 없으면 404 반환")
+    void getActiveSessionByExam_not_found() throws Exception {
+        // given
+        given(getActiveSessionUseCase.execute(1L, 100L))
+                .willThrow(new RestApiException(ExamErrorStatus.NO_ACTIVE_SESSION));
+
+        // when & then
+        mockMvc.perform(get("/api/exams/1/active-session"))
                 .andExpect(status().isNotFound());
     }
 }

@@ -216,7 +216,46 @@ class GetActiveSessionUseCaseTest {
         // given
         Long examId = 1L;
         Long participantId = 999L;
+
+        Exam runningExam = Exam.builder()
+                .title("진행 중 시험")
+                .state(ExamState.RUNNING)
+                .startsAt(LocalDateTime.now().minusHours(1))
+                .endsAt(LocalDateTime.now().plusHours(1))
+                .createdBy(1L)
+                .build();
+        ReflectionTestUtils.setField(runningExam, "id", examId);
+
+        given(examService.findById(examId)).willReturn(runningExam);
         given(examParticipantService.findByExamIdAndParticipantId(examId, participantId)).willReturn(null);
+
+        // when & then
+        assertThatThrownBy(() -> getActiveSessionUseCase.execute(examId, participantId))
+                .isInstanceOf(RestApiException.class)
+                .satisfies(ex -> {
+                    RestApiException restEx = (RestApiException) ex;
+                    assertThat(restEx.getErrorCode().getCode())
+                            .isEqualTo(ExamErrorStatus.NO_ACTIVE_SESSION.getCode().getCode());
+                });
+    }
+
+    @Test
+    @DisplayName("시험 ID 기준 활성 세션 조회 실패 — 시험이 RUNNING 아니면 NO_ACTIVE_SESSION 예외")
+    void execute_by_exam_id_throws_when_exam_is_not_running() {
+        // given
+        Long examId = 1L;
+        Long participantId = 100L;
+
+        Exam waitingExam = Exam.builder()
+                .title("대기 중 시험")
+                .state(ExamState.WAITING)
+                .startsAt(LocalDateTime.now().plusHours(1))
+                .endsAt(LocalDateTime.now().plusHours(3))
+                .createdBy(1L)
+                .build();
+        ReflectionTestUtils.setField(waitingExam, "id", examId);
+
+        given(examService.findById(examId)).willReturn(waitingExam);
 
         // when & then
         assertThatThrownBy(() -> getActiveSessionUseCase.execute(examId, participantId))

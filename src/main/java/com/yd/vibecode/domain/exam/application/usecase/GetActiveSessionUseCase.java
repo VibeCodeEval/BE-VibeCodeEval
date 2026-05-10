@@ -37,13 +37,13 @@ public class GetActiveSessionUseCase {
 
     @Transactional(readOnly = true)
     public ActiveSessionResponse execute(Long examId, Long participantId) {
-        ExamParticipant participant = examParticipantService.findByExamIdAndParticipantId(examId, participantId);
-        if (participant == null) {
+        Exam exam = examService.findById(examId);
+        if (!exam.isRunning()) {
             throw new RestApiException(ExamErrorStatus.NO_ACTIVE_SESSION);
         }
 
-        Exam exam = examService.findById(examId);
-        if (!exam.isRunning()) {
+        ExamParticipant participant = examParticipantService.findByExamIdAndParticipantId(examId, participantId);
+        if (participant == null) {
             throw new RestApiException(ExamErrorStatus.NO_ACTIVE_SESSION);
         }
 
