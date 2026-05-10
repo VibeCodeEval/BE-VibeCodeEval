@@ -34,4 +34,19 @@ public class GetActiveSessionUseCase {
 
         return ActiveSessionResponse.from(exam, participant);
     }
+
+    @Transactional(readOnly = true)
+    public ActiveSessionResponse execute(Long examId, Long participantId) {
+        ExamParticipant participant = examParticipantService.findByExamIdAndParticipantId(examId, participantId);
+        if (participant == null) {
+            throw new RestApiException(ExamErrorStatus.NO_ACTIVE_SESSION);
+        }
+
+        Exam exam = examService.findById(examId);
+        if (!exam.isRunning()) {
+            throw new RestApiException(ExamErrorStatus.NO_ACTIVE_SESSION);
+        }
+
+        return ActiveSessionResponse.from(exam, participant);
+    }
 }

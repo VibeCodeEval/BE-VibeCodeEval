@@ -93,6 +93,35 @@ class ExamControllerTest {
     }
 
     @Test
+    @DisplayName("시험 ID 기준 활성 세션 조회 성공 — 200 OK와 세션 정보 반환")
+    void getActiveSessionByExam_success() throws Exception {
+        // given
+        given(jwtBlacklistInterceptor.preHandle(any(HttpServletRequest.class), any(HttpServletResponse.class), any()))
+                .willReturn(true);
+        given(tokenProvider.getToken(any(HttpServletRequest.class)))
+                .willReturn(Optional.of("mock-token"));
+        given(tokenProvider.getId("mock-token"))
+                .willReturn(Optional.of("100"));
+
+        ActiveSessionResponse response = new ActiveSessionResponse(
+            1L, 999L, 300L, 200L,
+            ExamState.RUNNING,
+            LocalDateTime.of(2026, 5, 6, 9, 0),
+            LocalDateTime.of(2026, 5, 6, 11, 0),
+            LocalDateTime.now(),
+            50000, 1000
+        );
+        given(getActiveSessionUseCase.execute(1L, 100L)).willReturn(response);
+
+        // when & then
+        mockMvc.perform(get("/api/exams/1/active-session"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.examId").value(1))
+                .andExpect(jsonPath("$.result.examParticipantId").value(999))
+                .andExpect(jsonPath("$.result.examState").value("RUNNING"));
+    }
+
+    @Test
     @DisplayName("활성 세션 조회 실패 — 활성 세션 없으면 404 반환")
     void getActiveSession_not_found() throws Exception {
         // given

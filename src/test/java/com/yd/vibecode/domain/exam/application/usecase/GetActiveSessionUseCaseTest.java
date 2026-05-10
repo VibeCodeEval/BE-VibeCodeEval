@@ -83,6 +83,46 @@ class GetActiveSessionUseCaseTest {
     }
 
     @Test
+    @DisplayName("시험 ID 기준 활성 세션 조회 성공 — 지정 시험의 참가 기록과 RUNNING 상태를 확인한다")
+    void execute_by_exam_id_returns_session_for_requested_exam() {
+        // given
+        Long participantId = 100L;
+        Long examId = 1L;
+        LocalDateTime startsAt = LocalDateTime.of(2026, 5, 6, 9, 0);
+        LocalDateTime endsAt = LocalDateTime.of(2026, 5, 6, 11, 0);
+
+        ExamParticipant participant = ExamParticipant.builder()
+                .examId(examId)
+                .participantId(participantId)
+                .specId(200L)
+                .assignedProblemId(300L)
+                .tokenLimit(50000)
+                .tokenUsed(1000)
+                .build();
+        ReflectionTestUtils.setField(participant, "id", 999L);
+
+        Exam exam = Exam.builder()
+                .title("진행 중 시험")
+                .state(ExamState.RUNNING)
+                .startsAt(startsAt)
+                .endsAt(endsAt)
+                .createdBy(1L)
+                .build();
+        ReflectionTestUtils.setField(exam, "id", examId);
+
+        given(examParticipantService.findByExamIdAndParticipantId(examId, participantId)).willReturn(participant);
+        given(examService.findById(examId)).willReturn(exam);
+
+        // when
+        ActiveSessionResponse response = getActiveSessionUseCase.execute(examId, participantId);
+
+        // then
+        assertThat(response.examId()).isEqualTo(examId);
+        assertThat(response.examState()).isEqualTo(ExamState.RUNNING);
+        assertThat(response.examParticipantId()).isEqualTo(999L);
+    }
+
+    @Test
     @DisplayName("활성 세션 조회 실패 — 참가 이력 없으면 NO_ACTIVE_SESSION 예외")
     void execute_throws_when_no_participant_record() {
         // given
@@ -162,6 +202,24 @@ class GetActiveSessionUseCaseTest {
 
         // when & then
         assertThatThrownBy(() -> getActiveSessionUseCase.execute(participantId))
+                .isInstanceOf(RestApiException.class)
+                .satisfies(ex -> {
+                    RestApiException restEx = (RestApiException) ex;
+                    assertThat(restEx.getErrorCode().getCode())
+                            .isEqualTo(ExamErrorStatus.NO_ACTIVE_SESSION.getCode().getCode());
+                });
+    }
+
+    @Test
+    @DisplayName("시험 ID 기준 활성 세션 조회 실패 — 지정 시험 참가 기록이 없으면 NO_ACTIVE_SESSION 예외")
+    void execute_by_exam_id_throws_when_participant_record_does_not_exist() {
+        // given
+        Long examId = 1L;
+        Long participantId = 999L;
+        given(examParticipantService.findByExamIdAndParticipantId(examId, participantId)).willReturn(null);
+
+        // when & then
+        assertThatThrownBy(() -> getActiveSessionUseCase.execute(examId, participantId))
                 .isInstanceOf(RestApiException.class)
                 .satisfies(ex -> {
                     RestApiException restEx = (RestApiException) ex;
