@@ -47,9 +47,17 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
                     return new RestApiException(_UNAUTHORIZED);
                 });
 
+        // refresh token이 access token cookie/header를 통해 전달되어
+        // 인증된 호출처럼 사용되는 것을 방지한다. (RefreshTokenArgumentResolver와 대칭)
+        if (!tokenProvider.isAccessToken(token)) {
+            throw new RestApiException(INVALID_ACCESS_TOKEN);
+        }
+
+        // token은 존재하지만 id 클레임을 추출할 수 없다면 토큰 자체의 문제이므로
+        // MeUseCase와 동일하게 INVALID_ACCESS_TOKEN으로 통일한다.
         String userId = tokenProvider.getId(token)
                 .orElseThrow(() -> {
-                    return new RestApiException(_UNAUTHORIZED);
+                    return new RestApiException(INVALID_ACCESS_TOKEN);
                 });
 
         Class<?> paramType = parameter.getParameterType();

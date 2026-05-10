@@ -71,6 +71,7 @@ class ExamControllerTest {
                 .willReturn(true);
         given(tokenProvider.getToken(any(HttpServletRequest.class)))
                 .willReturn(Optional.of("mock-token"));
+        given(tokenProvider.isAccessToken("mock-token")).willReturn(true);
         given(tokenProvider.getId("mock-token"))
                 .willReturn(Optional.of("100"));
 
@@ -100,6 +101,7 @@ class ExamControllerTest {
                 .willReturn(true);
         given(tokenProvider.getToken(any(HttpServletRequest.class)))
                 .willReturn(Optional.of("mock-token"));
+        given(tokenProvider.isAccessToken("mock-token")).willReturn(true);
         given(tokenProvider.getId("mock-token"))
                 .willReturn(Optional.of("200"));
 
