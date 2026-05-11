@@ -70,6 +70,7 @@ class ExamControllerTest {
                 .willReturn(true);
         given(tokenProvider.getToken(any(HttpServletRequest.class)))
                 .willReturn(Optional.of("mock-token"));
+        given(tokenProvider.isAccessToken("mock-token")).willReturn(true);
         given(tokenProvider.getId("mock-token"))
                 .willReturn(Optional.of("100"));
     }
@@ -121,8 +122,15 @@ class ExamControllerTest {
     @Test
     @DisplayName("활성 세션 조회 실패 — 활성 세션 없으면 404 반환")
     void getActiveSession_not_found() throws Exception {
-        // given — @BeforeEach가 세운 "100" 스터빙을 "200"으로 덮어씀
-        given(tokenProvider.getId("mock-token")).willReturn(Optional.of("200"));
+        // given
+        given(jwtBlacklistInterceptor.preHandle(any(HttpServletRequest.class), any(HttpServletResponse.class), any()))
+                .willReturn(true);
+        given(tokenProvider.getToken(any(HttpServletRequest.class)))
+                .willReturn(Optional.of("mock-token"));
+        given(tokenProvider.isAccessToken("mock-token")).willReturn(true);
+        given(tokenProvider.getId("mock-token"))
+                .willReturn(Optional.of("200"));
+
         given(getActiveSessionUseCase.execute(200L))
                 .willThrow(new RestApiException(ExamErrorStatus.NO_ACTIVE_SESSION));
 
