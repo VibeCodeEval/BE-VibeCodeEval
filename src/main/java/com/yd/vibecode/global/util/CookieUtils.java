@@ -31,6 +31,21 @@ public class CookieUtils {
         response.addHeader("Set-Cookie", buildSetCookieHeader(REFRESH_TOKEN_COOKIE_NAME, "", 0));
     }
 
+    public String getAccessTokenFromRequest(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (ACCESS_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
+                    String value = cookie.getValue();
+                    if (value != null && !value.isBlank()) {
+                        return value;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     public String getRefreshTokenFromRequest(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {

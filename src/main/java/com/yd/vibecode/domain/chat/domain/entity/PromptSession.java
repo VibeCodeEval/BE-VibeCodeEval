@@ -68,4 +68,8 @@ public class PromptSession extends BaseEntity {
     public void endSession() {
         this.endedAt = LocalDateTime.now();
     }
+
+    public void updateSpecId(Long specId) {
+        this.specId = specId;
+    }
 }

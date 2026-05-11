@@ -16,6 +16,7 @@ import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
 import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
 import com.yd.vibecode.global.exception.RestApiException;
 import com.yd.vibecode.global.exception.code.status.GlobalErrorStatus;
+import com.yd.vibecode.global.exception.code.status.ProblemErrorStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +35,9 @@ public class SendMessageUseCase {
         ExamParticipant examParticipant = examParticipantService.findByExamIdAndParticipantId(examId, participantId);
         if (examParticipant == null) {
             throw new RestApiException(GlobalErrorStatus._NOT_FOUND);
+        }
+        if (examParticipant.getSpecId() == null || examParticipant.getAssignedProblemId() == null) {
+            throw new RestApiException(ProblemErrorStatus.NO_ASSIGNED_PROBLEM);
         }
 
         // 2. 세션 가져오기 또는 생성

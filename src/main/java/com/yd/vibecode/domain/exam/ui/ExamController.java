@@ -5,12 +5,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.yd.vibecode.domain.exam.application.dto.response.ActiveSessionResponse;
 import com.yd.vibecode.domain.exam.application.dto.response.ExamStateResponse;
 import com.yd.vibecode.domain.exam.application.dto.response.ParticipantSessionResponse;
+import com.yd.vibecode.domain.exam.application.usecase.GetActiveSessionUseCase;
 import com.yd.vibecode.domain.exam.application.usecase.GetExamStateUseCase;
 import com.yd.vibecode.domain.exam.application.usecase.GetParticipantSessionUseCase;
 import com.yd.vibecode.global.annotation.CurrentUser;
 import com.yd.vibecode.global.common.BaseResponse;
+import com.yd.vibecode.global.exception.RestApiException;
+import com.yd.vibecode.global.exception.code.status.AuthErrorStatus;
 import com.yd.vibecode.global.swagger.ExamApi;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +31,7 @@ public class ExamController implements ExamApi {
 
     private final GetExamStateUseCase getExamStateUseCase;
     private final GetParticipantSessionUseCase getParticipantSessionUseCase;
+    private final GetActiveSessionUseCase getActiveSessionUseCase;
 
     @GetMapping("/{examId}/state")
     @Override
@@ -39,8 +44,30 @@ public class ExamController implements ExamApi {
     public BaseResponse<ParticipantSessionResponse> getMySession(
             @PathVariable Long examId,
             @CurrentUser String userId) {
-        ParticipantSessionResponse response = getParticipantSessionUseCase.execute(examId, Long.parseLong(userId));
+        ParticipantSessionResponse response = getParticipantSessionUseCase.execute(examId, parseUserId(userId));
         return BaseResponse.onSuccess(response);
+    }
+
+    @GetMapping("/active-session")
+    public BaseResponse<ActiveSessionResponse> getActiveSession(@CurrentUser String userId) {
+        ActiveSessionResponse response = getActiveSessionUseCase.execute(parseUserId(userId));
+        return BaseResponse.onSuccess(response);
+    }
+
+    @GetMapping("/{examId}/active-session")
+    public BaseResponse<ActiveSessionResponse> getActiveSessionByExam(
+            @PathVariable Long examId,
+            @CurrentUser String userId) {
+        ActiveSessionResponse response = getActiveSessionUseCase.execute(examId, parseUserId(userId));
+        return BaseResponse.onSuccess(response);
+    }
+
+    private Long parseUserId(String userId) {
+        try {
+            return Long.parseLong(userId);
+        } catch (NumberFormatException e) {
+            throw new RestApiException(AuthErrorStatus.INVALID_ACCESS_TOKEN);
+        }
     }
 
 }
