@@ -72,8 +72,14 @@ jobs:
             echo ">>> Pulling latest app image..."
             docker compose --env-file .env -f docker-compose.prod.yml pull app
 
-            echo ">>> Restarting containers..."
-            docker compose --env-file .env -f docker-compose.prod.yml up -d --remove-orphans
+            echo ">>> Stopping existing containers..."
+            docker compose --env-file .env -f docker-compose.prod.yml down --remove-orphans 2>/dev/null || true
+
+            echo ">>> Removing stale network if unlabeled..."
+            docker network rm vibecode-net 2>/dev/null || true
+
+            echo ">>> Starting containers..."
+            docker compose --env-file .env -f docker-compose.prod.yml up -d
 
             echo ">>> Pruning old images..."
             docker image prune -f
