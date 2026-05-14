@@ -7,6 +7,7 @@ import com.yd.vibecode.domain.submission.domain.entity.Submission;
 import com.yd.vibecode.domain.submission.domain.entity.SubmissionRun;
 import com.yd.vibecode.domain.submission.domain.entity.SubmissionStatus;
 import com.yd.vibecode.domain.submission.domain.entity.Verdict;
+import com.yd.vibecode.domain.submission.application.service.SubmissionDetailAssembler;
 import com.yd.vibecode.domain.submission.domain.repository.ScoreRepository;
 import com.yd.vibecode.domain.submission.domain.repository.SubmissionRunRepository;
 import com.yd.vibecode.domain.submission.domain.service.SubmissionService;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -38,6 +40,9 @@ class GetSubmissionDetailUseCaseTest {
 
     @Mock
     private ScoreRepository scoreRepository;
+
+    @Spy
+    private SubmissionDetailAssembler submissionDetailAssembler = new SubmissionDetailAssembler();
 
     @Test
     @DisplayName("제출 상세 조회 성공: 메트릭 및 점수 계산 확인")

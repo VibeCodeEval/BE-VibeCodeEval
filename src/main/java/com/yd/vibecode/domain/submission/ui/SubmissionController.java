@@ -24,7 +24,9 @@ import lombok.RequiredArgsConstructor;
 /**
  * Submission Controller
  * - POST /api/exams/{examId}/submissions: 코드 제출
- * - GET /api/submissions/{submissionId}: 제출 상세 조회
+ * - GET /api/submissions/{submissionId}: 제출 상세 조회 (로그인 사용자 공통, 제출 코드·루브릭 미포함)
+ *   보안: {@code SecurityConfig} 상 인증만 필요하며 소유자 검증은 없음. 민감 데이터는
+ *   {@code GET /api/admin/submissions/{id}} (ADMIN/MASTER)를 사용한다.
  */
 @RestController
 @RequiredArgsConstructor
