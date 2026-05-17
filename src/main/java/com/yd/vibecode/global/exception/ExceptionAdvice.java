@@ -3,12 +3,14 @@ package com.yd.vibecode.global.exception;
 import com.yd.vibecode.global.common.BaseResponse;
 import com.yd.vibecode.global.exception.code.BaseCode;
 import com.yd.vibecode.global.exception.code.status.GlobalErrorStatus;
+import com.yd.vibecode.global.exception.code.status.SubmissionErrorStatus;
 import jakarta.validation.ConstraintViolationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -42,6 +44,25 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
                 e.getErrorCode().getCode(), e.getErrorCode().getMessage());
         BaseCode errorCode = e.getErrorCode();
         return handleExceptionInternal(errorCode);
+    }
+
+    /**
+     * 동일 시험·참가자에 대한 제출은 DB 유니크(exam_id, participant_id)로 한 건만 허용된다.
+     * 경쟁 조건 등으로 사전 검사를 통과한 뒤에도 위반이 나면 SUB002로 응답한다.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<BaseResponse<String>> handleDataIntegrityViolation(DataIntegrityViolationException e) {
+        Throwable root = e.getMostSpecificCause();
+        String msg = root != null ? root.getMessage() : e.getMessage();
+        String lower = msg != null ? msg.toLowerCase() : "";
+        if (lower.contains("submissions")
+                || (lower.contains("exam_id") && lower.contains("participant_id"))
+                || (lower.contains("duplicate") && lower.contains("submission"))) {
+            log.warn("[handleDataIntegrityViolation] duplicate submission constraint: {}", msg);
+            return handleExceptionInternal(SubmissionErrorStatus.ALREADY_SUBMITTED.getCode());
+        }
+        log.error("[handleDataIntegrityViolation] unmapped constraint: {}", msg, e);
+        return handleExceptionInternal(GlobalErrorStatus._EXIST_ENTITY.getCode());
     }
 
     /*
