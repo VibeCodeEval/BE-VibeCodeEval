@@ -1,5 +1,6 @@
 package com.yd.vibecode.domain.submission.application.usecase;
 
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -38,6 +39,18 @@ public class GetAdminSubmissionDetailUseCase {
         SubmissionDetailResponse base = submissionDetailAssembler.toResponse(submission, runs, score);
         String rubricJson = score != null ? score.getRubricJson() : null;
 
+        List<AdminSubmissionDetailResponse.CaseRunInfo> caseRuns = runs.stream()
+                .sorted(Comparator.comparing(
+                        SubmissionRun::getCaseIndex,
+                        Comparator.nullsLast(Integer::compareTo)))
+                .map(r -> new AdminSubmissionDetailResponse.CaseRunInfo(
+                        r.getCaseIndex(),
+                        r.getGrp(),
+                        r.getVerdict(),
+                        r.getTimeMs(),
+                        r.getMemKb()))
+                .toList();
+
         return new AdminSubmissionDetailResponse(
                 submission.getId(),
                 base.status(),
@@ -46,6 +59,7 @@ public class GetAdminSubmissionDetailUseCase {
                 base.metrics(),
                 base.tc(),
                 base.score(),
-                rubricJson);
+                rubricJson,
+                caseRuns);
     }
 }

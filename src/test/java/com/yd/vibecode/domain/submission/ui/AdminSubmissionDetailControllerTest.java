@@ -80,7 +80,8 @@ class AdminSubmissionDetailControllerTest {
                 new SubmissionDetailResponse.TestCaseInfo(1.0, java.util.List.of()),
                 new SubmissionDetailResponse.ScoreInfo(
                         new BigDecimal("1"), new BigDecimal("2"), new BigDecimal("3"), new BigDecimal("6")),
-                "{\"rubric\":true}");
+                "{\"rubric\":true}",
+                java.util.List.of());
 
         given(getAdminSubmissionDetailUseCase.execute(eq(submissionId))).willReturn(body);
 

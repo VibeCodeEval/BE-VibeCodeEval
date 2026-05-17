@@ -1,6 +1,10 @@
 package com.yd.vibecode.domain.submission.application.dto.response;
 
+import java.util.List;
+
+import com.yd.vibecode.domain.submission.domain.entity.RunGroup;
 import com.yd.vibecode.domain.submission.domain.entity.SubmissionStatus;
+import com.yd.vibecode.domain.submission.domain.entity.Verdict;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -32,6 +36,28 @@ public record AdminSubmissionDetailResponse(
         SubmissionDetailResponse.ScoreInfo score,
 
         @Schema(description = "AI/채점 루브릭 JSON (민감, scores.rubric_json)")
-        String rubricJson
+        String rubricJson,
+
+        @Schema(description = "개별 테스트 케이스 실행 결과 (submission_runs, 관리자 전용)")
+        List<CaseRunInfo> runs
 ) {
+
+    @Schema(description = "단일 테스트 케이스 실행 결과")
+    public record CaseRunInfo(
+            @Schema(description = "케이스 인덱스", example = "0")
+            Integer caseIndex,
+
+            @Schema(description = "테스트 그룹")
+            RunGroup grp,
+
+            @Schema(description = "판정")
+            Verdict verdict,
+
+            @Schema(description = "실행 시간(ms)", example = "120")
+            Integer timeMs,
+
+            @Schema(description = "메모리(KB)", example = "2048")
+            Integer memKb
+    ) {
+    }
 }
