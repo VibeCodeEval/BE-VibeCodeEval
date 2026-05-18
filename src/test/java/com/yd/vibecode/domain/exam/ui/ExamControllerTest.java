@@ -80,7 +80,7 @@ class ExamControllerTest {
     void getActiveSession_success() throws Exception {
         // given
         ActiveSessionResponse response = new ActiveSessionResponse(
-            1L, 999L, 300L, 200L,
+            1L, 999L, 100L, 300L, 200L,
             ExamState.RUNNING,
             LocalDateTime.of(2026, 5, 6, 9, 0),
             LocalDateTime.of(2026, 5, 6, 11, 0),
@@ -94,6 +94,7 @@ class ExamControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.examId").value(1))
                 .andExpect(jsonPath("$.result.examParticipantId").value(999))
+                .andExpect(jsonPath("$.result.participantId").value(100))
                 .andExpect(jsonPath("$.result.examState").value("RUNNING"));
     }
 
@@ -102,7 +103,7 @@ class ExamControllerTest {
     void getActiveSessionByExam_success() throws Exception {
         // given
         ActiveSessionResponse response = new ActiveSessionResponse(
-            1L, 999L, 300L, 200L,
+            1L, 999L, 100L, 300L, 200L,
             ExamState.RUNNING,
             LocalDateTime.of(2026, 5, 6, 9, 0),
             LocalDateTime.of(2026, 5, 6, 11, 0),
@@ -116,6 +117,7 @@ class ExamControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.examId").value(1))
                 .andExpect(jsonPath("$.result.examParticipantId").value(999))
+                .andExpect(jsonPath("$.result.participantId").value(100))
                 .andExpect(jsonPath("$.result.examState").value("RUNNING"));
     }
 
