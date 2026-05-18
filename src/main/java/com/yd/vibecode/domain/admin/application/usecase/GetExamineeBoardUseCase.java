@@ -63,11 +63,17 @@ public class GetExamineeBoardUseCase {
                 Long submissionId = submitted ? sub.getId() : null;
                 String submissionStatus = submitted ? sub.getStatus().name() : null;
                 LocalDateTime submittedAt = submitted ? sub.getCreatedAt() : null;
+                BigDecimal promptScore = null;
+                BigDecimal perfScore = null;
+                BigDecimal correctnessScore = null;
                 BigDecimal totalScore = null;
                 LocalDateTime evaluatedAt = null;
                 if (submitted) {
                     Score score = scoreBySubmissionId.get(sub.getId());
                     if (score != null) {
+                        promptScore = score.getPromptScore();
+                        perfScore = score.getPerfScore();
+                        correctnessScore = score.getCorrectnessScore();
                         totalScore = score.getTotalScore();
                         evaluatedAt = score.getUpdatedAt() != null ? score.getUpdatedAt() : score.getCreatedAt();
                     }
@@ -78,6 +84,9 @@ public class GetExamineeBoardUseCase {
                     submitted,
                     submissionId,
                     submissionStatus,
+                    promptScore,
+                    perfScore,
+                    correctnessScore,
                     totalScore,
                     submittedAt,
                     evaluatedAt

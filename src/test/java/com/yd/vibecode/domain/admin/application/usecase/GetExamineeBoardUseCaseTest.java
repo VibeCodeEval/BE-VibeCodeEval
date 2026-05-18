@@ -90,6 +90,9 @@ class GetExamineeBoardUseCaseTest {
         assertThat(row.submitted()).isTrue();
         assertThat(row.submissionId()).isEqualTo(50L);
         assertThat(row.submissionStatus()).isEqualTo("DONE");
+        assertThat(row.promptScore()).isEqualByComparingTo(new BigDecimal("40"));
+        assertThat(row.perfScore()).isEqualByComparingTo(new BigDecimal("30"));
+        assertThat(row.correctnessScore()).isEqualByComparingTo(new BigDecimal("30"));
         assertThat(row.totalScore()).isEqualByComparingTo(new BigDecimal("100"));
     }
 
