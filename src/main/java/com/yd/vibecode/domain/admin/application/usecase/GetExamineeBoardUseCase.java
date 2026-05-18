@@ -58,12 +58,7 @@ public class GetExamineeBoardUseCase {
         return participants.stream()
             .map(ep -> {
                 User p = userMap.get(ep.getParticipantId());
-                // submissions.participant_id는 원칙적으로 users.id (= exam_participants.participant_id).
-                // 레거시/외부 데이터에서 exam_participants.id가 들어간 경우를 보조 매칭한다.
                 Submission sub = submissionByParticipantId.get(ep.getParticipantId());
-                if (sub == null) {
-                    sub = submissionByParticipantId.get(ep.getId());
-                }
                 boolean submitted = sub != null;
                 Long submissionId = submitted ? sub.getId() : null;
                 String submissionStatus = submitted ? sub.getStatus().name() : null;

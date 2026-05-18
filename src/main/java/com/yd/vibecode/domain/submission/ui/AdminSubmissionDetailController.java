@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.yd.vibecode.domain.submission.application.dto.response.AdminSubmissionDetailResponse;
 import com.yd.vibecode.domain.submission.application.usecase.GetAdminSubmissionDetailUseCase;
+import com.yd.vibecode.global.annotation.CurrentUser;
 import com.yd.vibecode.global.common.BaseResponse;
 import com.yd.vibecode.global.swagger.AdminSubmissionDetailApi;
 
@@ -27,8 +28,10 @@ public class AdminSubmissionDetailController implements AdminSubmissionDetailApi
     @Override
     @GetMapping("/{submissionId}")
     public BaseResponse<AdminSubmissionDetailResponse> getAdminSubmissionDetail(
-            @PathVariable Long submissionId) {
-        AdminSubmissionDetailResponse response = getAdminSubmissionDetailUseCase.execute(submissionId);
+            @PathVariable Long submissionId,
+            @CurrentUser Long adminUserId) {
+        AdminSubmissionDetailResponse response =
+                getAdminSubmissionDetailUseCase.execute(adminUserId, submissionId);
         return BaseResponse.onSuccess(response);
     }
 }

@@ -42,7 +42,7 @@ public class SubmissionService {
 
     @Transactional(readOnly = true)
     public boolean existsByExamIdAndParticipantId(Long examId, Long participantId) {
-        return submissionRepository.findByExamIdAndParticipantId(examId, participantId).isPresent();
+        return submissionRepository.existsByExamIdAndParticipantId(examId, participantId);
     }
 
     @Transactional(readOnly = true)

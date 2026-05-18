@@ -28,10 +28,15 @@ public interface AdminSubmissionDetailApi extends BaseApi {
                     description = "조회 성공",
                     content = @Content(schema = @Schema(implementation = AdminSubmissionDetailResponse.class))),
             @ApiResponse(
+                    responseCode = "403",
+                    description = "관리자 권한 없음 또는 비활성 계정",
+                    content = @Content(schema = @Schema(implementation = BaseResponse.class))),
+            @ApiResponse(
                     responseCode = "404",
                     description = "제출을 찾을 수 없음",
                     content = @Content(schema = @Schema(implementation = BaseResponse.class)))
     })
     BaseResponse<AdminSubmissionDetailResponse> getAdminSubmissionDetail(
-            @Parameter(description = "제출 ID", example = "1") Long submissionId);
+            @Parameter(description = "제출 ID", example = "1") Long submissionId,
+            @Parameter(hidden = true) Long adminUserId);
 }

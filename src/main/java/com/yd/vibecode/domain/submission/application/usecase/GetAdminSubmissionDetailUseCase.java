@@ -6,6 +6,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.yd.vibecode.domain.auth.domain.entity.Admin;
+import com.yd.vibecode.domain.auth.domain.service.AdminService;
 import com.yd.vibecode.domain.submission.application.dto.response.AdminSubmissionDetailResponse;
 import com.yd.vibecode.domain.submission.application.dto.response.SubmissionDetailResponse;
 import com.yd.vibecode.domain.submission.application.service.SubmissionDetailAssembler;
@@ -15,6 +17,8 @@ import com.yd.vibecode.domain.submission.domain.entity.SubmissionRun;
 import com.yd.vibecode.domain.submission.domain.repository.ScoreRepository;
 import com.yd.vibecode.domain.submission.domain.repository.SubmissionRunRepository;
 import com.yd.vibecode.domain.submission.domain.service.SubmissionService;
+import com.yd.vibecode.global.exception.RestApiException;
+import com.yd.vibecode.global.exception.code.status.AuthErrorStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,13 +29,15 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GetAdminSubmissionDetailUseCase {
 
+    private final AdminService adminService;
     private final SubmissionService submissionService;
     private final SubmissionRunRepository submissionRunRepository;
     private final ScoreRepository scoreRepository;
     private final SubmissionDetailAssembler submissionDetailAssembler;
 
     @Transactional(readOnly = true)
-    public AdminSubmissionDetailResponse execute(Long submissionId) {
+    public AdminSubmissionDetailResponse execute(Long adminUserId, Long submissionId) {
+        validateAdminAccess(adminUserId);
         Submission submission = submissionService.findById(submissionId);
         List<SubmissionRun> runs = submissionRunRepository.findBySubmissionId(submissionId);
         Score score = scoreRepository.findBySubmissionId(submissionId).orElse(null);
@@ -61,5 +67,19 @@ public class GetAdminSubmissionDetailUseCase {
                 base.score(),
                 rubricJson,
                 caseRuns);
+    }
+
+    /**
+     * 요청자가 활성화된 ADMIN/MASTER 관리자인지 DB 기준으로 검증한다.
+     * (HTTP {@code /api/admin/**} 역할 검사와 별도로 UseCase 방어층)
+     */
+    private void validateAdminAccess(Long adminUserId) {
+        Admin admin = adminService.findById(adminUserId);
+        if (!Boolean.TRUE.equals(admin.getIsActive())) {
+            throw new RestApiException(AuthErrorStatus.ADMIN_ACCOUNT_INACTIVE);
+        }
+        if (!admin.isAdmin() && !admin.isMaster()) {
+            throw new RestApiException(AuthErrorStatus.FORBIDDEN);
+        }
     }
 }

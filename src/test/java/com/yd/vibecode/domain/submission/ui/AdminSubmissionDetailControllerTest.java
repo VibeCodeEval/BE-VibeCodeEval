@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.Optional;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,6 +30,9 @@ import com.yd.vibecode.domain.submission.application.dto.response.AdminSubmissio
 import com.yd.vibecode.domain.submission.application.dto.response.SubmissionDetailResponse;
 import com.yd.vibecode.domain.submission.application.usecase.GetAdminSubmissionDetailUseCase;
 import com.yd.vibecode.domain.submission.domain.entity.SubmissionStatus;
+import com.yd.vibecode.global.exception.RestApiException;
+import com.yd.vibecode.global.exception.code.status.AuthErrorStatus;
+import com.yd.vibecode.global.exception.code.status.SubmissionErrorStatus;
 import com.yd.vibecode.global.interceptor.JwtBlacklistInterceptor;
 import com.yd.vibecode.global.security.ExcludeBlacklistPathProperties;
 import com.yd.vibecode.global.security.SecurityConfig;
@@ -41,54 +45,85 @@ import com.yd.vibecode.global.security.TokenProvider;
 )
 class AdminSubmissionDetailControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+  private static final Long ADMIN_USER_ID = 1L;
 
-    @MockBean
-    private GetAdminSubmissionDetailUseCase getAdminSubmissionDetailUseCase;
+  @Autowired
+  private MockMvc mockMvc;
 
-    @MockBean
-    private JwtBlacklistInterceptor jwtBlacklistInterceptor;
+  @MockBean
+  private GetAdminSubmissionDetailUseCase getAdminSubmissionDetailUseCase;
 
-    @MockBean
-    private ExcludeBlacklistPathProperties excludeBlacklistPathProperties;
+  @MockBean
+  private JwtBlacklistInterceptor jwtBlacklistInterceptor;
 
-    @MockBean
-    private TokenProvider tokenProvider;
+  @MockBean
+  private ExcludeBlacklistPathProperties excludeBlacklistPathProperties;
 
-    @BeforeEach
-    void setUpInterceptor() {
-        // Mock JwtBlacklistInterceptor: Mockito boolean 기본값 false → true (컨트롤러까지 요청 전달)
-        given(jwtBlacklistInterceptor.preHandle(
-                any(HttpServletRequest.class),
-                any(HttpServletResponse.class),
-                any())).willReturn(true);
-        given(excludeBlacklistPathProperties.getExcludeAuthPaths()).willReturn(Collections.emptyList());
-    }
+  @MockBean
+  private TokenProvider tokenProvider;
 
-    @Test
-    @DisplayName("관리자 제출 상세 조회 성공")
-    @WithMockUser(roles = "ADMIN")
-    void getAdminSubmissionDetail_success() throws Exception {
-        Long submissionId = 42L;
-        AdminSubmissionDetailResponse body = new AdminSubmissionDetailResponse(
-                submissionId,
-                SubmissionStatus.DONE,
-                "python3.11",
-                "print(1)",
-                new SubmissionDetailResponse.MetricsInfo(10, 512, 1),
-                new SubmissionDetailResponse.TestCaseInfo(1.0, java.util.List.of()),
-                new SubmissionDetailResponse.ScoreInfo(
-                        new BigDecimal("1"), new BigDecimal("2"), new BigDecimal("3"), new BigDecimal("6")),
-                "{\"rubric\":true}",
-                java.util.List.of());
+  @BeforeEach
+  void setUp() throws Exception {
+    given(jwtBlacklistInterceptor.preHandle(
+            any(HttpServletRequest.class),
+            any(HttpServletResponse.class),
+            any())).willReturn(true);
+    given(excludeBlacklistPathProperties.getExcludeAuthPaths()).willReturn(Collections.emptyList());
+    given(tokenProvider.getToken(any(HttpServletRequest.class)))
+        .willReturn(Optional.of("mock-token"));
+    given(tokenProvider.isAccessToken("mock-token")).willReturn(true);
+    given(tokenProvider.getId("mock-token")).willReturn(Optional.of(String.valueOf(ADMIN_USER_ID)));
+  }
 
-        given(getAdminSubmissionDetailUseCase.execute(eq(submissionId))).willReturn(body);
+  @Test
+  @DisplayName("관리자 제출 상세 조회 성공")
+  @WithMockUser(roles = "ADMIN")
+  void getAdminSubmissionDetail_success() throws Exception {
+    Long submissionId = 42L;
+    AdminSubmissionDetailResponse body = new AdminSubmissionDetailResponse(
+        submissionId,
+        SubmissionStatus.DONE,
+        "python3.11",
+        "print(1)",
+        new SubmissionDetailResponse.MetricsInfo(10, 512, 1),
+        new SubmissionDetailResponse.TestCaseInfo(1.0, java.util.List.of()),
+        new SubmissionDetailResponse.ScoreInfo(
+            new BigDecimal("1"), new BigDecimal("2"), new BigDecimal("3"), new BigDecimal("6")),
+        "{\"rubric\":true}",
+        java.util.List.of());
 
-        mockMvc.perform(get("/api/admin/submissions/" + submissionId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.submissionId").value(42))
-                .andExpect(jsonPath("$.result.codeInline").value("print(1)"))
-                .andExpect(jsonPath("$.result.rubricJson").value("{\"rubric\":true}"));
-    }
+    given(getAdminSubmissionDetailUseCase.execute(eq(ADMIN_USER_ID), eq(submissionId))).willReturn(body);
+
+    mockMvc.perform(get("/api/admin/submissions/" + submissionId))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.result.submissionId").value(42))
+        .andExpect(jsonPath("$.result.codeInline").value("print(1)"))
+        .andExpect(jsonPath("$.result.rubricJson").value("{\"rubric\":true}"));
+  }
+
+  @Test
+  @DisplayName("관리자 권한 없음(UseCase) — 403")
+  @WithMockUser(roles = "ADMIN")
+  void getAdminSubmissionDetail_forbidden() throws Exception {
+    Long submissionId = 42L;
+    given(getAdminSubmissionDetailUseCase.execute(eq(ADMIN_USER_ID), eq(submissionId)))
+        .willThrow(new RestApiException(AuthErrorStatus.FORBIDDEN));
+
+    mockMvc.perform(get("/api/admin/submissions/" + submissionId))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.code").value("AUTH015"));
+  }
+
+  @Test
+  @DisplayName("존재하지 않는 submissionId — 404")
+  @WithMockUser(roles = "ADMIN")
+  void getAdminSubmissionDetail_notFound() throws Exception {
+    Long submissionId = 999L;
+    given(getAdminSubmissionDetailUseCase.execute(eq(ADMIN_USER_ID), eq(submissionId)))
+        .willThrow(new RestApiException(SubmissionErrorStatus.SUBMISSION_NOT_FOUND));
+
+    mockMvc.perform(get("/api/admin/submissions/" + submissionId))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.code").value("SUB001"));
+  }
 }

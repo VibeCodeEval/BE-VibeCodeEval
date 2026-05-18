@@ -52,17 +52,52 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<BaseResponse<String>> handleDataIntegrityViolation(DataIntegrityViolationException e) {
-        Throwable root = e.getMostSpecificCause();
-        String msg = root != null ? root.getMessage() : e.getMessage();
-        String lower = msg != null ? msg.toLowerCase() : "";
-        if (lower.contains("submissions")
-                || (lower.contains("exam_id") && lower.contains("participant_id"))
-                || (lower.contains("duplicate") && lower.contains("submission"))) {
-            log.warn("[handleDataIntegrityViolation] duplicate submission constraint: {}", msg);
+        if (isDuplicateSubmissionConstraintViolation(e)) {
+            log.warn("[handleDataIntegrityViolation] duplicate submission (exam_id, participant_id): {}",
+                    e.getMostSpecificCause() != null ? e.getMostSpecificCause().getMessage() : e.getMessage());
             return handleExceptionInternal(SubmissionErrorStatus.ALREADY_SUBMITTED.getCode());
         }
+        String msg = e.getMostSpecificCause() != null ? e.getMostSpecificCause().getMessage() : e.getMessage();
         log.error("[handleDataIntegrityViolation] unmapped constraint: {}", msg, e);
         return handleExceptionInternal(GlobalErrorStatus._EXIST_ENTITY.getCode());
+    }
+
+    /**
+     * submissions 테이블의 (exam_id, participant_id) 유니크 위반만 SUB002로 매핑한다.
+     * submissions 테이블명·FK·NOT NULL 등 다른 무결성 오류는 제외한다.
+     */
+    static boolean isDuplicateSubmissionConstraintViolation(DataIntegrityViolationException e) {
+        String text = extractConstraintViolationText(e).toLowerCase();
+        if (text.isBlank()) {
+            return false;
+        }
+        if (!text.contains("exam_id") || !text.contains("participant_id")) {
+            return false;
+        }
+        return text.contains("duplicate")
+                || text.contains("unique constraint")
+                || text.contains("unique key")
+                || text.contains("violates unique")
+                || (text.contains("unique") && text.contains("constraint"))
+                || text.contains("already exists");
+    }
+
+    private static String extractConstraintViolationText(DataIntegrityViolationException e) {
+        StringBuilder sb = new StringBuilder();
+        Throwable current = e;
+        while (current != null) {
+            if (current.getMessage() != null) {
+                sb.append(current.getMessage()).append(' ');
+            }
+            if (current instanceof org.hibernate.exception.ConstraintViolationException hibernateCve) {
+                String constraintName = hibernateCve.getConstraintName();
+                if (constraintName != null) {
+                    sb.append(constraintName).append(' ');
+                }
+            }
+            current = current.getCause();
+        }
+        return sb.toString().trim();
     }
 
     /*

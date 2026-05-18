@@ -1,5 +1,22 @@
 package com.yd.vibecode.domain.submission.application.usecase;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import com.yd.vibecode.domain.chat.domain.service.PromptSessionService;
 import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
 import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
@@ -15,20 +32,6 @@ import com.yd.vibecode.domain.submission.domain.service.SubmissionService;
 import com.yd.vibecode.global.exception.RestApiException;
 import com.yd.vibecode.global.exception.code.status.ProblemErrorStatus;
 import com.yd.vibecode.global.exception.code.status.SubmissionErrorStatus;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatchers;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SubmitUseCaseTest {
@@ -73,30 +76,31 @@ class SubmitUseCaseTest {
                 .lang(request.lang())
                 .status(SubmissionStatus.QUEUED)
                 .build();
-        try {
-            java.lang.reflect.Field idField = submission.getClass().getDeclaredField("id");
-            idField.setAccessible(true);
-            idField.set(submission, 123L);
-        } catch (Exception e) {
-            // Ignore
-        }
+        ReflectionTestUtils.setField(submission, "id", 123L);
 
         given(examParticipantService.findByExamIdAndParticipantId(examId, userId)).willReturn(examParticipant);
         given(submissionService.existsByExamIdAndParticipantId(examId, userId)).willReturn(false);
         given(submissionService.createAndEnqueue(examId, userId, specId, request.lang(), request.code()))
                 .willReturn(submission);
 
-        SubmitResponse response;
-        try {
-            response = submitUseCase.execute(examId, userId, request);
-        } catch (IllegalStateException | org.springframework.transaction.IllegalTransactionStateException e) {
-            response = new SubmitResponse(123L, SubmissionStatus.QUEUED);
-        }
+        SubmitResponse response = submitUseCase.execute(examId, userId, request);
 
         assertThat(response.submissionId()).isEqualTo(123L);
         assertThat(response.status()).isEqualTo(SubmissionStatus.QUEUED);
         verify(submissionService).createAndEnqueue(examId, userId, specId, request.lang(), request.code());
         verify(promptSessionService).getOrCreateSession(examId, userId, specId);
+        verify(outboxEventService).saveEvent(
+                eq("SUBMISSION"),
+                eq(123L),
+                eq("AI_EVAL_REQUEST"),
+                argThat((Object payload) -> {
+                    if (!(payload instanceof AISubmitEvaluationRequest r)) {
+                        return false;
+                    }
+                    return r.problemId().equals(200L)
+                            && r.specId().equals(specId)
+                            && r.submissionId().equals(123L);
+                }));
     }
 
     @Test
@@ -165,12 +169,7 @@ class SubmitUseCaseTest {
                 .lang(request.lang())
                 .status(SubmissionStatus.QUEUED)
                 .build();
-        try {
-            java.lang.reflect.Field idField = submission.getClass().getDeclaredField("id");
-            idField.setAccessible(true);
-            idField.set(submission, 999L);
-        } catch (Exception ignored) {
-        }
+        ReflectionTestUtils.setField(submission, "id", 999L);
 
         given(examParticipantService.findByExamIdAndParticipantId(examId, userId)).willReturn(examParticipant);
         given(submissionService.existsByExamIdAndParticipantId(examId, userId)).willReturn(false);
@@ -178,17 +177,16 @@ class SubmitUseCaseTest {
         given(submissionService.createAndEnqueue(examId, userId, specId, request.lang(), request.code()))
                 .willReturn(submission);
 
-        try {
-            submitUseCase.execute(examId, userId, request);
-        } catch (IllegalStateException | org.springframework.transaction.IllegalTransactionStateException ignored) {
-        }
+        SubmitResponse response = submitUseCase.execute(examId, userId, request);
 
+        assertThat(response.submissionId()).isEqualTo(999L);
+        assertThat(response.status()).isEqualTo(SubmissionStatus.QUEUED);
         verify(problemSpecService).findBySpecId(specId);
         verify(outboxEventService).saveEvent(
-                ArgumentMatchers.eq("SUBMISSION"),
-                ArgumentMatchers.eq(999L),
-                ArgumentMatchers.eq("AI_EVAL_REQUEST"),
-                ArgumentMatchers.argThat((Object payload) -> {
+                eq("SUBMISSION"),
+                eq(999L),
+                eq("AI_EVAL_REQUEST"),
+                argThat((Object payload) -> {
                     if (!(payload instanceof AISubmitEvaluationRequest r)) {
                         return false;
                     }
