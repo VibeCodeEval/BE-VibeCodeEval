@@ -16,6 +16,9 @@ public record ExamineeBoardResponse(
     Boolean submitted,
     Long submissionId,
     String submissionStatus,
+    BigDecimal promptScore,
+    BigDecimal perfScore,
+    BigDecimal correctnessScore,
     BigDecimal totalScore,
     LocalDateTime submittedAt,
     LocalDateTime evaluatedAt
@@ -26,6 +29,9 @@ public record ExamineeBoardResponse(
             boolean submitted,
             Long submissionId,
             String submissionStatus,
+            BigDecimal promptScore,
+            BigDecimal perfScore,
+            BigDecimal correctnessScore,
             BigDecimal totalScore,
             LocalDateTime submittedAt,
             LocalDateTime evaluatedAt) {
@@ -39,6 +45,9 @@ public record ExamineeBoardResponse(
             submitted,
             submissionId,
             submissionStatus,
+            promptScore,
+            perfScore,
+            correctnessScore,
             totalScore,
             submittedAt,
             evaluatedAt
