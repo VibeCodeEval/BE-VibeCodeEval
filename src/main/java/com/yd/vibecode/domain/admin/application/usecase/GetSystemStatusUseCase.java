@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -24,6 +26,9 @@ public class GetSystemStatusUseCase {
 
     private static final String STATUS_UP = "UP";
     private static final String STATUS_DOWN = "DOWN";
+
+    private static final ParameterizedTypeReference<Map<String, Object>> AI_HEALTH_RESPONSE_TYPE =
+            new ParameterizedTypeReference<>() {};
 
     private final JdbcTemplate jdbcTemplate;
     private final RestTemplate healthRestTemplate;
@@ -49,9 +54,7 @@ public class GetSystemStatusUseCase {
     }
 
     private ServiceStatusItem checkApiService() {
-        long start = System.nanoTime();
-        long latencyMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-        return new ServiceStatusItem("api", "API 서버", STATUS_UP, latencyMs);
+        return new ServiceStatusItem("api", "API 서버", STATUS_UP, null);
     }
 
     private ServiceStatusItem checkDatabaseService() {
@@ -74,8 +77,11 @@ public class GetSystemStatusUseCase {
         long start = System.nanoTime();
         String healthUrl = aiServerUrl + "/health";
         try {
-            @SuppressWarnings("rawtypes")
-            ResponseEntity<Map> response = healthRestTemplate.getForEntity(healthUrl, Map.class);
+            ResponseEntity<Map<String, Object>> response = healthRestTemplate.exchange(
+                    healthUrl,
+                    HttpMethod.GET,
+                    null,
+                    AI_HEALTH_RESPONSE_TYPE);
             long latencyMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
             if (response.getStatusCode().is2xxSuccessful() && isAiHealthOk(response.getBody())) {
                 return new ServiceStatusItem("ai", "AI 게이트웨이", STATUS_UP, latencyMs);
@@ -91,7 +97,7 @@ public class GetSystemStatusUseCase {
         return new ServiceStatusItem("ai", "AI 게이트웨이", STATUS_DOWN, latencyMs);
     }
 
-    private static boolean isAiHealthOk(Map<?, ?> body) {
+    private static boolean isAiHealthOk(Map<String, Object> body) {
         if (body == null) {
             return false;
         }
