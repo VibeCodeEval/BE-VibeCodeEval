@@ -24,7 +24,9 @@ import lombok.RequiredArgsConstructor;
 /**
  * Submission Controller
  * - POST /api/exams/{examId}/submissions: 코드 제출
- * - GET /api/submissions/{submissionId}: 제출 상세 조회
+ * - GET /api/submissions/{submissionId}: 제출 상세 조회 (본인 제출만, 제출 코드·루브릭 미포함)
+ *   보안: {@code participantId}가 액세스 토큰 user id와 일치할 때만 조회. 민감 데이터는
+ *   {@code GET /api/admin/submissions/{id}} (ADMIN/MASTER)를 사용한다.
  */
 @RestController
 @RequiredArgsConstructor
@@ -46,8 +48,10 @@ public class SubmissionController implements SubmissionApi {
 
     @GetMapping("/submissions/{submissionId}")
     public BaseResponse<SubmissionDetailResponse> getSubmissionDetail(
-            @PathVariable Long submissionId) {
-        SubmissionDetailResponse response = getSubmissionDetailUseCase.execute(submissionId);
+            @PathVariable Long submissionId,
+            @CurrentUser Long currentUserId) {
+        SubmissionDetailResponse response =
+                getSubmissionDetailUseCase.execute(currentUserId, submissionId);
         return BaseResponse.onSuccess(response);
     }
 }

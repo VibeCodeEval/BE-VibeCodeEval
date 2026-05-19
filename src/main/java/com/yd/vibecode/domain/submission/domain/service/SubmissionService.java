@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Optional;
 
 /**
  * SubmissionService
@@ -37,6 +38,16 @@ public class SubmissionService {
     public Submission findById(Long id) {
         return submissionRepository.findById(id)
                 .orElseThrow(() -> new RestApiException(SubmissionErrorStatus.SUBMISSION_NOT_FOUND));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsByExamIdAndParticipantId(Long examId, Long participantId) {
+        return submissionRepository.existsByExamIdAndParticipantId(examId, participantId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Submission> findOptionalByExamIdAndParticipantId(Long examId, Long participantId) {
+        return submissionRepository.findByExamIdAndParticipantId(examId, participantId);
     }
 
     /**

@@ -3,6 +3,9 @@ package com.yd.vibecode.domain.admin.application.dto.response;
 import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
 import com.yd.vibecode.domain.auth.domain.entity.User;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 public record ExamineeBoardResponse(
     Long examParticipantId,
     String name,
@@ -10,17 +13,35 @@ public record ExamineeBoardResponse(
     String state,
     Integer tokenLimit,
     Long tokenUsed,
-    Boolean submitted
+    Boolean submitted,
+    Long submissionId,
+    String submissionStatus,
+    BigDecimal totalScore,
+    LocalDateTime submittedAt,
+    LocalDateTime evaluatedAt
 ) {
-    public static ExamineeBoardResponse of(ExamParticipant ep, User p, Boolean submitted) {
+    public static ExamineeBoardResponse of(
+            ExamParticipant ep,
+            User p,
+            boolean submitted,
+            Long submissionId,
+            String submissionStatus,
+            BigDecimal totalScore,
+            LocalDateTime submittedAt,
+            LocalDateTime evaluatedAt) {
         return new ExamineeBoardResponse(
             ep.getId(),
-            p.getName(),
-            maskPhone(p.getPhone()),
+            p != null ? p.getName() : "",
+            p != null ? maskPhone(p.getPhone()) : "",
             ep.getState(),
             ep.getTokenLimit(),
             ep.getTokenUsed().longValue(),
-            submitted
+            submitted,
+            submissionId,
+            submissionStatus,
+            totalScore,
+            submittedAt,
+            evaluatedAt
         );
     }
 

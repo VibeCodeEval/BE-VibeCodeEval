@@ -299,6 +299,7 @@ class GetActiveSessionUseCaseTest {
         // then
         assertThat(response.examId()).isEqualTo(10L);
         assertThat(response.examParticipantId()).isEqualTo(50L);
+        assertThat(response.participantId()).isEqualTo(20L);
         assertThat(response.specId()).isEqualTo(30L);
         assertThat(response.assignedProblemId()).isEqualTo(40L);
         assertThat(response.examState()).isEqualTo(ExamState.RUNNING);

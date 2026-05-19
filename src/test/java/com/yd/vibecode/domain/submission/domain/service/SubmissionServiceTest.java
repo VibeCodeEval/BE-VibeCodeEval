@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.verify;
@@ -32,6 +33,32 @@ class SubmissionServiceTest {
 
     @Mock
     private ListOperations<String, String> listOperations;
+
+    @Test
+    @DisplayName("existsByExamIdAndParticipantId — 제출 존재 시 true")
+    void existsByExamIdAndParticipantId_returnsTrue() {
+        Long examId = 1L;
+        Long participantId = 100L;
+        given(submissionRepository.existsByExamIdAndParticipantId(examId, participantId)).willReturn(true);
+
+        assertThat(submissionService.existsByExamIdAndParticipantId(examId, participantId)).isTrue();
+
+        verify(submissionRepository).existsByExamIdAndParticipantId(examId, participantId);
+        verify(submissionRepository, never()).findByExamIdAndParticipantId(examId, participantId);
+    }
+
+    @Test
+    @DisplayName("existsByExamIdAndParticipantId — 제출 없음 시 false")
+    void existsByExamIdAndParticipantId_returnsFalse() {
+        Long examId = 1L;
+        Long participantId = 100L;
+        given(submissionRepository.existsByExamIdAndParticipantId(examId, participantId)).willReturn(false);
+
+        assertThat(submissionService.existsByExamIdAndParticipantId(examId, participantId)).isFalse();
+
+        verify(submissionRepository).existsByExamIdAndParticipantId(examId, participantId);
+        verify(submissionRepository, never()).findByExamIdAndParticipantId(examId, participantId);
+    }
 
     @Test
     @DisplayName("제출 생성 및 Enqueue 성공: 해시 및 LOC 계산 확인")
