@@ -54,8 +54,9 @@ public class MeUseCase {
                     role,
                     new MeResponse.ParticipantInfo(
                             admin.getId(),
-                            admin.getAdminNumber(),  // name 필드에 adminNumber 사용
-                            admin.getEmail()         // phone 필드에 email 사용
+                            admin.resolveDisplayName(),
+                            admin.getEmail(),
+                            admin.getAdminNumber()
                     ),
                     null,
                     null
@@ -79,7 +80,8 @@ public class MeUseCase {
                     new MeResponse.ParticipantInfo(
                             user.getId(),
                             user.getName(),
-                            user.getPhone()
+                            user.getPhone(),
+                            null
                     ),
                     new ExamInfoResponse(
                             exam.getId(),
@@ -99,7 +101,8 @@ public class MeUseCase {
                 new MeResponse.ParticipantInfo(
                         user.getId(),
                         user.getName(),
-                        user.getPhone()
+                        user.getPhone(),
+                        null
                 ),
                 null,
                 null

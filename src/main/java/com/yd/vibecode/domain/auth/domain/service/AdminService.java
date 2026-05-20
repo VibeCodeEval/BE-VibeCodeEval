@@ -1,5 +1,7 @@
 package com.yd.vibecode.domain.auth.domain.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -51,9 +53,10 @@ public class AdminService {
         }
     }
 
-    public Admin create(String adminNumber, String email, String passwordHash) {
+    public Admin create(String adminNumber, String displayName, String email, String passwordHash) {
         Admin admin = Admin.builder()
                 .adminNumber(adminNumber)
+                .displayName(displayName != null ? displayName.trim() : null)
                 .email(email)
                 .passwordHash(passwordHash)
                 .is2faEnabled(false)
@@ -65,6 +68,12 @@ public class AdminService {
 
     public java.util.List<Admin> findAll() {
         return adminRepository.findAll();
+    }
+
+    /** 관리자 로그인 성공 시 최근 로그인 시각 갱신 */
+    public void recordLastLogin(Admin admin) {
+        admin.updateLastLoginAt(LocalDateTime.now());
+        adminRepository.save(admin);
     }
 }
 

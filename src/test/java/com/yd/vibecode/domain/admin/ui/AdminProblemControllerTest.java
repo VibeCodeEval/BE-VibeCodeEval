@@ -19,8 +19,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.yd.vibecode.domain.admin.application.usecase.CreateProblemUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.DeleteProblemUseCase;
+import com.yd.vibecode.domain.admin.application.dto.response.ProblemDetailResponse;
+import com.yd.vibecode.domain.admin.application.usecase.GetProblemDetailUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.GetProblemSpecsUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.GetProblemsUseCase;
+import com.yd.vibecode.domain.problem.domain.entity.Difficulty;
+import com.yd.vibecode.domain.problem.domain.entity.ProblemStatus;
 import com.yd.vibecode.global.interceptor.JwtBlacklistInterceptor;
 import com.yd.vibecode.global.security.ExcludeBlacklistPathProperties;
 import com.yd.vibecode.global.security.SecurityConfig;
@@ -49,6 +53,9 @@ class AdminProblemControllerTest {
     private GetProblemSpecsUseCase getProblemSpecsUseCase;
 
     @MockBean
+    private GetProblemDetailUseCase getProblemDetailUseCase;
+
+    @MockBean
     private JwtBlacklistInterceptor jwtBlacklistInterceptor;
 
     @MockBean
@@ -68,6 +75,33 @@ class AdminProblemControllerTest {
 
         // when & then
         mockMvc.perform(get("/api/admin/problems/" + problemId + "/specs"))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("문제 상세 조회 성공")
+    @WithMockUser(roles = "MASTER")
+    void getProblemDetail_success() throws Exception {
+        Long problemId = 1L;
+        ProblemDetailResponse detail = new ProblemDetailResponse(
+            problemId,
+            "외판원 순회",
+            Difficulty.MEDIUM,
+            List.of("dp"),
+            1,
+            "## 문제\n본문",
+            new ProblemDetailResponse.LimitsInfo(2000, 256),
+            new ProblemDetailResponse.RestrictionsInfo(List.of("python3.11"), List.of()),
+            new ProblemDetailResponse.CheckerInfo("equality"),
+            null,
+            null,
+            null,
+            ProblemStatus.PUBLISHED,
+            true
+        );
+        given(getProblemDetailUseCase.execute(eq(problemId))).willReturn(detail);
+
+        mockMvc.perform(get("/api/admin/problems/" + problemId + "/detail"))
             .andExpect(status().isOk());
     }
 }

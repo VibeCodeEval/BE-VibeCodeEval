@@ -54,6 +54,7 @@ class AdminLoginUseCaseTest {
         assertThat(response.role()).isEqualTo("ADMIN");
         assertThat(response.admin().email()).isEqualTo("admin@example.com");
         verify(adminService).validatePassword(admin, "password");
+        verify(adminService).recordLastLogin(admin);
     }
 
     @Test
@@ -79,5 +80,6 @@ class AdminLoginUseCaseTest {
         assertThat(response.role()).isEqualTo("ADMIN");
         assertThat(response.admin().adminNumber()).isEqualTo("admin123");
         verify(adminService).validatePassword(admin, "password");
+        verify(adminService).recordLastLogin(admin);
     }
 }

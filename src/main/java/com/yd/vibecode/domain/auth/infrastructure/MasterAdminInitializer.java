@@ -43,6 +43,7 @@ public class MasterAdminInitializer implements ApplicationRunner {
             log.info("[MasterAdminInitializer] Creating master admin account...");
             Admin master = adminRepository.save(Admin.builder()
                     .adminNumber(properties.adminNumber())
+                    .displayName("Master")
                     .email(properties.email())
                     .passwordHash(passwordEncoder.encode(properties.password()))
                     .role(AdminRole.MASTER)

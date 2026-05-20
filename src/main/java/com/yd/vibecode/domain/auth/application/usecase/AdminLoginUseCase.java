@@ -20,7 +20,7 @@ public class AdminLoginUseCase {
     private final AdminService adminService;
     private final TokenProvider tokenProvider;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AdminLoginResponse execute(AdminLoginRequest request) {
         // 1. 관리자 조회 (관리자 번호 또는 이메일로)
         Admin admin;
@@ -35,14 +35,17 @@ public class AdminLoginUseCase {
             throw new RestApiException(AuthErrorStatus.ADMIN_ACCOUNT_INACTIVE);
         }
 
-        // 3. 비밀번호 검증
+        // 3. 비밀번호 검증 (실패 시 예외 — lastLoginAt 미갱신)
         adminService.validatePassword(admin, request.password());
 
-        // 4. JWT 토큰 생성
+        // 4. 인증 성공 시 최근 로그인 시각 저장
+        adminService.recordLastLogin(admin);
+
+        // 5. JWT 토큰 생성
         String accessToken = tokenProvider.createAccessToken(
                 admin.getId().toString(), "ADMIN");
 
-        // 5. 응답 생성
+        // 6. 응답 생성
         return new AdminLoginResponse(
                 accessToken,
                 "ADMIN",

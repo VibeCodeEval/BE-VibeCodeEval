@@ -12,7 +12,9 @@ public record MeResponse(
     public record ParticipantInfo(
         Long id,
         String name,
-        String phone
+        String phone,
+        /** ADMIN 전용. USER는 null */
+        String adminNumber
     ) {
     }
 }

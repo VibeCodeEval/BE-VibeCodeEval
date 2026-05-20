@@ -3,6 +3,7 @@ package com.yd.vibecode.global.swagger;
 import java.util.List;
 
 import com.yd.vibecode.domain.admin.application.dto.request.CreateProblemRequest;
+import com.yd.vibecode.domain.admin.application.dto.response.ProblemDetailResponse;
 import com.yd.vibecode.domain.admin.application.dto.response.ProblemResponse;
 import com.yd.vibecode.domain.admin.application.dto.response.ProblemSpecResponse;
 import com.yd.vibecode.global.common.BaseResponse;
@@ -31,4 +32,12 @@ public interface AdminProblemApi extends BaseApi {
     @Operation(summary = "문제 스펙 조회", description = "특정 문제의 스펙 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     BaseResponse<List<ProblemSpecResponse>> getProblemSpecs(Long problemId);
+
+    @Operation(
+            summary = "문제 상세 조회",
+            description = "problemId 기준으로 공개 가능한 문제 본문(contentMd) 및 스펙 메타를 조회합니다. "
+                    + "테스트케이스·정답 데이터는 포함하지 않습니다."
+    )
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    BaseResponse<ProblemDetailResponse> getProblemDetail(Long problemId);
 }

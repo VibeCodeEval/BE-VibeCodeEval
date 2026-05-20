@@ -48,7 +48,7 @@ class AdminServiceTest {
         given(adminRepository.save(any(Admin.class))).willReturn(admin);
 
         // when
-        Admin result = adminService.create(adminNumber, email, passwordHash);
+        Admin result = adminService.create(adminNumber, "테스트 관리자", email, passwordHash);
 
         // then
         assertThat(result.getAdminNumber()).isEqualTo(adminNumber);
