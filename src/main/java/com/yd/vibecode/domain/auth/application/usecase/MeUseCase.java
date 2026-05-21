@@ -56,7 +56,8 @@ public class MeUseCase {
                             admin.getId(),
                             admin.resolveDisplayName(),
                             admin.getEmail(),
-                            admin.getAdminNumber()
+                            admin.getAdminNumber(),
+                            admin.getDisplayName()
                     ),
                     null,
                     null
@@ -81,6 +82,7 @@ public class MeUseCase {
                             user.getId(),
                             user.getName(),
                             user.getPhone(),
+                            null,
                             null
                     ),
                     new ExamInfoResponse(
@@ -102,6 +104,7 @@ public class MeUseCase {
                         user.getId(),
                         user.getName(),
                         user.getPhone(),
+                        null,
                         null
                 ),
                 null,

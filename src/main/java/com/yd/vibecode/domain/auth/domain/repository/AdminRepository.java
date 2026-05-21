@@ -1,5 +1,7 @@
 package com.yd.vibecode.domain.auth.domain.repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -7,6 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.yd.vibecode.domain.auth.domain.entity.Admin;
 
 public interface AdminRepository extends JpaRepository<Admin, Long> {
+
+    List<Admin> findByIdIn(Collection<Long> ids);
 
     Optional<Admin> findByAdminNumber(String adminNumber);
 

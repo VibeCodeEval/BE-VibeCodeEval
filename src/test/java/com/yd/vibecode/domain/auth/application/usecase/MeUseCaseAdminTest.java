@@ -58,6 +58,7 @@ class MeUseCaseAdminTest {
 
         assertThat(response.role()).isEqualTo("ADMIN");
         assertThat(response.participant().name()).isEqualTo("김관리");
+        assertThat(response.participant().displayName()).isEqualTo("김관리");
         assertThat(response.participant().phone()).isEqualTo("admin@example.com");
         assertThat(response.participant().adminNumber()).isEqualTo("ADM-001");
     }
@@ -81,6 +82,7 @@ class MeUseCaseAdminTest {
         MeResponse response = meUseCase.execute(token);
 
         assertThat(response.participant().name()).isEqualTo("ADM-002");
+        assertThat(response.participant().displayName()).isNull();
         assertThat(response.participant().adminNumber()).isEqualTo("ADM-002");
     }
 }

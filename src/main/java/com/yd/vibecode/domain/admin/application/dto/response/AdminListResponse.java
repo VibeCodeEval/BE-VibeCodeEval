@@ -25,7 +25,7 @@ public record AdminListResponse(
             return new AdminInfo(
                 admin.getId(),
                 admin.getAdminNumber(),
-                admin.resolveDisplayName(),
+                admin.getDisplayName(),
                 admin.getEmail(),
                 admin.getRole(),
                 admin.getIs2faEnabled(),
