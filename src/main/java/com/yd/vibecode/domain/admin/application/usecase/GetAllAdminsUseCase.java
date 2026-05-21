@@ -1,6 +1,9 @@
 package com.yd.vibecode.domain.admin.application.usecase;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,13 +37,23 @@ public class GetAllAdminsUseCase {
                 .filter(admin -> !admin.isDeleted())
                 .toList();
 
+        List<String> adminNumbers = admins.stream()
+                .map(Admin::getAdminNumber)
+                .toList();
+
+        Map<String, LocalDateTime> issuedAtByAdminNumber = adminNumbers.isEmpty()
+                ? Map.of()
+                : adminNumberRepository.findByAdminNumberIn(adminNumbers).stream()
+                        .collect(Collectors.toMap(
+                                AdminNumber::getAdminNumber,
+                                AdminNumber::getCreatedAt
+                        ));
+
         List<AdminListResponse.AdminInfo> adminInfos = admins.stream()
-                .map(admin -> {
-                    var issuedAt = adminNumberRepository.findByAdminNumber(admin.getAdminNumber())
-                            .map(AdminNumber::getCreatedAt)
-                            .orElse(null);
-                    return AdminListResponse.AdminInfo.from(admin, issuedAt);
-                })
+                .map(admin -> AdminListResponse.AdminInfo.from(
+                        admin,
+                        issuedAtByAdminNumber.get(admin.getAdminNumber())
+                ))
                 .toList();
 
         return AdminListResponse.of(adminInfos);

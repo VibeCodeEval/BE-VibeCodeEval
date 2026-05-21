@@ -12,11 +12,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +50,10 @@ import com.yd.vibecode.global.security.TokenProvider;
 )
 class AdminNumberControllerTest {
 
+    private static final String ACCESS_TOKEN = "access-token";
+    /** JWT @CurrentUser로 전달되는 요청자(MASTER) ID */
+    private static final Long CURRENT_USER_ID = 1L;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -72,47 +78,64 @@ class AdminNumberControllerTest {
     @MockBean
     private TokenProvider tokenProvider;
 
-    @Test
-    @DisplayName("모든 관리자 조회 성공")
-    @WithMockUser(roles = "ADMIN")
-    void getAllAdmins_success() throws Exception {
-        AdminListResponse mockResponse = new AdminListResponse(List.of());
-        given(getAllAdminsUseCase.execute(any(Long.class)))
-            .willReturn(mockResponse);
-
-        mockMvc.perform(get("/api/admin/admin-numbers/admins"))
-            .andExpect(status().isOk());
+    @BeforeEach
+    void setUp() throws Exception {
+        given(jwtBlacklistInterceptor.preHandle(
+                any(HttpServletRequest.class),
+                any(HttpServletResponse.class),
+                any()
+        )).willReturn(true);
+        given(excludeBlacklistPathProperties.getExcludeAuthPaths()).willReturn(Collections.emptyList());
+        given(tokenProvider.getToken(any(HttpServletRequest.class))).willReturn(Optional.of(ACCESS_TOKEN));
+        given(tokenProvider.isAccessToken(ACCESS_TOKEN)).willReturn(true);
+        given(tokenProvider.getId(ACCESS_TOKEN)).willReturn(Optional.of(String.valueOf(CURRENT_USER_ID)));
     }
 
     @Test
-    @DisplayName("관리자 번호 발급 성공")
-    @WithMockUser(roles = "ADMIN")
-    void issueAdminNumber_success() throws Exception {
+    @DisplayName("MASTER - 모든 관리자 조회 성공")
+    @WithMockUser(roles = "MASTER")
+    void master_getAllAdmins_success() throws Exception {
+        AdminListResponse mockResponse = new AdminListResponse(List.of());
+        given(getAllAdminsUseCase.execute(eq(CURRENT_USER_ID))).willReturn(mockResponse);
+
+        mockMvc.perform(get("/api/admin/admin-numbers/admins")
+                .header("Authorization", "Bearer " + ACCESS_TOKEN))
+            .andExpect(status().isOk());
+
+        verify(getAllAdminsUseCase).execute(eq(CURRENT_USER_ID));
+    }
+
+    @Test
+    @DisplayName("MASTER - 관리자 번호 발급 성공")
+    @WithMockUser(roles = "MASTER")
+    void master_issueAdminNumber_success() throws Exception {
         String requestBody = """
             {
                 "label": "Test Admin",
-                "expiresAt": "2025-12-31T23:59:59"
+                "expiresAt": "2099-12-31T23:59:59"
             }
             """;
 
         AdminNumberResponse mockResponse = new AdminNumberResponse(
             "ADM-123456", "Test Admin", true, 1L, null,
-            LocalDateTime.parse("2025-12-31T23:59:59"), null, LocalDateTime.now()
+            LocalDateTime.parse("2099-12-31T23:59:59"), null, LocalDateTime.now()
         );
 
-        given(issueAdminNumberUseCase.execute(any(Long.class), any()))
-            .willReturn(mockResponse);
+        given(issueAdminNumberUseCase.execute(eq(CURRENT_USER_ID), any())).willReturn(mockResponse);
 
         mockMvc.perform(post("/api/admin/admin-numbers")
+                .header("Authorization", "Bearer " + ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
             .andExpect(status().isOk());
+
+        verify(issueAdminNumberUseCase).execute(eq(CURRENT_USER_ID), any());
     }
 
     @Test
-    @DisplayName("관리자 번호 수정 성공")
-    @WithMockUser(roles = "ADMIN")
-    void updateAdminNumber_success() throws Exception {
+    @DisplayName("MASTER - 관리자 번호 수정 성공")
+    @WithMockUser(roles = "MASTER")
+    void master_updateAdminNumber_success() throws Exception {
         String adminNumber = "ADM-123456";
         String requestBody = """
             {
@@ -125,39 +148,33 @@ class AdminNumberControllerTest {
             adminNumber, "Updated Admin", false, 1L, null, null, null, LocalDateTime.now()
         );
 
-        given(updateAdminNumberUseCase.execute(any(Long.class), eq(adminNumber), any()))
+        given(updateAdminNumberUseCase.execute(eq(CURRENT_USER_ID), eq(adminNumber), any()))
             .willReturn(mockResponse);
 
         mockMvc.perform(patch("/api/admin/admin-numbers/" + adminNumber)
+                .header("Authorization", "Bearer " + ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
             .andExpect(status().isOk());
+
+        verify(updateAdminNumberUseCase).execute(eq(CURRENT_USER_ID), eq(adminNumber), any());
     }
 
     @Test
-    @DisplayName("MASTER 타 관리자 임시 비밀번호 재설정 성공")
-    @WithMockUser(roles = "ADMIN")
-    void resetAdminPasswordByMaster_success() throws Exception {
+    @DisplayName("MASTER - 타 관리자 임시 비밀번호 재설정 성공")
+    @WithMockUser(roles = "MASTER")
+    void master_resetAdminPasswordByMaster_success() throws Exception {
         String adminNumber = "ADM-123456";
 
-        given(jwtBlacklistInterceptor.preHandle(
-                any(HttpServletRequest.class),
-                any(HttpServletResponse.class),
-                any()
-        )).willReturn(true);
-        given(tokenProvider.getToken(any(HttpServletRequest.class))).willReturn(Optional.of("access-token"));
-        given(tokenProvider.isAccessToken("access-token")).willReturn(true);
-        given(tokenProvider.getId("access-token")).willReturn(Optional.of("1"));
-
-        given(resetAdminPasswordByMasterUseCase.execute(eq(1L), eq(adminNumber)))
+        given(resetAdminPasswordByMasterUseCase.execute(eq(CURRENT_USER_ID), eq(adminNumber)))
                 .willReturn(new ResetAdminPasswordByMasterResponse("TempPass1!xYz"));
 
-        mockMvc.perform(patch("/api/admin/admin-numbers/" + adminNumber + "/password/reset"))
+        mockMvc.perform(patch("/api/admin/admin-numbers/" + adminNumber + "/password/reset")
+                .header("Authorization", "Bearer " + ACCESS_TOKEN))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.result.temporaryPassword").value("TempPass1!xYz"));
 
-        verify(resetAdminPasswordByMasterUseCase).execute(eq(1L), eq(adminNumber));
+        verify(resetAdminPasswordByMasterUseCase).execute(eq(CURRENT_USER_ID), eq(adminNumber));
         verify(updateAdminNumberUseCase, never()).execute(any(Long.class), eq(adminNumber), any());
     }
 }
-

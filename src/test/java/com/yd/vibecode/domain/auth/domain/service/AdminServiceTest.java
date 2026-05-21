@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.yd.vibecode.domain.auth.domain.entity.Admin;
@@ -64,6 +65,21 @@ class AdminServiceTest {
 
         // when & then
         assertDoesNotThrow(() -> adminService.validatePassword(admin, "raw"));
+    }
+
+    @Test
+    @DisplayName("최근 로그인 시각 갱신 - save 없이 dirty checking")
+    void recordLastLogin_updatesLastLoginAt_withoutSave() {
+        Admin admin = Admin.builder()
+                .adminNumber("admin123")
+                .email("admin@example.com")
+                .passwordHash("encoded")
+                .build();
+
+        adminService.recordLastLogin(admin);
+
+        assertThat(admin.getLastLoginAt()).isNotNull();
+        verify(adminRepository, never()).save(any(Admin.class));
     }
 
     @Test

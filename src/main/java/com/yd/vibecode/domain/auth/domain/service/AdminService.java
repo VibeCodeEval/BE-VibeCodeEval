@@ -70,10 +70,9 @@ public class AdminService {
         return adminRepository.findAll();
     }
 
-    /** 관리자 로그인 성공 시 최근 로그인 시각 갱신 */
+    /** 관리자 로그인 성공 시 최근 로그인 시각 갱신 (영속 엔티티 dirty checking) */
     public void recordLastLogin(Admin admin) {
         admin.updateLastLoginAt(LocalDateTime.now());
-        adminRepository.save(admin);
     }
 }
 
