@@ -16,9 +16,10 @@ public interface AdminSubmissionStreamApi extends BaseApi {
             제출 ID에 대한 채점 결과를 SSE(Server-Sent Events)로 실시간 스트리밍합니다.
             Admin/Master 권한이 필요합니다.
 
-            **이벤트 타입:**
-            - `case_result`: 테스트 케이스별 결과 (caseIndex, verdict, timeMs, memKb)
-            - `final_score`: 최종 점수 (promptScore, perfScore, correctnessScore, total)
+            **이벤트 타입 (순서):**
+            - `case_result`: 테스트 케이스별 결과 (caseIndex, group, verdict, timeMs, memKb)
+            - `scoring_complete`: 채점 종료 (submissionId, status, runCount, passedCount)
+            - `final_score`: 최종 점수 (score 있을 때만, promptScore, perfScore, correctnessScore, total)
 
             **주의:** Swagger UI에서는 SSE를 직접 테스트하기 어렵습니다.
             curl 또는 브라우저 개발자 도구를 사용하세요.

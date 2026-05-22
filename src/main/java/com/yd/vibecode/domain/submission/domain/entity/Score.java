@@ -60,4 +60,13 @@ public class Score extends BaseEntity {
     public void calculateTotalScore() {
         this.totalScore = promptScore.add(perfScore).add(correctnessScore);
     }
+
+    public void updateFrom(BigDecimal promptScore, BigDecimal perfScore,
+                           BigDecimal correctnessScore, String rubricJson) {
+        this.promptScore = promptScore != null ? promptScore : BigDecimal.ZERO;
+        this.perfScore = perfScore != null ? perfScore : BigDecimal.ZERO;
+        this.correctnessScore = correctnessScore != null ? correctnessScore : BigDecimal.ZERO;
+        this.rubricJson = rubricJson;
+        calculateTotalScore();
+    }
 }
