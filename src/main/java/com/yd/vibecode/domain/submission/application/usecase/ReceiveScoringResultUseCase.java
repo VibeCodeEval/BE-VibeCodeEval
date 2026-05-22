@@ -95,7 +95,12 @@ public class ReceiveScoringResultUseCase {
                 finalScore
         ));
 
-        log.info("Scoring result saved, SSE event published: submissionId={}, status={}",
-                submissionId, request.status());
+        log.info(
+                "Scoring result saved, SSE event published: submissionId={}, status={}, runs={}, scoreSaved={}, sseFinalScore={}",
+                submissionId,
+                request.status(),
+                casePayloads.size(),
+                request.score() != null,
+                finalScore != null);
     }
 }
