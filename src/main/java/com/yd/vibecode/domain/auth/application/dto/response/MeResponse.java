@@ -11,8 +11,13 @@ public record MeResponse(
 ) {
     public record ParticipantInfo(
         Long id,
+        /** 표시용 이름 (displayName 없으면 adminNumber 등 BE fallback) */
         String name,
-        String phone
+        String phone,
+        /** ADMIN 전용. USER는 null */
+        String adminNumber,
+        /** ADMIN 전용 원본 display_name (nullable). USER는 null */
+        String displayName
     ) {
     }
 }

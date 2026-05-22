@@ -3,12 +3,12 @@ package com.yd.vibecode.domain.submission.application.usecase;
 import com.yd.vibecode.domain.submission.domain.entity.Submission;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.yd.vibecode.domain.chat.domain.service.PromptSessionService;
-import com.yd.vibecode.domain.chat.infrastructure.AIChatService;
 import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
 import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
+import com.yd.vibecode.domain.problem.domain.entity.ProblemSpec;
+import com.yd.vibecode.domain.problem.domain.service.ProblemSpecService;
 import com.yd.vibecode.domain.submission.application.dto.request.AISubmitEvaluationRequest;
 import com.yd.vibecode.domain.submission.application.dto.request.SubmitRequest;
 import com.yd.vibecode.domain.submission.application.dto.response.SubmitResponse;
@@ -16,6 +16,7 @@ import com.yd.vibecode.domain.submission.domain.service.OutboxEventService;
 import com.yd.vibecode.domain.submission.domain.service.SubmissionService;
 import com.yd.vibecode.global.exception.RestApiException;
 import com.yd.vibecode.global.exception.code.status.ProblemErrorStatus;
+import com.yd.vibecode.global.exception.code.status.SubmissionErrorStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class SubmitUseCase {
 
     private final ExamParticipantService examParticipantService;
     private final SubmissionService submissionService;
+    private final ProblemSpecService problemSpecService;
     private final PromptSessionService promptSessionService;
     private final OutboxEventService outboxEventService;
 
@@ -43,6 +45,16 @@ public class SubmitUseCase {
         
         if (examParticipant == null || examParticipant.getSpecId() == null) {
             throw new RestApiException(ProblemErrorStatus.NO_ASSIGNED_PROBLEM);
+        }
+
+        if (submissionService.existsByExamIdAndParticipantId(examId, userId)) {
+            throw new RestApiException(SubmissionErrorStatus.ALREADY_SUBMITTED);
+        }
+
+        Long problemId = examParticipant.getAssignedProblemId();
+        if (problemId == null) {
+            ProblemSpec spec = problemSpecService.findBySpecId(examParticipant.getSpecId());
+            problemId = spec.getProblemId();
         }
 
         // 2. 제출 생성 및 Redis Queue enqueue
@@ -62,7 +74,7 @@ public class SubmitUseCase {
         AISubmitEvaluationRequest aiRequest = new AISubmitEvaluationRequest(
                 examId,
                 userId,  // participantId
-                examParticipant.getAssignedProblemId(),
+                problemId,
                 examParticipant.getSpecId(),
                 request.code(),
                 request.lang(),

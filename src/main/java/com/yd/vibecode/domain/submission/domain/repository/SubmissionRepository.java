@@ -12,7 +12,9 @@ import java.util.Optional;
 public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     Optional<Submission> findByExamIdAndParticipantId(Long examId, Long participantId);
-    
+
+    boolean existsByExamIdAndParticipantId(Long examId, Long participantId);
+
     List<Submission> findByExamId(Long examId);
     
     List<Submission> findByParticipantId(Long participantId);

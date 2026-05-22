@@ -36,7 +36,11 @@ public class AdminSignupUseCase {
         String passwordHash = adminService.encodePassword(request.password());
 
         // 4. 관리자 생성
-        var admin = adminService.create(request.adminNumber(), request.email(), passwordHash);
+        var admin = adminService.create(
+                request.adminNumber(),
+                request.displayName(),
+                request.email(),
+                passwordHash);
 
         // 5. 관리자 번호 사용 처리
         adminNumberService.assign(adminNumber, admin.getId());

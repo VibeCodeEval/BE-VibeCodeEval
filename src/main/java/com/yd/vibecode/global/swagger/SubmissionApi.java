@@ -6,6 +6,7 @@ import com.yd.vibecode.domain.submission.application.dto.response.SubmitResponse
 import com.yd.vibecode.global.common.BaseResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -43,6 +44,7 @@ public interface SubmissionApi extends BaseApi {
     @Operation(
             summary = "제출 상세 조회",
             description = "제출 ID로 제출 상세 정보를 조회합니다. " +
+                    "본인 제출(`participantId` = 인증 사용자 ID)만 조회할 수 있습니다. " +
                     "채점 완료 시 테스트 케이스 결과, 점수, 메트릭 정보를 포함합니다."
     )
     @ApiResponses(value = {
@@ -52,11 +54,18 @@ public interface SubmissionApi extends BaseApi {
                     content = @Content(schema = @Schema(implementation = SubmissionDetailResponse.class))
             ),
             @ApiResponse(
+                    responseCode = "403",
+                    description = "타인 제출 조회 시도",
+                    content = @Content(schema = @Schema(implementation = BaseResponse.class))
+            ),
+            @ApiResponse(
                     responseCode = "404",
                     description = "제출을 찾을 수 없음",
                     content = @Content(schema = @Schema(implementation = BaseResponse.class))
             )
     })
-    BaseResponse<SubmissionDetailResponse> getSubmissionDetail(Long submissionId);
+    BaseResponse<SubmissionDetailResponse> getSubmissionDetail(
+            Long submissionId,
+            @Parameter(hidden = true) Long currentUserId);
 }
 

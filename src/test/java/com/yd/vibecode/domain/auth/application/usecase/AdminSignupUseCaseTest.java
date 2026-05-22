@@ -36,7 +36,7 @@ class AdminSignupUseCaseTest {
     void signup_success() {
         // given
         AdminSignupRequest request = new AdminSignupRequest(
-                "admin123", "admin@example.com", "password");
+                "admin123", "홍길동", "admin@example.com", "password");
         AdminNumber adminNumber = AdminNumber.builder()
                 .adminNumber("admin123")
                 .issuedBy(1L)
@@ -50,7 +50,7 @@ class AdminSignupUseCaseTest {
         given(adminService.existsByAdminNumber(request.adminNumber())).willReturn(false);
         given(adminService.existsByEmail(request.email())).willReturn(false);
         given(adminService.encodePassword(request.password())).willReturn("encodedPassword");
-        given(adminService.create(request.adminNumber(), request.email(), "encodedPassword"))
+        given(adminService.create(request.adminNumber(), request.displayName(), request.email(), "encodedPassword"))
                 .willReturn(savedAdmin);
 
         // when
@@ -58,7 +58,7 @@ class AdminSignupUseCaseTest {
 
         // then
         verify(adminNumberService).assign(adminNumber, savedAdmin.getId());
-        verify(adminService).create(request.adminNumber(), request.email(), "encodedPassword");
+        verify(adminService).create(request.adminNumber(), request.displayName(), request.email(), "encodedPassword");
     }
 
     @Test
@@ -66,7 +66,7 @@ class AdminSignupUseCaseTest {
     void signup_fail_duplicate_admin_number() {
         // given
         AdminSignupRequest request = new AdminSignupRequest(
-                "admin123", "admin@example.com", "password");
+                "admin123", "홍길동", "admin@example.com", "password");
         AdminNumber adminNumber = AdminNumber.builder()
                 .adminNumber("admin123")
                 .issuedBy(1L)
@@ -88,7 +88,7 @@ class AdminSignupUseCaseTest {
     void signup_fail_duplicate_email() {
         // given
         AdminSignupRequest request = new AdminSignupRequest(
-                "admin123", "admin@example.com", "password");
+                "admin123", "홍길동", "admin@example.com", "password");
         AdminNumber adminNumber = AdminNumber.builder()
                 .adminNumber("admin123")
                 .issuedBy(1L)

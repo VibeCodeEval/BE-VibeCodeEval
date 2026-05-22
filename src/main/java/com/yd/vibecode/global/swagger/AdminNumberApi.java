@@ -4,6 +4,7 @@ import com.yd.vibecode.domain.admin.application.dto.request.AdminNumberIssueRequ
 import com.yd.vibecode.domain.admin.application.dto.request.AdminNumberUpdateRequest;
 import com.yd.vibecode.domain.admin.application.dto.response.AdminListResponse;
 import com.yd.vibecode.domain.admin.application.dto.response.AdminNumberResponse;
+import com.yd.vibecode.domain.admin.application.dto.response.ResetAdminPasswordByMasterResponse;
 import com.yd.vibecode.global.common.BaseResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,11 +26,18 @@ public interface AdminNumberApi extends BaseApi {
             @Parameter(hidden = true) String adminId,
             AdminNumberIssueRequest request);
 
+    @Operation(
+            summary = "관리자 임시 비밀번호 재설정 (MASTER)",
+            description = "MASTER가 다른 관리자의 비밀번호를 임시 비밀번호로 재설정합니다. " +
+                    "응답의 temporaryPassword는 한 번만 표시됩니다. 마스터 계정은 재설정할 수 없습니다."
+    )
+    BaseResponse<ResetAdminPasswordByMasterResponse> resetAdminPasswordByMaster(
+            @Parameter(hidden = true) String adminId,
+            String adminNumber);
+
     @Operation(summary = "관리자 번호 상태 변경", description = "관리자 번호의 라벨, 만료일, 활성 상태를 변경합니다. 관리자 번호 값 자체는 변경되지 않습니다.")
     BaseResponse<AdminNumberResponse> updateAdminNumber(
             @Parameter(hidden = true) String adminId,
             String adminNumber,
             AdminNumberUpdateRequest request);
 }
-
-

@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,6 +29,9 @@ public class Admin extends BaseEntity {
     @Column(nullable = false, unique = true, length = 50)
     private String adminNumber;
 
+    @Column(name = "display_name", length = 100)
+    private String displayName;
+
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
@@ -44,9 +48,14 @@ public class Admin extends BaseEntity {
     @Column(nullable = false)
     private Boolean isActive = true;
 
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+
     @Builder
-    public Admin(String adminNumber, String email, String passwordHash, AdminRole role, Boolean is2faEnabled, Boolean isActive) {
+    public Admin(String adminNumber, String displayName, String email, String passwordHash, AdminRole role,
+                 Boolean is2faEnabled, Boolean isActive) {
         this.adminNumber = adminNumber;
+        this.displayName = displayName;
         this.email = email;
         this.passwordHash = passwordHash;
         this.role = role != null ? role : AdminRole.ADMIN;
@@ -64,6 +73,18 @@ public class Admin extends BaseEntity {
 
     public void updateActive(Boolean isActive) {
         this.isActive = isActive != null ? isActive : true;
+    }
+
+    public void updateLastLoginAt(LocalDateTime lastLoginAt) {
+        this.lastLoginAt = lastLoginAt;
+    }
+
+    /** 표시 이름 (미입력·레거시 계정은 관리자 번호) */
+    public String resolveDisplayName() {
+        if (displayName != null && !displayName.isBlank()) {
+            return displayName.trim();
+        }
+        return adminNumber;
     }
 
     public boolean isMaster() {

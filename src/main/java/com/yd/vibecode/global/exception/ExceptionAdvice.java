@@ -3,12 +3,14 @@ package com.yd.vibecode.global.exception;
 import com.yd.vibecode.global.common.BaseResponse;
 import com.yd.vibecode.global.exception.code.BaseCode;
 import com.yd.vibecode.global.exception.code.status.GlobalErrorStatus;
+import com.yd.vibecode.global.exception.code.status.SubmissionErrorStatus;
 import jakarta.validation.ConstraintViolationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -42,6 +44,60 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
                 e.getErrorCode().getCode(), e.getErrorCode().getMessage());
         BaseCode errorCode = e.getErrorCode();
         return handleExceptionInternal(errorCode);
+    }
+
+    /**
+     * 동일 시험·참가자에 대한 제출은 DB 유니크(exam_id, participant_id)로 한 건만 허용된다.
+     * 경쟁 조건 등으로 사전 검사를 통과한 뒤에도 위반이 나면 SUB002로 응답한다.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<BaseResponse<String>> handleDataIntegrityViolation(DataIntegrityViolationException e) {
+        if (isDuplicateSubmissionConstraintViolation(e)) {
+            log.warn("[handleDataIntegrityViolation] duplicate submission (exam_id, participant_id): {}",
+                    e.getMostSpecificCause() != null ? e.getMostSpecificCause().getMessage() : e.getMessage());
+            return handleExceptionInternal(SubmissionErrorStatus.ALREADY_SUBMITTED.getCode());
+        }
+        String msg = e.getMostSpecificCause() != null ? e.getMostSpecificCause().getMessage() : e.getMessage();
+        log.error("[handleDataIntegrityViolation] unmapped constraint: {}", msg, e);
+        return handleExceptionInternal(GlobalErrorStatus._EXIST_ENTITY.getCode());
+    }
+
+    /**
+     * submissions 테이블의 (exam_id, participant_id) 유니크 위반만 SUB002로 매핑한다.
+     * submissions 테이블명·FK·NOT NULL 등 다른 무결성 오류는 제외한다.
+     */
+    static boolean isDuplicateSubmissionConstraintViolation(DataIntegrityViolationException e) {
+        String text = extractConstraintViolationText(e).toLowerCase();
+        if (text.isBlank()) {
+            return false;
+        }
+        if (!text.contains("exam_id") || !text.contains("participant_id")) {
+            return false;
+        }
+        return text.contains("duplicate")
+                || text.contains("unique constraint")
+                || text.contains("unique key")
+                || text.contains("violates unique")
+                || (text.contains("unique") && text.contains("constraint"))
+                || text.contains("already exists");
+    }
+
+    private static String extractConstraintViolationText(DataIntegrityViolationException e) {
+        StringBuilder sb = new StringBuilder();
+        Throwable current = e;
+        while (current != null) {
+            if (current.getMessage() != null) {
+                sb.append(current.getMessage()).append(' ');
+            }
+            if (current instanceof org.hibernate.exception.ConstraintViolationException hibernateCve) {
+                String constraintName = hibernateCve.getConstraintName();
+                if (constraintName != null) {
+                    sb.append(constraintName).append(' ');
+                }
+            }
+            current = current.getCause();
+        }
+        return sb.toString().trim();
     }
 
     /*

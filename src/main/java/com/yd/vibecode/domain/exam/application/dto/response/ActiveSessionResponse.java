@@ -9,6 +9,7 @@ import com.yd.vibecode.domain.exam.domain.entity.ExamState;
 public record ActiveSessionResponse(
     Long examId,
     Long examParticipantId,
+    Long participantId,
     Long assignedProblemId,
     Long specId,
     ExamState examState,
@@ -22,6 +23,7 @@ public record ActiveSessionResponse(
         return new ActiveSessionResponse(
             exam.getId(),
             participant.getId(),
+            participant.getParticipantId(),
             participant.getAssignedProblemId(),
             participant.getSpecId(),
             exam.getState(),

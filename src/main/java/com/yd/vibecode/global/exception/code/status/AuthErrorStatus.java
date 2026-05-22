@@ -42,7 +42,8 @@ public enum AuthErrorStatus implements BaseCodeInterface {
     ADMIN_NUMBER_INACTIVE(HttpStatus.BAD_REQUEST, "AUTH019", "사용할 수 없는 관리자 번호입니다."),
     MASTER_ONLY(HttpStatus.FORBIDDEN, "AUTH020", "MASTER 권한이 필요합니다."),
     MASTER_ACCOUNT_CANNOT_BE_DEACTIVATED(HttpStatus.BAD_REQUEST, "AUTH021", "마스터 계정은 비활성화할 수 없습니다."),
-    ADMIN_ACCOUNT_INACTIVE(HttpStatus.FORBIDDEN, "AUTH022", "비활성화된 관리자 계정입니다.")
+    ADMIN_ACCOUNT_INACTIVE(HttpStatus.FORBIDDEN, "AUTH022", "비활성화된 관리자 계정입니다."),
+    MASTER_ACCOUNT_PASSWORD_CANNOT_BE_RESET(HttpStatus.BAD_REQUEST, "AUTH023", "마스터 계정 비밀번호는 재설정할 수 없습니다.")
     ;
 
     private final HttpStatus httpStatus;
