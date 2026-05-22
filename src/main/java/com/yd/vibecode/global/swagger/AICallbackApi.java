@@ -36,7 +36,8 @@ public interface AICallbackApi extends BaseApi {
     @Operation(
             summary = "채점 결과 수신",
             description = "AI Worker가 N9 이후 testCases, score, status를 전송합니다. "
-                    + "submission_runs, scores 저장 및 SSE 발행."
+                    + "submission_runs, scores 저장 및 SSE(case_result, scoring_complete, final_score) 발행. "
+                    + "재호출 시 기존 runs/score를 덮어씁니다."
     )
     @ApiResponse(responseCode = "200", description = "채점 결과 수신 성공")
     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content)

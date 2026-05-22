@@ -45,9 +45,8 @@ public class AICallbackController implements AICallbackApi {
     public BaseResponse<Void> receiveScoringResult(
             @PathVariable Long submissionId,
             @Valid @RequestBody ScoringResultRequest request) {
-        int testCaseCount = request.testCases() != null ? request.testCases().size() : 0;
         log.info("[AI Callback] POST /submissions/{}/result — status={}, testCases={}, hasScore={}",
-                submissionId, request.status(), testCaseCount, request.score() != null);
+                submissionId, request.status(), request.testCases().size(), request.score() != null);
         receiveScoringResultUseCase.execute(submissionId, request);
         log.info("[AI Callback] result 처리 완료 — submissionId={}, status={}", submissionId, request.status());
         return BaseResponse.onSuccess();

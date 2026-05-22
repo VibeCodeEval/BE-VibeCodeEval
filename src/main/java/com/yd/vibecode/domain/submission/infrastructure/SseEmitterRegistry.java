@@ -68,7 +68,7 @@ public class SseEmitterRegistry {
     public void send(Long submissionId, String eventName, Object data) {
         CopyOnWriteArrayList<SseEmitter> list = emitters.get(submissionId);
         if (list == null || list.isEmpty()) {
-            log.info("No SSE emitter for submissionId={}, event={} skipped (no /stream subscriber)",
+            log.debug("No SSE emitter for submissionId={}, event={} skipped (no /stream subscriber)",
                     submissionId, eventName);
             return;
         }

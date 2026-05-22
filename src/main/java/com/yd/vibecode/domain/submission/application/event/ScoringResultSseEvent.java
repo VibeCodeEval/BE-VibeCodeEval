@@ -3,6 +3,7 @@ package com.yd.vibecode.domain.submission.application.event;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.yd.vibecode.domain.submission.domain.entity.RunGroup;
 import com.yd.vibecode.domain.submission.domain.entity.SubmissionStatus;
 import com.yd.vibecode.domain.submission.domain.entity.Verdict;
 
@@ -17,13 +18,20 @@ public record ScoringResultSseEvent(
     Long submissionId,
     SubmissionStatus status,
     List<CaseResultPayload> caseResults,
+    CompletionPayload completion,
     FinalScorePayload finalScore  // nullable (score 없는 경우)
 ) {
     public record CaseResultPayload(
         int caseIndex,
+        RunGroup group,
         Verdict verdict,
         int timeMs,
         int memKb
+    ) {}
+
+    public record CompletionPayload(
+        int runCount,
+        int passedCount
     ) {}
 
     public record FinalScorePayload(

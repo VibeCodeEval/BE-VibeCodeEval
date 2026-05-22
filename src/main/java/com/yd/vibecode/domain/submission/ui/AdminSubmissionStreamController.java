@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
  *
  * GET /api/admin/submissions/{submissionId}/stream
  * - text/event-stream 응답
- * - 이벤트: case_result (테스트 케이스별), final_score (최종 점수)
+ * - 이벤트: case_result, scoring_complete, final_score (선택)
  */
 @RestController
 @RequiredArgsConstructor

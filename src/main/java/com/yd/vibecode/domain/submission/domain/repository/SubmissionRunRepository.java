@@ -11,4 +11,6 @@ public interface SubmissionRunRepository extends JpaRepository<SubmissionRun, Lo
     List<SubmissionRun> findBySubmissionId(Long submissionId);
     
     List<SubmissionRun> findBySubmissionIdOrderByCaseIndexAsc(Long submissionId);
+
+    void deleteBySubmissionId(Long submissionId);
 }
