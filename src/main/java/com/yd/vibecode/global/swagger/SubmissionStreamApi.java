@@ -17,7 +17,7 @@ public interface SubmissionStreamApi extends BaseApi {
             description = """
                     제출 ID에 대한 채점 진행 상황을 SSE로 수신합니다. **해당 제출의 소유자(토큰의 user id = submissions.participant_id)**만 연결할 수 있습니다.
 
-                    이벤트는 관리자 스트림과 동일하게 `case_result`, `final_score`만 전달되며, 제출 코드·루브릭 등 민감 필드는 포함하지 않습니다.
+                    이벤트는 관리자 스트림과 동일하게 `case_result`, `scoring_complete`, `final_score`(선택) 순으로 전달되며, 제출 코드·루브릭 등 민감 필드는 포함하지 않습니다.
                     """)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "SSE 스트림 연결 성공", content = @Content()),

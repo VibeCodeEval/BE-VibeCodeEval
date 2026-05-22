@@ -12,9 +12,13 @@ import com.yd.vibecode.domain.submission.domain.entity.RunGroup;
 import com.yd.vibecode.domain.submission.domain.entity.Score;
 import com.yd.vibecode.domain.submission.domain.entity.Submission;
 import com.yd.vibecode.domain.submission.domain.entity.SubmissionRun;
+import com.yd.vibecode.domain.submission.domain.entity.SubmissionStatus;
+import com.yd.vibecode.domain.submission.domain.entity.Verdict;
 import com.yd.vibecode.domain.submission.domain.repository.ScoreRepository;
 import com.yd.vibecode.domain.submission.domain.repository.SubmissionRunRepository;
 import com.yd.vibecode.domain.submission.domain.service.SubmissionService;
+import com.yd.vibecode.global.exception.RestApiException;
+import com.yd.vibecode.global.exception.code.status.GlobalErrorStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,17 +42,21 @@ public class ReceiveScoringResultUseCase {
 
     @Transactional
     public void execute(Long submissionId, ScoringResultRequest request) {
-        // 1. Submission 상태 업데이트
+        validateTestCases(request);
+
         Submission submission = submissionService.findById(submissionId);
         submission.updateStatus(request.status());
 
-        // 2. SubmissionRun 저장
+        submissionRunRepository.deleteBySubmissionId(submissionId);
+
+        int passedCount = 0;
         List<ScoringResultSseEvent.CaseResultPayload> casePayloads = request.testCases().stream()
                 .map(tc -> {
+                    RunGroup group = parseRunGroup(tc.group());
                     SubmissionRun run = SubmissionRun.builder()
                             .submissionId(submissionId)
                             .caseIndex(tc.caseIndex())
-                            .grp(RunGroup.valueOf(tc.group()))
+                            .grp(group)
                             .verdict(tc.verdict())
                             .timeMs(tc.timeMs())
                             .memKb(tc.memKb())
@@ -59,6 +67,7 @@ public class ReceiveScoringResultUseCase {
 
                     return new ScoringResultSseEvent.CaseResultPayload(
                             tc.caseIndex(),
+                            group,
                             tc.verdict(),
                             tc.timeMs() != null ? tc.timeMs() : 0,
                             tc.memKb() != null ? tc.memKb() : 0
@@ -66,36 +75,64 @@ public class ReceiveScoringResultUseCase {
                 })
                 .toList();
 
-        // 3. Score 저장
+        for (ScoringResultSseEvent.CaseResultPayload payload : casePayloads) {
+            if (payload.verdict() == Verdict.AC) {
+                passedCount++;
+            }
+        }
+
         ScoringResultSseEvent.FinalScorePayload finalScore = null;
         if (request.score() != null) {
-            Score score = Score.builder()
-                    .submissionId(submissionId)
-                    .promptScore(request.score().promptScore())
-                    .perfScore(request.score().perfScore())
-                    .correctnessScore(request.score().correctnessScore())
-                    .rubricJson(request.score().rubricJson())
-                    .build();
-            score.calculateTotalScore();
+            ScoringResultRequest.ScoreData scoreData = request.score();
+            Score score = scoreRepository.findBySubmissionId(submissionId)
+                    .orElseGet(() -> Score.builder()
+                            .submissionId(submissionId)
+                            .build());
+            score.updateFrom(
+                    scoreData.promptScore(),
+                    scoreData.perfScore(),
+                    scoreData.correctnessScore(),
+                    scoreData.rubricJson());
             scoreRepository.save(score);
 
             finalScore = new ScoringResultSseEvent.FinalScorePayload(
                     score.getPromptScore(),
                     score.getPerfScore(),
                     score.getCorrectnessScore(),
-                    score.getTotalScore()  // calculateTotalScore() 결과 재사용
-            );
+                    score.getTotalScore());
         }
 
-        // 4. SSE 이벤트 publish (트랜잭션 커밋 후 SseScoringEventListener가 처리)
+        ScoringResultSseEvent.CompletionPayload completion = new ScoringResultSseEvent.CompletionPayload(
+                casePayloads.size(),
+                passedCount);
+
         eventPublisher.publishEvent(new ScoringResultSseEvent(
                 submissionId,
                 request.status(),
                 casePayloads,
-                finalScore
-        ));
+                completion,
+                finalScore));
 
-        log.info("Scoring result saved, SSE event published: submissionId={}, status={}",
-                submissionId, request.status());
+        log.info(
+                "Scoring result saved, SSE event published: submissionId={}, status={}, runs={}, scoreSaved={}, sseFinalScore={}",
+                submissionId,
+                request.status(),
+                casePayloads.size(),
+                request.score() != null,
+                finalScore != null);
+    }
+
+    private static void validateTestCases(ScoringResultRequest request) {
+        if (request.status() == SubmissionStatus.DONE && request.testCases().isEmpty()) {
+            throw new RestApiException(GlobalErrorStatus._BAD_REQUEST);
+        }
+    }
+
+    private static RunGroup parseRunGroup(String group) {
+        try {
+            return RunGroup.valueOf(group.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RestApiException(GlobalErrorStatus._BAD_REQUEST);
+        }
     }
 }

@@ -91,13 +91,21 @@ public class SseRetryExecutor {
             for (ScoringResultSseEvent.CaseResultPayload caseResult : event.caseResults()) {
                 sseEmitterRegistry.send(submissionId, "case_result", Map.of(
                         "caseIndex", caseResult.caseIndex(),
+                        "group", caseResult.group(),
                         "verdict", caseResult.verdict(),
                         "timeMs", caseResult.timeMs(),
                         "memKb", caseResult.memKb()
                 ));
             }
 
-            // 2. 최종 점수 전송
+            sseEmitterRegistry.send(submissionId, "scoring_complete", Map.of(
+                    "submissionId", submissionId,
+                    "status", event.status(),
+                    "runCount", event.completion().runCount(),
+                    "passedCount", event.completion().passedCount()
+            ));
+
+            // 3. 최종 점수 전송 (score 있을 때만)
             if (event.finalScore() != null) {
                 sseEmitterRegistry.send(submissionId, "final_score", Map.of(
                         "submissionId", submissionId,
@@ -109,7 +117,7 @@ public class SseRetryExecutor {
                 ));
             }
 
-            // 3. 스트림 종료
+            // 4. 스트림 종료
             sseEmitterRegistry.complete(submissionId);
             log.info("[SSE Outbox] Delivery succeeded: submissionId={}, attempt={}", submissionId, attempt + 1);
 
