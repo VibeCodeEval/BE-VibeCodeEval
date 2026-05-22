@@ -13,14 +13,26 @@ public record ExamResponse(
     LocalDateTime endsAt,
     Integer version,
     Long createdBy,
+    String creatorName,
     long participantCount,
     long completedCount
 ) {
+    private static final String UNKNOWN_CREATOR = "알 수 없음";
+
     public static ExamResponse from(Exam exam) {
-        return from(exam, 0L, 0L);
+        return from(exam, 0L, 0L, null);
     }
 
     public static ExamResponse from(Exam exam, long participantCount, long completedCount) {
+        return from(exam, participantCount, completedCount, null);
+    }
+
+    public static ExamResponse from(
+            Exam exam,
+            long participantCount,
+            long completedCount,
+            String creatorName
+    ) {
         return new ExamResponse(
             exam.getId(),
             exam.getTitle(),
@@ -29,8 +41,16 @@ public record ExamResponse(
             exam.getEndsAt(),
             exam.getVersion(),
             exam.getCreatedBy(),
+            resolveCreatorName(creatorName),
             participantCount,
             completedCount
         );
+    }
+
+    private static String resolveCreatorName(String creatorName) {
+        if (creatorName == null || creatorName.isBlank()) {
+            return UNKNOWN_CREATOR;
+        }
+        return creatorName.trim();
     }
 }
