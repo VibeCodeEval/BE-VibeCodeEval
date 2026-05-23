@@ -66,7 +66,7 @@ jobs:
             MASTER_ADMIN_NUMBER=$MASTER_ADMIN_NUMBER
             MASTER_ADMIN_EMAIL=$MASTER_ADMIN_EMAIL
             MASTER_ADMIN_PASSWORD=$MASTER_ADMIN_PASSWORD
-            AI_SERVER_URL=${AI_SERVER_URL:-http://host.docker.internal:8000}
+            AI_SERVER_URL=${AI_SERVER_URL:-http://ai_vibe_worker:8000}
             EOF
 
             echo ">>> Pulling latest app image..."
