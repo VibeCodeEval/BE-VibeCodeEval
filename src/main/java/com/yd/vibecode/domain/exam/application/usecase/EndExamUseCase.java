@@ -26,10 +26,14 @@ public class EndExamUseCase {
 
     private final ExamService examService;
     private final ExamParticipantService examParticipantService;
+    private final AutoSubmitParticipantsOnExamEndUseCase autoSubmitParticipantsOnExamEndUseCase;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
     public void execute(Long examId) {
+        // 시험 상태 전환 전(RUNNING) 미제출 참가자 자동 제출 — 멱등
+        autoSubmitParticipantsOnExamEndUseCase.execute(examId);
+
         Exam exam = examService.endExam(examId);
 
         // 모든 참가자의 상태를 ENDED로 변경

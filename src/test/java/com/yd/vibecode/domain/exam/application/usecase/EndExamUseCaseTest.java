@@ -30,6 +30,9 @@ class EndExamUseCaseTest {
     private ExamParticipantService examParticipantService;
 
     @Mock
+    private AutoSubmitParticipantsOnExamEndUseCase autoSubmitParticipantsOnExamEndUseCase;
+
+    @Mock
     private SimpMessagingTemplate messagingTemplate;
 
     @Test
@@ -52,6 +55,7 @@ class EndExamUseCaseTest {
         endExamUseCase.execute(examId);
 
         // then
+        verify(autoSubmitParticipantsOnExamEndUseCase).execute(examId);
         verify(examService).endExam(examId);
         verify(examParticipantService).endAllParticipants(examId);
     }
