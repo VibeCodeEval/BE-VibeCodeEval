@@ -12,6 +12,8 @@ import java.util.Optional;
 public interface ProblemRepository extends JpaRepository<Problem, Long> {
 
     List<Problem> findByStatus(ProblemStatus status);
+
+    long countByStatus(ProblemStatus status);
     
     List<Problem> findByDifficulty(Difficulty difficulty);
 

@@ -104,4 +104,5 @@ class AdminProblemControllerTest {
         mockMvc.perform(get("/api/admin/problems/" + problemId + "/detail"))
             .andExpect(status().isOk());
     }
+
 }
