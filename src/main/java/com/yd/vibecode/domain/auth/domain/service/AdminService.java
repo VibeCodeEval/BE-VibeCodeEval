@@ -43,16 +43,6 @@ public class AdminService {
                 .orElseThrow(() -> new RestApiException(GlobalErrorStatus._NOT_FOUND));
     }
 
-    /**
-     * access token 인증 시 삭제·비활성 관리자의 보호 API 접근을 차단한다.
-     */
-    public void validateActiveForAuthentication(Long adminId) {
-        Admin admin = findById(adminId);
-        if (admin.isDeleted() || !Boolean.TRUE.equals(admin.getIsActive())) {
-            throw new RestApiException(AuthErrorStatus.ADMIN_ACCOUNT_INACTIVE);
-        }
-    }
-
     public String encodePassword(String password) {
         return passwordEncoder.encode(password);
     }

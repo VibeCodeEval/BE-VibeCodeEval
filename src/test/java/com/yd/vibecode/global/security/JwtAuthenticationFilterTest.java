@@ -22,7 +22,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.yd.vibecode.domain.auth.domain.service.AdminService;
+import com.yd.vibecode.domain.auth.domain.service.AdminAccessAuthValidator;
 import com.yd.vibecode.domain.auth.domain.service.RefreshTokenService;
 import com.yd.vibecode.domain.auth.domain.service.TokenWhitelistService;
 import com.yd.vibecode.global.exception.RestApiException;
@@ -37,7 +37,7 @@ class JwtAuthenticationFilterTest {
   @Mock private ExcludeAuthPathProperties excludeAuthPathProperties;
   @Mock private RefreshTokenService refreshTokenService;
   @Mock private TokenWhitelistService tokenWhitelistService;
-  @Mock private AdminService adminService;
+  @Mock private AdminAccessAuthValidator adminAccessAuthValidator;
   @Mock private FilterChain filterChain;
 
   private JwtAuthenticationFilter filter;
@@ -50,7 +50,7 @@ class JwtAuthenticationFilterTest {
             excludeAuthPathProperties,
             refreshTokenService,
             tokenWhitelistService,
-            adminService);
+            adminAccessAuthValidator);
     SecurityContextHolder.clearContext();
     given(excludeAuthPathProperties.getPaths()).willReturn(Collections.emptyList());
   }
@@ -68,7 +68,7 @@ class JwtAuthenticationFilterTest {
     given(tokenProvider.getRole(token)).willReturn(Optional.of("ADMIN"));
     given(tokenProvider.getId(token)).willReturn(Optional.of("42"));
     willThrow(new RestApiException(AuthErrorStatus.ADMIN_ACCOUNT_INACTIVE))
-        .given(adminService)
+        .given(adminAccessAuthValidator)
         .validateActiveForAuthentication(42L);
 
     filter.doFilter(request, response, filterChain);
@@ -97,7 +97,7 @@ class JwtAuthenticationFilterTest {
 
     filter.doFilter(request, response, filterChain);
 
-    verify(adminService).validateActiveForAuthentication(1L);
+    verify(adminAccessAuthValidator).validateActiveForAuthentication(1L);
     verify(filterChain).doFilter(request, response);
     assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
   }
@@ -120,7 +120,7 @@ class JwtAuthenticationFilterTest {
 
     filter.doFilter(request, response, filterChain);
 
-    verify(adminService, never()).validateActiveForAuthentication(any());
+    verify(adminAccessAuthValidator, never()).validateActiveForAuthentication(any());
     verify(filterChain).doFilter(request, response);
   }
 
@@ -136,13 +136,13 @@ class JwtAuthenticationFilterTest {
     given(tokenProvider.getRole(token)).willReturn(Optional.of("MASTER"));
     given(tokenProvider.getId(token)).willReturn(Optional.of("99"));
     willThrow(new RestApiException(AuthErrorStatus.ADMIN_ACCOUNT_INACTIVE))
-        .given(adminService)
+        .given(adminAccessAuthValidator)
         .validateActiveForAuthentication(99L);
 
     filter.doFilter(request, response, filterChain);
 
     assertThat(response.getStatus()).isEqualTo(401);
-    verify(adminService).validateActiveForAuthentication(eq(99L));
+    verify(adminAccessAuthValidator).validateActiveForAuthentication(eq(99L));
     verify(filterChain, never()).doFilter(any(), any());
   }
 }

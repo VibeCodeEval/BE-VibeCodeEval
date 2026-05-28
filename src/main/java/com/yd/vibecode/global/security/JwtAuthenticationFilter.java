@@ -11,7 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.pattern.PathPatternParser;
 
-import com.yd.vibecode.domain.auth.domain.service.AdminService;
+import com.yd.vibecode.domain.auth.domain.service.AdminAccessAuthValidator;
 import com.yd.vibecode.domain.auth.domain.service.RefreshTokenService;
 import com.yd.vibecode.domain.auth.domain.service.TokenWhitelistService;
 import com.yd.vibecode.global.exception.RestApiException;
@@ -33,7 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final ExcludeAuthPathProperties excludeAuthPathProperties;
     private final RefreshTokenService refreshTokenService;
     private final TokenWhitelistService tokenWhitelistService;
-    private final AdminService adminService;
+    private final AdminAccessAuthValidator adminAccessAuthValidator;
 
     private final PathPatternParser pathPatternParser = new PathPatternParser();
 
@@ -117,7 +117,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String adminId = tokenProvider.getId(token)
                 .orElseThrow(() -> new RestApiException(INVALID_ACCESS_TOKEN));
         try {
-            adminService.validateActiveForAuthentication(Long.parseLong(adminId));
+            adminAccessAuthValidator.validateActiveForAuthentication(Long.parseLong(adminId));
         } catch (NumberFormatException e) {
             throw new RestApiException(INVALID_ACCESS_TOKEN);
         }
