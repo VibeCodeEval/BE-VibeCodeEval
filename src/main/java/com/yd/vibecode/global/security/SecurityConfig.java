@@ -19,6 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.yd.vibecode.domain.auth.domain.service.AdminService;
 import com.yd.vibecode.domain.auth.domain.service.RefreshTokenService;
 import com.yd.vibecode.domain.auth.domain.service.TokenWhitelistService;
 import com.yd.vibecode.global.config.properties.CorsProperties;
@@ -39,6 +40,7 @@ public class SecurityConfig {
 	private final ExcludeAuthPathProperties excludeAuthPathProperties;
 	private final RefreshTokenService refreshTokenService;
 	private final TokenWhitelistService tokenWhitelistService;
+	private final AdminService adminService;
 	private final CorsProperties corsProperties;
 
 	@Bean
@@ -117,7 +119,13 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(tokenProvider, excludeAuthPathProperties, refreshTokenService, tokenWhitelistService);
+        return new JwtAuthenticationFilter(
+                tokenProvider,
+                excludeAuthPathProperties,
+                refreshTokenService,
+                tokenWhitelistService,
+                adminService
+        );
     }
     
     @Bean
