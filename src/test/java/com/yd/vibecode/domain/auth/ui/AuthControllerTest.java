@@ -198,6 +198,33 @@ class AuthControllerTest {
         verify(cookieUtils).setRefreshTokenCookie(any(HttpServletResponse.class), eq("new-refresh"), eq(120));
     }
 
+    @Test
+    @DisplayName("관리자 토큰 재발급 API — refresh token 없으면 400 AUTH007 및 쿠키 삭제")
+    void admin_reissue_api_missing_refresh_token_clears_cookies() throws Exception {
+        given(cookieUtils.getRefreshTokenFromRequest(any(HttpServletRequest.class))).willReturn(null);
+
+        mockMvc.perform(post("/api/auth/admin/reissue"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("AUTH007"));
+
+        verify(cookieUtils).clearAccessTokenCookie(any(HttpServletResponse.class));
+        verify(cookieUtils).clearRefreshTokenCookie(any(HttpServletResponse.class));
+    }
+
+    @Test
+    @DisplayName("관리자 토큰 재발급 API — refresh token 만료 시 400 AUTH005 및 쿠키 삭제")
+    void admin_reissue_api_expired_refresh_token_clears_cookies() throws Exception {
+        given(cookieUtils.getRefreshTokenFromRequest(any(HttpServletRequest.class))).willReturn("expired-refresh");
+        given(tokenProvider.validateToken("expired-refresh")).willReturn(false);
+
+        mockMvc.perform(post("/api/auth/admin/reissue"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("AUTH005"));
+
+        verify(cookieUtils).clearAccessTokenCookie(any(HttpServletResponse.class));
+        verify(cookieUtils).clearRefreshTokenCookie(any(HttpServletResponse.class));
+    }
+
     // =========================================================================
     // 3. POST /api/auth/admin/logout — 관리자 로그아웃
     // =========================================================================

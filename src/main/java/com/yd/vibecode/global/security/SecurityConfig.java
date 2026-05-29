@@ -11,7 +11,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -19,6 +18,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.yd.vibecode.domain.auth.domain.service.AdminAccessAuthValidator;
 import com.yd.vibecode.domain.auth.domain.service.RefreshTokenService;
 import com.yd.vibecode.domain.auth.domain.service.TokenWhitelistService;
 import com.yd.vibecode.global.config.properties.CorsProperties;
@@ -39,6 +39,7 @@ public class SecurityConfig {
 	private final ExcludeAuthPathProperties excludeAuthPathProperties;
 	private final RefreshTokenService refreshTokenService;
 	private final TokenWhitelistService tokenWhitelistService;
+	private final AdminAccessAuthValidator adminAccessAuthValidator;
 	private final CorsProperties corsProperties;
 
 	@Bean
@@ -117,12 +118,13 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(tokenProvider, excludeAuthPathProperties, refreshTokenService, tokenWhitelistService);
-    }
-    
-    @Bean
-    public BCryptPasswordEncoder bCryptPasswordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new JwtAuthenticationFilter(
+                tokenProvider,
+                excludeAuthPathProperties,
+                refreshTokenService,
+                tokenWhitelistService,
+                adminAccessAuthValidator
+        );
     }
 
     private void writeUnauthorizedResponse(HttpServletResponse response) throws IOException {

@@ -1,6 +1,7 @@
 package com.yd.vibecode.domain.auth.ui;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import com.yd.vibecode.domain.auth.application.dto.request.AdminLoginRequest;
 import com.yd.vibecode.domain.auth.application.dto.request.AdminSignupRequest;
@@ -99,25 +100,30 @@ public class AuthController implements AuthApi {
     public BaseResponse<Void> adminReissue(HttpServletRequest request, HttpServletResponse httpResponse) {
         String refreshToken = cookieUtils.getRefreshTokenFromRequest(request);
         if (refreshToken == null) {
-            throw new RestApiException(AuthErrorStatus.EMPTY_JWT);
+            failAdminReissue(httpResponse, AuthErrorStatus.INVALID_REFRESH_TOKEN);
         }
         if (!tokenProvider.validateToken(refreshToken)) {
-            throw new RestApiException(AuthErrorStatus.EXPIRED_REFRESH_TOKEN);
+            failAdminReissue(httpResponse, AuthErrorStatus.EXPIRED_REFRESH_TOKEN);
         }
 
-        String adminId = tokenProvider.getId(refreshToken)
-                .orElseThrow(() -> new RestApiException(AuthErrorStatus.INVALID_REFRESH_TOKEN));
+        String adminId = tokenProvider.getId(refreshToken).orElse(null);
+        if (adminId == null) {
+            failAdminReissue(httpResponse, AuthErrorStatus.INVALID_REFRESH_TOKEN);
+        }
 
         if (!refreshTokenService.isExist(refreshToken, adminId)) {
-            throw new RestApiException(AuthErrorStatus.INVALID_REFRESH_TOKEN);
+            failAdminReissue(httpResponse, AuthErrorStatus.INVALID_REFRESH_TOKEN);
         }
 
         // 토큰 로테이션: 기존 refresh token 삭제 후 신규 발급
         refreshTokenService.deleteRefreshToken(adminId);
         String newAccessToken = tokenProvider.createAccessToken(adminId, "ADMIN");
         String newRefreshToken = tokenProvider.createRefreshToken(adminId);
-        Duration remaining = tokenProvider.getRemainingDuration(refreshToken)
-                .orElseThrow(() -> new RestApiException(AuthErrorStatus.EXPIRED_REFRESH_TOKEN));
+        Optional<Duration> remainingOptional = tokenProvider.getRemainingDuration(refreshToken);
+        if (remainingOptional.isEmpty()) {
+            failAdminReissue(httpResponse, AuthErrorStatus.EXPIRED_REFRESH_TOKEN);
+        }
+        Duration remaining = remainingOptional.get();
         refreshTokenService.saveRefreshToken(adminId, newRefreshToken, remaining);
 
         int accessMaxAge = Math.toIntExact(jwtProperties.getAccessTokenExpirationPeriodDay() / 1000);
@@ -126,6 +132,12 @@ public class AuthController implements AuthApi {
         cookieUtils.setRefreshTokenCookie(httpResponse, newRefreshToken, refreshMaxAge);
 
         return BaseResponse.onSuccess();
+    }
+
+    private void failAdminReissue(HttpServletResponse httpResponse, AuthErrorStatus status) {
+        cookieUtils.clearAccessTokenCookie(httpResponse);
+        cookieUtils.clearRefreshTokenCookie(httpResponse);
+        throw new RestApiException(status);
     }
 
     @GetMapping("/me")
