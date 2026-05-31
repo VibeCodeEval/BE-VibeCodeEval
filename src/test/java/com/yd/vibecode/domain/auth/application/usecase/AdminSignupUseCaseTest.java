@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
+import com.yd.vibecode.domain.admin.domain.service.MasterActivityLogService;
 import com.yd.vibecode.domain.auth.application.dto.request.AdminSignupRequest;
 import com.yd.vibecode.domain.auth.domain.entity.Admin;
 import com.yd.vibecode.domain.auth.domain.entity.AdminNumber;
@@ -15,6 +16,7 @@ import com.yd.vibecode.global.exception.code.status.AuthErrorStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -31,6 +33,9 @@ class AdminSignupUseCaseTest {
     @Mock
     private AdminNumberService adminNumberService;
 
+    @Mock
+    private MasterActivityLogService masterActivityLogService;
+
     @Test
     @DisplayName("관리자 회원가입 성공")
     void signup_success() {
@@ -43,9 +48,11 @@ class AdminSignupUseCaseTest {
                 .build();
         Admin savedAdmin = Admin.builder()
                 .adminNumber("admin123")
+                .displayName("홍길동")
                 .email("admin@example.com")
                 .passwordHash("encodedPassword")
                 .build();
+        ReflectionTestUtils.setField(savedAdmin, "id", 99L);
         given(adminNumberService.validateUsable(request.adminNumber())).willReturn(adminNumber);
         given(adminService.existsByAdminNumber(request.adminNumber())).willReturn(false);
         given(adminService.existsByEmail(request.email())).willReturn(false);
@@ -59,6 +66,7 @@ class AdminSignupUseCaseTest {
         // then
         verify(adminNumberService).assign(adminNumber, savedAdmin.getId());
         verify(adminService).create(request.adminNumber(), request.displayName(), request.email(), "encodedPassword");
+        verify(masterActivityLogService).logAdminSignedUp(1L, 99L, "홍길동");
     }
 
     @Test

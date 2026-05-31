@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.yd.vibecode.domain.admin.domain.service.AdminAuditLogService;
+import com.yd.vibecode.domain.admin.domain.service.MasterActivityLogService;
 import com.yd.vibecode.domain.auth.domain.entity.Admin;
 import com.yd.vibecode.domain.auth.domain.entity.AdminRole;
 import com.yd.vibecode.domain.auth.domain.service.AdminService;
@@ -34,6 +35,9 @@ class ResetAdminPasswordByMasterUseCaseTest {
 
     @Mock
     private AdminAuditLogService adminAuditLogService;
+
+    @Mock
+    private MasterActivityLogService masterActivityLogService;
 
     @Mock
     private TemporaryPasswordGenerator temporaryPasswordGenerator;
@@ -66,6 +70,7 @@ class ResetAdminPasswordByMasterUseCaseTest {
         assertThat(target.getPasswordHash()).isEqualTo("encodedNew");
         verify(adminService).encodePassword(temporaryPassword);
         verify(adminAuditLogService).log(eq(requesterId), eq("RESET_PASSWORD_BY_MASTER"), any());
+        verify(masterActivityLogService).logAdminPasswordReset(requesterId, 2L, target.getDisplayName());
     }
 
     @Test

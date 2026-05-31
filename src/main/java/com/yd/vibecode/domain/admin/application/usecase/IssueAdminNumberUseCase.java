@@ -2,6 +2,7 @@ package com.yd.vibecode.domain.admin.application.usecase;
 
 import com.yd.vibecode.domain.admin.application.dto.request.AdminNumberIssueRequest;
 import com.yd.vibecode.domain.admin.application.dto.response.AdminNumberResponse;
+import com.yd.vibecode.domain.admin.domain.service.MasterActivityLogService;
 import com.yd.vibecode.domain.auth.domain.entity.Admin;
 import com.yd.vibecode.domain.auth.domain.entity.AdminNumber;
 import com.yd.vibecode.domain.auth.domain.service.AdminNumberService;
@@ -18,6 +19,7 @@ public class IssueAdminNumberUseCase {
 
     private final AdminService adminService;
     private final AdminNumberService adminNumberService;
+    private final MasterActivityLogService masterActivityLogService;
 
     @Transactional
     public AdminNumberResponse execute(Long requesterId, AdminNumberIssueRequest request) {
@@ -27,6 +29,7 @@ public class IssueAdminNumberUseCase {
         }
 
         AdminNumber issued = adminNumberService.issue(admin.getId(), request.label(), request.expiresAt());
+        masterActivityLogService.logSignupCodeIssued(admin.getId());
         return AdminNumberResponse.from(issued);
     }
 }
