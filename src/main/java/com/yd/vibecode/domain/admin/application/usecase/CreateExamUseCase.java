@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.yd.vibecode.domain.exam.application.dto.request.CreateExamRequest;
 import com.yd.vibecode.domain.exam.application.dto.response.ExamResponse;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 
@@ -21,6 +22,7 @@ import com.yd.vibecode.domain.problem.infrastructure.entity.ProblemSetItem;
 import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetItemRepository;
 import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetRepository;
 import com.yd.vibecode.global.exception.RestApiException;
+import com.yd.vibecode.global.exception.code.status.ExamErrorStatus;
 import com.yd.vibecode.global.exception.code.status.ProblemErrorStatus;
 import com.yd.vibecode.global.util.CodeGenerator;
 
@@ -38,6 +40,10 @@ public class CreateExamUseCase {
 
     @Transactional
     public ExamResponse execute(Long adminId, CreateExamRequest request) {
+        if (!request.endsAt().isAfter(LocalDateTime.now())) {
+            throw new RestApiException(ExamErrorStatus.EXAM_ENDS_AT_NOT_IN_FUTURE);
+        }
+
         // 1. 시험 생성
         Exam exam = Exam.builder()
             .title(request.title())
