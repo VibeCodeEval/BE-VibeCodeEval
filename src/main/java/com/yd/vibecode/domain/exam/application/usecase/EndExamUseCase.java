@@ -45,6 +45,6 @@ public class EndExamUseCase {
         messagingTemplate.convertAndSend("/topic/exam/" + examId, event);
         log.info("Exam ended, WS broadcast sent: examId={}, version={}", examId, exam.getVersion());
 
-        adminActivityLogService.logExamEnded(exam.getCreatedBy(), examId);
+        adminActivityLogService.logExamEnded(exam.getCreatedBy(), examId, exam.getTitle());
     }
 }

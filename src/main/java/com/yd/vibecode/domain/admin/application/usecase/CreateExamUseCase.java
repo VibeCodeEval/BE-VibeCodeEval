@@ -98,7 +98,7 @@ public class CreateExamUseCase {
         
         entryCodeRepository.save(entryCode);
 
-        adminActivityLogService.logRoomCreated(adminId, savedExam.getId());
+        adminActivityLogService.logRoomCreated(adminId, savedExam.getId(), savedExam.getTitle());
 
         return ExamResponse.from(savedExam);
     }

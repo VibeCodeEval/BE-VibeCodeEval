@@ -19,6 +19,7 @@ import com.yd.vibecode.domain.submission.domain.repository.SubmissionRunReposito
 import com.yd.vibecode.domain.submission.domain.service.SubmissionService;
 import com.yd.vibecode.domain.exam.domain.repository.ExamRepository;
 import com.yd.vibecode.domain.admin.domain.service.AdminActivityLogService;
+import com.yd.vibecode.domain.auth.domain.repository.UserRepository;
 import com.yd.vibecode.global.exception.RestApiException;
 import com.yd.vibecode.global.exception.code.status.GlobalErrorStatus;
 
@@ -43,6 +44,7 @@ public class ReceiveScoringResultUseCase {
     private final ApplicationEventPublisher eventPublisher;
     private final ExamRepository examRepository;
     private final AdminActivityLogService adminActivityLogService;
+    private final UserRepository userRepository;
 
     @Transactional
     public void execute(Long submissionId, ScoringResultRequest request) {
@@ -106,11 +108,17 @@ public class ReceiveScoringResultUseCase {
                     score.getTotalScore());
 
             if (request.status() == SubmissionStatus.DONE) {
-                examRepository.findById(submission.getExamId()).ifPresent(exam ->
-                        adminActivityLogService.logEvaluationCompleted(
-                                exam.getCreatedBy(),
-                                submission.getExamId(),
-                                submission.getParticipantId()));
+                examRepository.findById(submission.getExamId()).ifPresent(exam -> {
+                    String participantName = userRepository.findById(submission.getParticipantId())
+                            .map(user -> user.getName())
+                            .orElse(null);
+                    adminActivityLogService.logEvaluationCompleted(
+                            exam.getCreatedBy(),
+                            submission.getExamId(),
+                            submission.getParticipantId(),
+                            exam.getTitle(),
+                            participantName);
+                });
             }
         }
 

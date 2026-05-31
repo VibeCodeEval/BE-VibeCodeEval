@@ -54,6 +54,9 @@ class ReceiveScoringResultUseCaseTest {
     @Mock
     private com.yd.vibecode.domain.admin.domain.service.AdminActivityLogService adminActivityLogService;
 
+    @Mock
+    private com.yd.vibecode.domain.auth.domain.repository.UserRepository userRepository;
+
     @Test
     @DisplayName("채점 결과 수신 및 처리 성공 - DB 저장 및 SSE 이벤트 발행 확인")
     void execute_Success() {

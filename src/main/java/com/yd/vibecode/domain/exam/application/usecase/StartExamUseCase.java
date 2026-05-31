@@ -60,7 +60,7 @@ public class StartExamUseCase {
         messagingTemplate.convertAndSend("/topic/exam/" + examId, event);
         log.info("Exam started, WS broadcast sent: examId={}, version={}", examId, exam.getVersion());
 
-        adminActivityLogService.logExamStarted(exam.getCreatedBy(), examId);
+        adminActivityLogService.logExamStarted(exam.getCreatedBy(), examId, exam.getTitle());
     }
 
     /**

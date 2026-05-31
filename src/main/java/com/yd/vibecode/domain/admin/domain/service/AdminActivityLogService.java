@@ -14,38 +14,63 @@ import lombok.RequiredArgsConstructor;
 public class AdminActivityLogService {
 
     private static final String ROOM_CREATED_TITLE = "시험 방 생성됨";
-    private static final String ROOM_CREATED_MESSAGE = "새 입장 코드가 생성되었습니다.";
     private static final String EXAM_STARTED_TITLE = "시험 세션이 시작되었습니다.";
-    private static final String EXAM_STARTED_MESSAGE = "시험이 시작되었습니다.";
     private static final String EVALUATION_COMPLETED_TITLE = "채점 과정이 성공적으로 완료되었습니다.";
-    private static final String EVALUATION_COMPLETED_MESSAGE = "참가자의 채점이 완료되었습니다.";
     private static final String EXAM_ENDED_TITLE = "시험이 종료되었습니다.";
-    private static final String EXAM_ENDED_MESSAGE = "시험이 종료되었습니다.";
 
     private final AdminActivityLogRepository adminActivityLogRepository;
 
     @Transactional
-    public AdminActivityLog logRoomCreated(Long adminId, Long examId) {
+    public AdminActivityLog logRoomCreated(Long adminId, Long examId, String examTitle) {
         return save(adminId, examId, null, AdminActivityLogType.ROOM_CREATED,
-                ROOM_CREATED_TITLE, ROOM_CREATED_MESSAGE);
+                ROOM_CREATED_TITLE,
+                formatMessage("'%s' 시험 방이 생성되었습니다.", examTitle, examId));
     }
 
     @Transactional
-    public AdminActivityLog logExamStarted(Long adminId, Long examId) {
+    public AdminActivityLog logExamStarted(Long adminId, Long examId, String examTitle) {
         return save(adminId, examId, null, AdminActivityLogType.EXAM_STARTED,
-                EXAM_STARTED_TITLE, EXAM_STARTED_MESSAGE);
+                EXAM_STARTED_TITLE,
+                formatMessage("'%s' 시험이 시작되었습니다.", examTitle, examId));
     }
 
     @Transactional
-    public AdminActivityLog logEvaluationCompleted(Long adminId, Long examId, Long participantId) {
+    public AdminActivityLog logEvaluationCompleted(
+            Long adminId,
+            Long examId,
+            Long participantId,
+            String examTitle,
+            String participantDisplayName) {
+        String message = buildEvaluationCompletedMessage(examTitle, examId, participantDisplayName);
         return save(adminId, examId, participantId, AdminActivityLogType.EVALUATION_COMPLETED,
-                EVALUATION_COMPLETED_TITLE, EVALUATION_COMPLETED_MESSAGE);
+                EVALUATION_COMPLETED_TITLE, message);
     }
 
     @Transactional
-    public AdminActivityLog logExamEnded(Long adminId, Long examId) {
+    public AdminActivityLog logExamEnded(Long adminId, Long examId, String examTitle) {
         return save(adminId, examId, null, AdminActivityLogType.EXAM_ENDED,
-                EXAM_ENDED_TITLE, EXAM_ENDED_MESSAGE);
+                EXAM_ENDED_TITLE,
+                formatMessage("'%s' 시험이 종료되었습니다.", examTitle, examId));
+    }
+
+    static String resolveExamLabel(String examTitle, Long examId) {
+        if (examTitle != null && !examTitle.isBlank()) {
+            return examTitle.trim();
+        }
+        return "시험 ID " + examId;
+    }
+
+    static String formatMessage(String template, String examTitle, Long examId) {
+        return String.format(template, resolveExamLabel(examTitle, examId));
+    }
+
+    static String buildEvaluationCompletedMessage(String examTitle, Long examId, String participantDisplayName) {
+        String examLabel = resolveExamLabel(examTitle, examId);
+        if (participantDisplayName != null && !participantDisplayName.isBlank()) {
+            return String.format("참가자 %s님의 '%s' 채점이 완료되었습니다.",
+                    participantDisplayName.trim(), examLabel);
+        }
+        return String.format("'%s' 시험의 참가자 채점이 완료되었습니다.", examLabel);
     }
 
     private AdminActivityLog save(
