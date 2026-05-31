@@ -27,6 +27,8 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.yd.vibecode.domain.exam.application.usecase.GetParticipantCodeDraftUseCase;
+import com.yd.vibecode.domain.exam.application.usecase.SaveParticipantCodeDraftUseCase;
 import com.yd.vibecode.domain.submission.application.dto.response.SubmissionDetailResponse;
 import com.yd.vibecode.domain.submission.application.usecase.GetSubmissionDetailUseCase;
 import com.yd.vibecode.domain.submission.application.usecase.SubmitUseCase;
@@ -59,6 +61,12 @@ class SubmissionControllerTest {
 
     @MockBean
     private GetSubmissionDetailUseCase getSubmissionDetailUseCase;
+
+    @MockBean
+    private SaveParticipantCodeDraftUseCase saveParticipantCodeDraftUseCase;
+
+    @MockBean
+    private GetParticipantCodeDraftUseCase getParticipantCodeDraftUseCase;
 
     @MockBean
     private JwtBlacklistInterceptor jwtBlacklistInterceptor;
