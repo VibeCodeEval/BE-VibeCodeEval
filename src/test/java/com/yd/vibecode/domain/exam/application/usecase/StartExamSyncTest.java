@@ -21,6 +21,7 @@ import com.yd.vibecode.domain.problem.domain.entity.Problem;
 import com.yd.vibecode.domain.problem.domain.entity.ProblemStatus;
 import com.yd.vibecode.domain.problem.domain.repository.ProblemRepository;
 import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetItemRepository;
+import com.yd.vibecode.domain.admin.domain.service.AdminActivityLogService;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -63,6 +64,8 @@ class StartExamSyncTest {
     private EntryCodeRepository entryCodeRepository;
     @Mock
     private ProblemSetItemRepository problemSetItemRepository;
+    @Mock
+    private AdminActivityLogService adminActivityLogService;
 
     @BeforeEach
     void stubProblemSetItems() {

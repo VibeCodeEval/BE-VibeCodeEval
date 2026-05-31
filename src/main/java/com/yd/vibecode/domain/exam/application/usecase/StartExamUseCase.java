@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.yd.vibecode.domain.auth.domain.entity.EntryCode;
 import com.yd.vibecode.domain.auth.domain.repository.EntryCodeRepository;
+import com.yd.vibecode.domain.admin.domain.service.AdminActivityLogService;
 import com.yd.vibecode.domain.exam.application.dto.event.ExamStateEvent;
 import com.yd.vibecode.domain.exam.domain.entity.Exam;
 import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
@@ -44,6 +45,7 @@ public class StartExamUseCase {
     private final ProblemRepository problemRepository;
     private final EntryCodeRepository entryCodeRepository;
     private final ProblemSetItemRepository problemSetItemRepository;
+    private final AdminActivityLogService adminActivityLogService;
 
     @Transactional
     public void execute(Long examId) {
@@ -57,6 +59,8 @@ public class StartExamUseCase {
         ExamStateEvent event = ExamStateEvent.from(exam);
         messagingTemplate.convertAndSend("/topic/exam/" + examId, event);
         log.info("Exam started, WS broadcast sent: examId={}, version={}", examId, exam.getVersion());
+
+        adminActivityLogService.logExamStarted(exam.getCreatedBy(), examId);
     }
 
     /**

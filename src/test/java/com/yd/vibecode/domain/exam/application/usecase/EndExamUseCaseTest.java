@@ -14,6 +14,7 @@ import com.yd.vibecode.domain.exam.domain.entity.Exam;
 import com.yd.vibecode.domain.exam.domain.entity.ExamState;
 import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
 import com.yd.vibecode.domain.exam.domain.service.ExamService;
+import com.yd.vibecode.domain.admin.domain.service.AdminActivityLogService;
 
 import java.time.LocalDateTime;
 
@@ -34,6 +35,9 @@ class EndExamUseCaseTest {
 
     @Mock
     private SimpMessagingTemplate messagingTemplate;
+
+    @Mock
+    private AdminActivityLogService adminActivityLogService;
 
     @Test
     @DisplayName("시험 종료 UseCase 성공: 서비스 호출 및 WS 브로드캐스트 확인")

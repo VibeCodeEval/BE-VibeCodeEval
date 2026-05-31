@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.yd.vibecode.domain.exam.application.dto.event.ExamStateEvent;
+import com.yd.vibecode.domain.admin.domain.service.AdminActivityLogService;
 import com.yd.vibecode.domain.exam.domain.entity.Exam;
 import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
 import com.yd.vibecode.domain.exam.domain.service.ExamService;
@@ -28,6 +29,7 @@ public class EndExamUseCase {
     private final ExamParticipantService examParticipantService;
     private final AutoSubmitParticipantsOnExamEndUseCase autoSubmitParticipantsOnExamEndUseCase;
     private final SimpMessagingTemplate messagingTemplate;
+    private final AdminActivityLogService adminActivityLogService;
 
     @Transactional
     public void execute(Long examId) {
@@ -42,5 +44,7 @@ public class EndExamUseCase {
         ExamStateEvent event = ExamStateEvent.from(exam);
         messagingTemplate.convertAndSend("/topic/exam/" + examId, event);
         log.info("Exam ended, WS broadcast sent: examId={}, version={}", examId, exam.getVersion());
+
+        adminActivityLogService.logExamEnded(exam.getCreatedBy(), examId);
     }
 }

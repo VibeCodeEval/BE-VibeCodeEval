@@ -48,6 +48,12 @@ class ReceiveScoringResultUseCaseTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
+    @Mock
+    private com.yd.vibecode.domain.exam.domain.repository.ExamRepository examRepository;
+
+    @Mock
+    private com.yd.vibecode.domain.admin.domain.service.AdminActivityLogService adminActivityLogService;
+
     @Test
     @DisplayName("채점 결과 수신 및 처리 성공 - DB 저장 및 SSE 이벤트 발행 확인")
     void execute_Success() {

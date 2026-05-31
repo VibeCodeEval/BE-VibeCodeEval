@@ -20,6 +20,7 @@ import com.yd.vibecode.domain.exam.domain.repository.ExamParticipantRepository;
 import com.yd.vibecode.domain.exam.domain.service.ExamService;
 import com.yd.vibecode.domain.problem.domain.repository.ProblemRepository;
 import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetItemRepository;
+import com.yd.vibecode.domain.admin.domain.service.AdminActivityLogService;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -43,6 +44,9 @@ class StartExamUseCaseTest {
     private EntryCodeRepository entryCodeRepository;
     @Mock
     private ProblemSetItemRepository problemSetItemRepository;
+
+    @Mock
+    private AdminActivityLogService adminActivityLogService;
 
     @Test
     @DisplayName("시험 시작 UseCase 성공: 서비스 호출 및 WS 브로드캐스트 확인")
