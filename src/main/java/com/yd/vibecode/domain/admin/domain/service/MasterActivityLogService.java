@@ -29,6 +29,9 @@ public class MasterActivityLogService {
     private static final String ADMIN_ACCOUNT_DELETED_TITLE = "관리자 계정이 삭제되었습니다";
     private static final String ADMIN_PASSWORD_RESET_TITLE = "관리자 비밀번호가 재설정되었습니다";
 
+    private static final String PLATFORM_SETTINGS_UPDATED_TITLE = "플랫폼 전역 설정이 변경되었습니다";
+    private static final String PLATFORM_SETTINGS_UPDATED_MESSAGE = "플랫폼 전역 설정이 변경되었습니다.";
+
     private final MasterActivityLogRepository masterActivityLogRepository;
 
     @Transactional
@@ -75,6 +78,12 @@ public class MasterActivityLogService {
         return save(masterId, targetAdminId, MasterActivityLogType.ADMIN_ACCOUNT_DELETED,
                 ADMIN_ACCOUNT_DELETED_TITLE,
                 String.format("'%s' 관리자 계정이 삭제되었습니다.", label));
+    }
+
+    @Transactional
+    public MasterActivityLog logPlatformSettingsUpdated(Long masterId) {
+        return save(masterId, null, MasterActivityLogType.PLATFORM_SETTINGS_UPDATED,
+                PLATFORM_SETTINGS_UPDATED_TITLE, PLATFORM_SETTINGS_UPDATED_MESSAGE);
     }
 
     @Transactional
