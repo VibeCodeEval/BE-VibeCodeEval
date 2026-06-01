@@ -4,6 +4,14 @@ spring:
   config:
     import: optional:classpath:application-secret.yml
     
+  # DB 커넥션 풀 설정 (HikariCP 기본값 10개 → 명시적 설정)
+  datasource:
+    hikari:
+      pool-name: vibecode-hikari
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:20}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      connection-timeout: 20000   # 풀 고갈 시 무한 대기 대신 20초 후 빠른 실패
+
   # Redis 설정
   data:
     redis:
