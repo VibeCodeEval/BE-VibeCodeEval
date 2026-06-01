@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.pattern.PathPatternParser;
 
+import com.yd.vibecode.domain.auth.domain.service.AdminAccessAuthValidator;
 import com.yd.vibecode.domain.auth.domain.service.RefreshTokenService;
 import com.yd.vibecode.domain.auth.domain.service.TokenWhitelistService;
 import com.yd.vibecode.global.exception.RestApiException;
@@ -32,6 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final ExcludeAuthPathProperties excludeAuthPathProperties;
     private final RefreshTokenService refreshTokenService;
     private final TokenWhitelistService tokenWhitelistService;
+    private final AdminAccessAuthValidator adminAccessAuthValidator;
 
     private final PathPatternParser pathPatternParser = new PathPatternParser();
 
@@ -99,7 +101,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void setAuthentication(String token) {
+        tokenProvider.getRole(token)
+                .filter(this::isAdminRole)
+                .ifPresent(role -> validateAdminAccountActive(token));
+
         Authentication authentication = tokenProvider.getAuthentication(token);
         SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private boolean isAdminRole(String role) {
+        return "ADMIN".equals(role) || "MASTER".equals(role);
+    }
+
+    private void validateAdminAccountActive(String token) {
+        String adminId = tokenProvider.getId(token)
+                .orElseThrow(() -> new RestApiException(INVALID_ACCESS_TOKEN));
+        try {
+            adminAccessAuthValidator.validateActiveForAuthentication(Long.parseLong(adminId));
+        } catch (NumberFormatException e) {
+            throw new RestApiException(INVALID_ACCESS_TOKEN);
+        }
     }
 }

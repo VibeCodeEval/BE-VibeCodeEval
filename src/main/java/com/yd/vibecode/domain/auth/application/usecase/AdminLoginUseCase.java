@@ -30,8 +30,8 @@ public class AdminLoginUseCase {
             admin = adminService.findByAdminNumber(request.identifier());
         }
 
-        // 2. 계정 활성 상태 확인
-        if (!admin.getIsActive()) {
+        // 2. 삭제·비활성 계정 로그인 차단
+        if (admin.isDeleted() || !admin.getIsActive()) {
             throw new RestApiException(AuthErrorStatus.ADMIN_ACCOUNT_INACTIVE);
         }
 

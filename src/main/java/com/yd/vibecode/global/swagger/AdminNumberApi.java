@@ -40,4 +40,12 @@ public interface AdminNumberApi extends BaseApi {
             @Parameter(hidden = true) String adminId,
             String adminNumber,
             AdminNumberUpdateRequest request);
+
+    @Operation(
+            summary = "관리자 계정 삭제 (MASTER)",
+            description = "MASTER가 다른 관리자 계정을 soft delete 합니다. 마스터 계정은 삭제할 수 없습니다."
+    )
+    BaseResponse<Void> deleteAdminByMaster(
+            @Parameter(hidden = true) String adminId,
+            String adminNumber);
 }
