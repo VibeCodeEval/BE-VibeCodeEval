@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.yd.vibecode.domain.chat.application.dto.request.AISendMessageRequest;
+import com.yd.vibecode.domain.chat.domain.entity.PromptMessage;
 import com.yd.vibecode.domain.chat.application.dto.request.SaveChatMessageRequest;
 import com.yd.vibecode.domain.chat.application.dto.response.SendMessageResponse;
 import com.yd.vibecode.domain.chat.domain.entity.PromptSession;
@@ -70,18 +71,18 @@ public class SaveChatMessageUseCase {
                     request.examId(), request.participantId(), examParticipant.getSpecId());
         }
 
-        // 3. 다음 turn 계산 + 사용자 메시지 저장 (각 메서드 자체 트랜잭션에서 커밋)
-        Integer nextTurn = promptMessageService.getNextTurn(session.getId());
-        promptMessageService.create(
-                session.getId(), nextTurn, request.role(), request.content(),
-                request.tokenCount(), request.meta());
-        if (request.tokenCount() != null && request.tokenCount() > 0) {
-            promptSessionService.addTokens(session.getId(), request.tokenCount());
-        }
-
         // USER 메시지가 아니면 처리하지 않음 (FE는 USER만 전송)
         if (!"USER".equalsIgnoreCase(request.role())) {
             throw new RestApiException(GlobalErrorStatus._BAD_REQUEST);
+        }
+
+        // 3. 사용자 메시지 저장 — turn 계산 + INSERT를 단일 트랜잭션으로 처리 (레이스 컨디션 방지)
+        PromptMessage savedUserMessage = promptMessageService.createWithNextTurn(
+                session.getId(), request.role(), request.content(),
+                request.tokenCount(), request.meta());
+        Integer nextTurn = savedUserMessage.getTurn();
+        if (request.tokenCount() != null && request.tokenCount() > 0) {
+            promptSessionService.addTokens(session.getId(), request.tokenCount());
         }
 
         // 4. AI 호출 — 트랜잭션 밖 (DB 커넥션을 잡지 않음)
