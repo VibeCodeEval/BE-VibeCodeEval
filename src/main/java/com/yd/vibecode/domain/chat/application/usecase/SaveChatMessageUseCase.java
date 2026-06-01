@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.yd.vibecode.domain.chat.application.dto.request.AISendMessageRequest;
 import com.yd.vibecode.domain.chat.application.dto.request.SaveChatMessageRequest;
@@ -28,8 +30,8 @@ import lombok.RequiredArgsConstructor;
  *  - AI HTTP 호출: 트랜잭션 밖 (DB 커넥션 비점유)  ← 커넥션 풀 고갈 방지
  *  - 사후 저장(AI 메시지/토큰): ChatResponsePersister 단일 트랜잭션
  *
- * 주의: execute() 자체에 @Transactional 을 붙이면 AI 응답(최대 90초)을 기다리는 동안
- *       DB 커넥션을 점유하여 풀이 고갈되므로 절대 붙이지 않는다.
+ * 주의: execute()가 REQUIRED 트랜잭션을 시작/전파받으면 AI 응답(최대 90초)을 기다리는 동안
+ *       DB 커넥션을 점유하여 풀이 고갈될 수 있으므로, NOT_SUPPORTED로 외부 트랜잭션을 명시적으로 중단한다.
  */
 @Service
 @RequiredArgsConstructor
@@ -41,6 +43,7 @@ public class SaveChatMessageUseCase {
     private final AIChatService aiChatService;
     private final ChatResponsePersister chatResponsePersister;
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public SendMessageResponse execute(SaveChatMessageRequest request) {
         // 1. 참가자 검증 (읽기 트랜잭션 즉시 종료)
         ExamParticipant examParticipant = examParticipantService.findByExamIdAndParticipantId(

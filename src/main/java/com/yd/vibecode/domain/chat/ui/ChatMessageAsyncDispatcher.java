@@ -28,19 +28,20 @@ public class ChatMessageAsyncDispatcher {
 
     @Async("chatAsyncExecutor")
     public void dispatch(SaveChatMessageRequest request) {
-        String userId = request.participantId() != null ? request.participantId().toString() : null;
+        if (request == null || request.participantId() == null) {
+            log.warn("[WS Chat] Invalid chat request: participantId is null");
+            return;
+        }
+        String userId = request.participantId().toString();
         try {
             SendMessageResponse response = saveChatMessageUseCase.execute(request);
             messagingTemplate.convertAndSendToUser(userId, "/queue/chat", response);
             log.info("[WS Chat] AI response sent: userId={}, turnId={}", userId, response.turnId());
         } catch (Exception e) {
-            log.error("[WS Chat] Failed to process message: {}", e.getMessage(), e);
-            if (userId != null) {
-                messagingTemplate.convertAndSendToUser(
-                        userId, "/queue/chat-error",
-                        Map.of("error", true,
-                               "message", e.getMessage() != null ? e.getMessage() : "AI 응답 처리 실패"));
-            }
+            log.error("[WS Chat] Failed to process message: userId={}, error={}", userId, e.getMessage(), e);
+            messagingTemplate.convertAndSendToUser(
+                    userId, "/queue/chat-error",
+                    Map.of("error", true, "message", "AI 응답 처리 실패"));
         }
     }
 }
