@@ -21,7 +21,8 @@ public class SaveParticipantCodeDraftUseCase {
 
     @Transactional
     public void execute(Long examId, Long participantId, SaveParticipantCodeDraftRequest request) {
-        ExamParticipant participant = examParticipantService.findByExamIdAndParticipantId(examId, participantId);
+        ExamParticipant participant =
+                examParticipantService.findByExamIdAndParticipantIdForUpdate(examId, participantId);
         if (participant == null) {
             throw new RestApiException(GlobalErrorStatus._NOT_FOUND);
         }

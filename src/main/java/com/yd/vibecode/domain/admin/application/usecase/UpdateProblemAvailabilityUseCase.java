@@ -1,5 +1,7 @@
 package com.yd.vibecode.domain.admin.application.usecase;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,10 +32,17 @@ public class UpdateProblemAvailabilityUseCase {
             }
         } else {
             if (problem.getStatus() == ProblemStatus.PUBLISHED) {
-                if (problemRepository.countByStatus(ProblemStatus.PUBLISHED) <= 1) {
+                List<Problem> publishedProblems =
+                        problemRepository.findAllByStatusForUpdate(ProblemStatus.PUBLISHED);
+                if (publishedProblems.size() <= 1) {
                     throw new RestApiException(ProblemErrorStatus.LAST_AVAILABLE_PROBLEM_REQUIRED);
                 }
-                problem.archive();
+                Problem publishedTarget = publishedProblems.stream()
+                        .filter(p -> p.getId().equals(problemId))
+                        .findFirst()
+                        .orElseThrow(() -> new RestApiException(ProblemErrorStatus.PROBLEM_NOT_FOUND));
+                publishedTarget.archive();
+                return ProblemResponse.from(publishedTarget);
             } else if (problem.getStatus() != ProblemStatus.ARCHIVED) {
                 problem.archive();
             }

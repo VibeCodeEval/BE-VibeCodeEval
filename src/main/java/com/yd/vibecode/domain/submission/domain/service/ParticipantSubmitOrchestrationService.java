@@ -39,7 +39,8 @@ public class ParticipantSubmitOrchestrationService {
      */
     @Transactional
     public java.util.Optional<SubmitResponse> submitIfAbsent(Long examId, Long participantId, SubmitRequest request) {
-        ExamParticipant examParticipant = examParticipantService.findByExamIdAndParticipantId(examId, participantId);
+        ExamParticipant examParticipant =
+                examParticipantService.findByExamIdAndParticipantIdForUpdate(examId, participantId);
 
         if (examParticipant == null || examParticipant.getSpecId() == null) {
             throw new RestApiException(ProblemErrorStatus.NO_ASSIGNED_PROBLEM);

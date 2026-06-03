@@ -51,6 +51,7 @@ public class ReceiveScoringResultUseCase {
         validateTestCases(request);
 
         Submission submission = submissionService.findById(submissionId);
+        SubmissionStatus previousStatus = submission.getStatus();
         submission.updateStatus(request.status());
 
         submissionRunRepository.deleteBySubmissionId(submissionId);
@@ -107,7 +108,7 @@ public class ReceiveScoringResultUseCase {
                     score.getCorrectnessScore(),
                     score.getTotalScore());
 
-            if (request.status() == SubmissionStatus.DONE) {
+            if (request.status() == SubmissionStatus.DONE && previousStatus != SubmissionStatus.DONE) {
                 examRepository.findById(submission.getExamId()).ifPresent(exam -> {
                     String participantName = userRepository.findById(submission.getParticipantId())
                             .map(user -> user.getName())

@@ -47,7 +47,7 @@ public class AutoSubmitParticipantsOnExamEndUseCase {
             }
             if (!participant.hasCodeSnapshot()) {
                 skippedNoCodeSnapshot++;
-                log.warn(
+                log.info(
                         "Auto-submit skipped (no code snapshot): examId={}, participantId={}, examParticipantId={}",
                         examId, participantId, participant.getId());
                 continue;

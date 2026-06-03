@@ -62,7 +62,7 @@ public class SubmissionController implements SubmissionApi {
     }
 
     @PutMapping("/exams/{examId}/code-draft")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ResponseStatus(HttpStatus.OK)
     public BaseResponse<Void> saveCodeDraft(
             @PathVariable Long examId,
             @CurrentUser Long userId,

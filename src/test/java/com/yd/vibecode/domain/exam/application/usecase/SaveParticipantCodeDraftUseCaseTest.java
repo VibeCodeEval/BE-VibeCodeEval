@@ -3,6 +3,7 @@ package com.yd.vibecode.domain.exam.application.usecase;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -47,14 +49,16 @@ class SaveParticipantCodeDraftUseCaseTest {
         SaveParticipantCodeDraftRequest request =
                 new SaveParticipantCodeDraftRequest("python", "print('draft')");
 
-        given(examParticipantService.findByExamIdAndParticipantId(EXAM_ID, USER_ID)).willReturn(participant);
+        given(examParticipantService.findByExamIdAndParticipantIdForUpdate(EXAM_ID, USER_ID)).willReturn(participant);
         given(submissionService.existsByExamIdAndParticipantId(EXAM_ID, USER_ID)).willReturn(false);
 
         saveParticipantCodeDraftUseCase.execute(EXAM_ID, USER_ID, request);
 
         assertThat(participant.getLastCodeLang()).isEqualTo("python");
         assertThat(participant.getLastCodeInline()).isEqualTo("print('draft')");
+        verify(examParticipantService).findByExamIdAndParticipantIdForUpdate(EXAM_ID, USER_ID);
         verify(submissionService).existsByExamIdAndParticipantId(EXAM_ID, USER_ID);
+        verify(examParticipantService, never()).findByExamIdAndParticipantId(EXAM_ID, USER_ID);
     }
 
     @Test
@@ -69,7 +73,7 @@ class SaveParticipantCodeDraftUseCaseTest {
         SaveParticipantCodeDraftRequest request =
                 new SaveParticipantCodeDraftRequest("python", "print('late debounce')");
 
-        given(examParticipantService.findByExamIdAndParticipantId(EXAM_ID, USER_ID)).willReturn(participant);
+        given(examParticipantService.findByExamIdAndParticipantIdForUpdate(EXAM_ID, USER_ID)).willReturn(participant);
         given(submissionService.existsByExamIdAndParticipantId(EXAM_ID, USER_ID)).willReturn(true);
 
         saveParticipantCodeDraftUseCase.execute(EXAM_ID, USER_ID, request);
@@ -93,7 +97,7 @@ class SaveParticipantCodeDraftUseCaseTest {
         SaveParticipantCodeDraftRequest request =
                 new SaveParticipantCodeDraftRequest("java", "System.out.println(1);");
 
-        given(examParticipantService.findByExamIdAndParticipantId(EXAM_ID, USER_ID)).willReturn(participant);
+        given(examParticipantService.findByExamIdAndParticipantIdForUpdate(EXAM_ID, USER_ID)).willReturn(participant);
         given(submissionService.existsByExamIdAndParticipantId(EXAM_ID, USER_ID)).willReturn(true);
 
         saveParticipantCodeDraftUseCase.execute(EXAM_ID, USER_ID, request);
@@ -104,9 +108,30 @@ class SaveParticipantCodeDraftUseCaseTest {
     }
 
     @Test
+    @DisplayName("lock 획득 후 제출 여부를 재확인 — 제출 완료 시 late draft는 snapshot을 복구하지 않음")
+    void execute_checksSubmissionAfterLock_beforeUpdatingSnapshot() {
+        ExamParticipant participant = ExamParticipant.builder()
+                .examId(EXAM_ID)
+                .participantId(USER_ID)
+                .build();
+        SaveParticipantCodeDraftRequest request =
+                new SaveParticipantCodeDraftRequest("python", "print('late debounce')");
+
+        given(examParticipantService.findByExamIdAndParticipantIdForUpdate(EXAM_ID, USER_ID)).willReturn(participant);
+        given(submissionService.existsByExamIdAndParticipantId(EXAM_ID, USER_ID)).willReturn(true);
+
+        saveParticipantCodeDraftUseCase.execute(EXAM_ID, USER_ID, request);
+
+        InOrder inOrder = inOrder(examParticipantService, submissionService);
+        inOrder.verify(examParticipantService).findByExamIdAndParticipantIdForUpdate(EXAM_ID, USER_ID);
+        inOrder.verify(submissionService).existsByExamIdAndParticipantId(EXAM_ID, USER_ID);
+        assertThat(participant.hasCodeSnapshot()).isFalse();
+    }
+
+    @Test
     @DisplayName("참가자 없으면 NOT_FOUND")
     void execute_throwsWhenParticipantMissing() {
-        given(examParticipantService.findByExamIdAndParticipantId(EXAM_ID, USER_ID)).willReturn(null);
+        given(examParticipantService.findByExamIdAndParticipantIdForUpdate(EXAM_ID, USER_ID)).willReturn(null);
 
         assertThatThrownBy(() -> saveParticipantCodeDraftUseCase.execute(
                 EXAM_ID, USER_ID, new SaveParticipantCodeDraftRequest("python", "x")))

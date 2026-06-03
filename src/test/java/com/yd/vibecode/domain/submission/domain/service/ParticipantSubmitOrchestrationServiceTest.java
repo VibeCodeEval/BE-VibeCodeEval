@@ -70,7 +70,7 @@ class ParticipantSubmitOrchestrationServiceTest {
                 .build();
         ReflectionTestUtils.setField(submission, "id", 123L);
 
-        given(examParticipantService.findByExamIdAndParticipantId(examId, userId)).willReturn(examParticipant);
+        given(examParticipantService.findByExamIdAndParticipantIdForUpdate(examId, userId)).willReturn(examParticipant);
         given(submissionService.existsByExamIdAndParticipantId(examId, userId)).willReturn(false);
         given(submissionService.createAndEnqueue(examId, userId, specId, request.lang(), request.code()))
                 .willReturn(submission);
@@ -79,6 +79,7 @@ class ParticipantSubmitOrchestrationServiceTest {
 
         assertThat(response).isPresent();
         assertThat(examParticipant.hasCodeSnapshot()).isFalse();
+        verify(examParticipantService).findByExamIdAndParticipantIdForUpdate(examId, userId);
         verify(outboxEventService).saveEvent(
                 eq("SUBMISSION"),
                 eq(123L),
