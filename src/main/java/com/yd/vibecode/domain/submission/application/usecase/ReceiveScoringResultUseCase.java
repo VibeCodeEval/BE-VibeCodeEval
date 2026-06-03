@@ -107,20 +107,20 @@ public class ReceiveScoringResultUseCase {
                     score.getPerfScore(),
                     score.getCorrectnessScore(),
                     score.getTotalScore());
+        }
 
-            if (request.status() == SubmissionStatus.DONE && previousStatus != SubmissionStatus.DONE) {
-                examRepository.findById(submission.getExamId()).ifPresent(exam -> {
-                    String participantName = userRepository.findById(submission.getParticipantId())
-                            .map(user -> user.getName())
-                            .orElse(null);
-                    adminActivityLogService.logEvaluationCompleted(
-                            exam.getCreatedBy(),
-                            submission.getExamId(),
-                            submission.getParticipantId(),
-                            exam.getTitle(),
-                            participantName);
-                });
-            }
+        if (request.status() == SubmissionStatus.DONE && previousStatus != SubmissionStatus.DONE) {
+            examRepository.findById(submission.getExamId()).ifPresent(exam -> {
+                String participantName = userRepository.findById(submission.getParticipantId())
+                        .map(user -> user.getName())
+                        .orElse(null);
+                adminActivityLogService.logEvaluationCompleted(
+                        exam.getCreatedBy(),
+                        submission.getExamId(),
+                        submission.getParticipantId(),
+                        exam.getTitle(),
+                        participantName);
+            });
         }
 
         ScoringResultSseEvent.CompletionPayload completion = new ScoringResultSseEvent.CompletionPayload(

@@ -23,7 +23,6 @@ import com.yd.vibecode.domain.submission.application.dto.request.SubmitRequest;
 import com.yd.vibecode.domain.submission.application.dto.response.SubmitResponse;
 import com.yd.vibecode.domain.submission.domain.entity.SubmissionStatus;
 import com.yd.vibecode.domain.submission.domain.service.ParticipantSubmitOrchestrationService;
-import com.yd.vibecode.domain.submission.domain.service.SubmissionService;
 
 @ExtendWith(MockitoExtension.class)
 class AutoSubmitParticipantsOnExamEndUseCaseTest {
@@ -32,9 +31,6 @@ class AutoSubmitParticipantsOnExamEndUseCaseTest {
 
     @Mock
     private ExamParticipantRepository examParticipantRepository;
-
-    @Mock
-    private SubmissionService submissionService;
 
     @Mock
     private ParticipantSubmitOrchestrationService participantSubmitOrchestrationService;
@@ -54,7 +50,6 @@ class AutoSubmitParticipantsOnExamEndUseCaseTest {
                 .build();
 
         given(examParticipantRepository.findAllByExamId(EXAM_ID)).willReturn(List.of(ep));
-        given(submissionService.existsByExamIdAndParticipantId(EXAM_ID, participantId)).willReturn(false);
         given(participantSubmitOrchestrationService.submitIfAbsent(
                 eq(EXAM_ID), eq(participantId), any(SubmitRequest.class)))
                 .willReturn(Optional.of(new SubmitResponse(50L, SubmissionStatus.QUEUED)));
@@ -70,7 +65,7 @@ class AutoSubmitParticipantsOnExamEndUseCaseTest {
     }
 
     @Test
-    @DisplayName("이미 제출된 참가자는 중복 제출하지 않음")
+    @DisplayName("이미 제출된 참가자는 submitIfAbsent empty로 skip 집계, 중복 제출 없음")
     void execute_skipsAlreadySubmitted() {
         Long participantId = 100L;
         ExamParticipant ep = ExamParticipant.builder()
@@ -81,14 +76,18 @@ class AutoSubmitParticipantsOnExamEndUseCaseTest {
                 .build();
 
         given(examParticipantRepository.findAllByExamId(EXAM_ID)).willReturn(List.of(ep));
-        given(submissionService.existsByExamIdAndParticipantId(EXAM_ID, participantId)).willReturn(true);
+        given(participantSubmitOrchestrationService.submitIfAbsent(
+                eq(EXAM_ID), eq(participantId), any(SubmitRequest.class)))
+                .willReturn(Optional.empty());
 
         AutoSubmitParticipantsOnExamEndUseCase.AutoSubmitResult result =
                 autoSubmitParticipantsOnExamEndUseCase.execute(EXAM_ID);
 
         assertThat(result.submittedCount()).isZero();
         assertThat(result.skippedAlreadySubmitted()).isEqualTo(1);
-        verify(participantSubmitOrchestrationService, never()).submitIfAbsent(any(), any(), any());
+        assertThat(result.skippedNoCodeSnapshot()).isZero();
+        verify(participantSubmitOrchestrationService).submitIfAbsent(
+                eq(EXAM_ID), eq(participantId), any(SubmitRequest.class));
     }
 
     @Test
@@ -101,12 +100,12 @@ class AutoSubmitParticipantsOnExamEndUseCaseTest {
                 .build();
 
         given(examParticipantRepository.findAllByExamId(EXAM_ID)).willReturn(List.of(ep));
-        given(submissionService.existsByExamIdAndParticipantId(EXAM_ID, participantId)).willReturn(false);
 
         AutoSubmitParticipantsOnExamEndUseCase.AutoSubmitResult result =
                 autoSubmitParticipantsOnExamEndUseCase.execute(EXAM_ID);
 
         assertThat(result.submittedCount()).isZero();
+        assertThat(result.skippedAlreadySubmitted()).isZero();
         assertThat(result.skippedNoCodeSnapshot()).isEqualTo(1);
         verify(participantSubmitOrchestrationService, never()).submitIfAbsent(any(), any(), any());
     }

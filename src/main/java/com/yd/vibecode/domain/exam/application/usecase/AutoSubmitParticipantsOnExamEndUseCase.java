@@ -9,7 +9,6 @@ import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
 import com.yd.vibecode.domain.exam.domain.repository.ExamParticipantRepository;
 import com.yd.vibecode.domain.submission.application.dto.request.SubmitRequest;
 import com.yd.vibecode.domain.submission.domain.service.ParticipantSubmitOrchestrationService;
-import com.yd.vibecode.domain.submission.domain.service.SubmissionService;
 import com.yd.vibecode.global.exception.RestApiException;
 
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 public class AutoSubmitParticipantsOnExamEndUseCase {
 
     private final ExamParticipantRepository examParticipantRepository;
-    private final SubmissionService submissionService;
     private final ParticipantSubmitOrchestrationService participantSubmitOrchestrationService;
 
     @Transactional
@@ -41,10 +39,6 @@ public class AutoSubmitParticipantsOnExamEndUseCase {
 
         for (ExamParticipant participant : participants) {
             Long participantId = participant.getParticipantId();
-            if (submissionService.existsByExamIdAndParticipantId(examId, participantId)) {
-                skippedAlreadySubmitted++;
-                continue;
-            }
             if (!participant.hasCodeSnapshot()) {
                 skippedNoCodeSnapshot++;
                 log.info(

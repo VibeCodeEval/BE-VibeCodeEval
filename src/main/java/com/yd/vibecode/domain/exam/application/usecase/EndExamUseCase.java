@@ -41,10 +41,11 @@ public class EndExamUseCase {
         // 모든 참가자의 상태를 ENDED로 변경
         examParticipantService.endAllParticipants(examId);
 
+        // 관리자 활동 로그 (DB — 트랜잭션 커밋 전 외부 브로드캐스트보다 먼저)
+        adminActivityLogService.logExamEnded(exam.getCreatedBy(), examId, exam.getTitle());
+
         ExamStateEvent event = ExamStateEvent.from(exam);
         messagingTemplate.convertAndSend("/topic/exam/" + examId, event);
         log.info("Exam ended, WS broadcast sent: examId={}, version={}", examId, exam.getVersion());
-
-        adminActivityLogService.logExamEnded(exam.getCreatedBy(), examId, exam.getTitle());
     }
 }

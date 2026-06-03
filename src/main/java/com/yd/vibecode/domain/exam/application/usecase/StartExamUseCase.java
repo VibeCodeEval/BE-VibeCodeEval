@@ -55,12 +55,13 @@ public class StartExamUseCase {
         // 2. 시험 상태 변경 WAITING -> RUNNING
         Exam exam = examService.startExam(examId);
 
-        // 3. WebSocket 브로드캐스트
+        // 3. 관리자 활동 로그 (DB — 트랜잭션 커밋 전 외부 브로드캐스트보다 먼저)
+        adminActivityLogService.logExamStarted(exam.getCreatedBy(), examId, exam.getTitle());
+
+        // 4. WebSocket 브로드캐스트
         ExamStateEvent event = ExamStateEvent.from(exam);
         messagingTemplate.convertAndSend("/topic/exam/" + examId, event);
         log.info("Exam started, WS broadcast sent: examId={}, version={}", examId, exam.getVersion());
-
-        adminActivityLogService.logExamStarted(exam.getCreatedBy(), examId, exam.getTitle());
     }
 
     /**

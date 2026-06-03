@@ -230,6 +230,74 @@ class ReceiveScoringResultUseCaseTest {
     }
 
     @Test
+    @DisplayName("RUNNING → DONE 최초 전환 시 score 없어도 평가 완료 로그 기록")
+    void execute_logsEvaluationCompletedOnFirstTransitionToDone_withoutScore() {
+        Long submissionId = 1L;
+        Long examId = 100L;
+        Long participantId = 200L;
+        Long adminId = 10L;
+
+        Submission submission = Submission.builder()
+                .examId(examId)
+                .participantId(participantId)
+                .status(SubmissionStatus.RUNNING)
+                .build();
+        Exam exam = Exam.builder()
+                .title("기말 시험")
+                .state(ExamState.RUNNING)
+                .startsAt(LocalDateTime.now())
+                .endsAt(LocalDateTime.now().plusHours(2))
+                .createdBy(adminId)
+                .build();
+        ReflectionTestUtils.setField(exam, "id", examId);
+
+        ScoringResultRequest request = new ScoringResultRequest(
+                SubmissionStatus.DONE,
+                List.of(new ScoringResultRequest.TestCaseResult(
+                        0, "SAMPLE", Verdict.AC, 100, 1024, 0, 0)),
+                null);
+
+        given(submissionService.findById(submissionId)).willReturn(submission);
+        given(examRepository.findById(examId)).willReturn(Optional.of(exam));
+        given(userRepository.findById(participantId)).willReturn(Optional.empty());
+
+        receiveScoringResultUseCase.execute(submissionId, request);
+
+        verify(adminActivityLogService).logEvaluationCompleted(
+                eq(adminId), eq(examId), eq(participantId), eq("기말 시험"), eq(null));
+        verify(scoreRepository, never()).save(any(Score.class));
+    }
+
+    @Test
+    @DisplayName("이미 DONE 상태인 제출에 score 없는 DONE 재콜백 시 평가 완료 로그 미기록")
+    void execute_duplicateDoneCallbackWithoutScore_doesNotLogEvaluationCompleted() {
+        Long submissionId = 1L;
+        Long examId = 100L;
+        Long participantId = 200L;
+
+        Submission submission = Submission.builder()
+                .examId(examId)
+                .participantId(participantId)
+                .status(SubmissionStatus.DONE)
+                .build();
+
+        ScoringResultRequest request = new ScoringResultRequest(
+                SubmissionStatus.DONE,
+                List.of(new ScoringResultRequest.TestCaseResult(
+                        0, "SAMPLE", Verdict.AC, 100, 1024, 0, 0)),
+                null);
+
+        given(submissionService.findById(submissionId)).willReturn(submission);
+
+        receiveScoringResultUseCase.execute(submissionId, request);
+        receiveScoringResultUseCase.execute(submissionId, request);
+
+        verify(adminActivityLogService, never()).logEvaluationCompleted(any(), any(), any(), any(), any());
+        verify(examRepository, never()).findById(any());
+        verify(scoreRepository, never()).save(any(Score.class));
+    }
+
+    @Test
     @DisplayName("이미 DONE 상태인 제출에 DONE 재콜백 시 평가 완료 로그 미기록")
     void execute_duplicateDoneCallback_doesNotLogEvaluationCompleted() {
         Long submissionId = 1L;
