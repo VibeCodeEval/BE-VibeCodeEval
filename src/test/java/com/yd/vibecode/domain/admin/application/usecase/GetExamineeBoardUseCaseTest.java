@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,8 +19,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.yd.vibecode.domain.admin.application.dto.response.ExamineeBoardResponse;
 import com.yd.vibecode.domain.auth.domain.entity.User;
 import com.yd.vibecode.domain.auth.domain.repository.UserRepository;
+import com.yd.vibecode.domain.admin.application.dto.response.ParticipantAttendanceStatus;
+import com.yd.vibecode.domain.admin.application.dto.response.ParticipantSubmissionDisplayStatus;
+import com.yd.vibecode.domain.exam.domain.entity.Exam;
 import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
+import com.yd.vibecode.domain.exam.domain.entity.ExamState;
 import com.yd.vibecode.domain.exam.domain.repository.ExamParticipantRepository;
+import com.yd.vibecode.domain.exam.domain.repository.ExamRepository;
 import com.yd.vibecode.domain.submission.domain.entity.Score;
 import com.yd.vibecode.domain.submission.domain.entity.Submission;
 import com.yd.vibecode.domain.submission.domain.entity.SubmissionStatus;
@@ -30,6 +36,9 @@ import com.yd.vibecode.domain.submission.domain.repository.SubmissionRepository;
 class GetExamineeBoardUseCaseTest {
 
     private static final Long EXAM_ID = 1L;
+
+    @Mock
+    private ExamRepository examRepository;
 
     @Mock
     private ExamParticipantRepository examParticipantRepository;
@@ -45,6 +54,19 @@ class GetExamineeBoardUseCaseTest {
 
     @InjectMocks
     private GetExamineeBoardUseCase getExamineeBoardUseCase;
+
+    private Exam runningExam() {
+        Exam exam = Exam.builder()
+                .title("테스트")
+                .state(ExamState.RUNNING)
+                .startsAt(LocalDateTime.now().minusHours(1))
+                .endsAt(LocalDateTime.now().plusHours(1))
+                .version(1)
+                .createdBy(1L)
+                .build();
+        ReflectionTestUtils.setField(exam, "id", EXAM_ID);
+        return exam;
+    }
 
     @Test
     @DisplayName("participantId(users.id) 일치 시 제출 상태·점수 매핑")
@@ -77,6 +99,7 @@ class GetExamineeBoardUseCaseTest {
                 .build();
         score.calculateTotalScore();
 
+        given(examRepository.findById(EXAM_ID)).willReturn(Optional.of(runningExam()));
         given(examParticipantRepository.findAllByExamId(EXAM_ID)).willReturn(List.of(ep));
         given(userRepository.findAllById(List.of(userId))).willReturn(List.of(user));
         given(submissionRepository.findByExamId(EXAM_ID)).willReturn(List.of(submission));
@@ -87,6 +110,8 @@ class GetExamineeBoardUseCaseTest {
         assertThat(result).hasSize(1);
         ExamineeBoardResponse row = result.get(0);
         assertThat(row.examParticipantId()).isEqualTo(12L);
+        assertThat(row.attendanceStatus()).isEqualTo(ParticipantAttendanceStatus.SUBMITTED);
+        assertThat(row.submissionDisplayStatus()).isEqualTo(ParticipantSubmissionDisplayStatus.GRADED);
         assertThat(row.submitted()).isTrue();
         assertThat(row.submissionId()).isEqualTo(50L);
         assertThat(row.submissionStatus()).isEqualTo("DONE");
@@ -121,6 +146,7 @@ class GetExamineeBoardUseCaseTest {
                 .build();
         ReflectionTestUtils.setField(otherUserSubmission, "id", 99L);
 
+        given(examRepository.findById(EXAM_ID)).willReturn(Optional.of(runningExam()));
         given(examParticipantRepository.findAllByExamId(EXAM_ID)).willReturn(List.of(ep));
         given(userRepository.findAllById(List.of(userId))).willReturn(List.of(user));
         given(submissionRepository.findByExamId(EXAM_ID)).willReturn(List.of(otherUserSubmission));
@@ -130,6 +156,8 @@ class GetExamineeBoardUseCaseTest {
 
         assertThat(result).hasSize(1);
         ExamineeBoardResponse row = result.get(0);
+        assertThat(row.attendanceStatus()).isEqualTo(ParticipantAttendanceStatus.IN_EXAM);
+        assertThat(row.submissionDisplayStatus()).isEqualTo(ParticipantSubmissionDisplayStatus.NOT_SUBMITTED);
         assertThat(row.submitted()).isFalse();
         assertThat(row.submissionId()).isNull();
         assertThat(row.submissionStatus()).isNull();

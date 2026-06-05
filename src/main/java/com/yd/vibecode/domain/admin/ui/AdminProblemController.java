@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.yd.vibecode.domain.admin.application.dto.request.CreateProblemRequest;
+import com.yd.vibecode.domain.admin.application.dto.request.UpdateProblemAvailabilityRequest;
 import com.yd.vibecode.domain.admin.application.dto.response.ProblemDetailResponse;
 import com.yd.vibecode.domain.admin.application.dto.response.ProblemResponse;
 import com.yd.vibecode.domain.admin.application.dto.response.ProblemSpecResponse;
@@ -21,6 +23,7 @@ import com.yd.vibecode.domain.admin.application.usecase.DeleteProblemUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.GetProblemDetailUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.GetProblemSpecsUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.GetProblemsUseCase;
+import com.yd.vibecode.domain.admin.application.usecase.UpdateProblemAvailabilityUseCase;
 import com.yd.vibecode.global.common.BaseResponse;
 import com.yd.vibecode.global.swagger.AdminProblemApi;
 
@@ -37,6 +40,7 @@ public class AdminProblemController implements AdminProblemApi {
     private final DeleteProblemUseCase deleteProblemUseCase;
     private final GetProblemSpecsUseCase getProblemSpecsUseCase;
     private final GetProblemDetailUseCase getProblemDetailUseCase;
+    private final UpdateProblemAvailabilityUseCase updateProblemAvailabilityUseCase;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -50,6 +54,15 @@ public class AdminProblemController implements AdminProblemApi {
     @Override
     public BaseResponse<List<ProblemResponse>> getProblems() {
         List<ProblemResponse> response = getProblemsUseCase.execute();
+        return BaseResponse.onSuccess(response);
+    }
+
+    @PatchMapping("/{problemId}/availability")
+    @Override
+    public BaseResponse<ProblemResponse> updateProblemAvailability(
+            @PathVariable Long problemId,
+            @Valid @RequestBody UpdateProblemAvailabilityRequest request) {
+        ProblemResponse response = updateProblemAvailabilityUseCase.execute(problemId, request);
         return BaseResponse.onSuccess(response);
     }
 

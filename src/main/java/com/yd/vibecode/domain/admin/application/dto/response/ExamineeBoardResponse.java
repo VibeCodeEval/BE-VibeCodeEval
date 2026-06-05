@@ -21,7 +21,9 @@ public record ExamineeBoardResponse(
     BigDecimal correctnessScore,
     BigDecimal totalScore,
     LocalDateTime submittedAt,
-    LocalDateTime evaluatedAt
+    LocalDateTime evaluatedAt,
+    ParticipantAttendanceStatus attendanceStatus,
+    ParticipantSubmissionDisplayStatus submissionDisplayStatus
 ) {
     public static ExamineeBoardResponse of(
             ExamParticipant ep,
@@ -34,7 +36,9 @@ public record ExamineeBoardResponse(
             BigDecimal correctnessScore,
             BigDecimal totalScore,
             LocalDateTime submittedAt,
-            LocalDateTime evaluatedAt) {
+            LocalDateTime evaluatedAt,
+            ParticipantAttendanceStatus attendanceStatus,
+            ParticipantSubmissionDisplayStatus submissionDisplayStatus) {
         return new ExamineeBoardResponse(
             ep.getId(),
             p != null ? p.getName() : "",
@@ -50,13 +54,14 @@ public record ExamineeBoardResponse(
             correctnessScore,
             totalScore,
             submittedAt,
-            evaluatedAt
+            evaluatedAt,
+            attendanceStatus,
+            submissionDisplayStatus
         );
     }
 
     private static String maskPhone(String phone) {
         if (phone == null || phone.length() < 9) return phone;
-        // 010-1234-5678 -> 010-****-5678
         String[] parts = phone.split("-");
         if (parts.length == 3) {
             return parts[0] + "-****-" + parts[2];

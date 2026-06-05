@@ -1,9 +1,12 @@
 package com.yd.vibecode.domain.admin.application.usecase;
 
 import com.yd.vibecode.domain.admin.application.dto.response.ExamineeBoardResponse;
+import com.yd.vibecode.domain.admin.application.service.ExamParticipantDisplayStatusResolver;
 import com.yd.vibecode.domain.auth.domain.entity.User;
+import com.yd.vibecode.domain.exam.domain.entity.Exam;
 import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
 import com.yd.vibecode.domain.exam.domain.repository.ExamParticipantRepository;
+import com.yd.vibecode.domain.exam.domain.repository.ExamRepository;
 import com.yd.vibecode.domain.auth.domain.repository.UserRepository;
 import com.yd.vibecode.domain.submission.domain.entity.Score;
 import com.yd.vibecode.domain.submission.domain.entity.Submission;
@@ -26,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class GetExamineeBoardUseCase {
 
+    private final ExamRepository examRepository;
     private final ExamParticipantRepository examParticipantRepository;
     private final UserRepository userRepository;
     private final SubmissionRepository submissionRepository;
@@ -33,6 +37,12 @@ public class GetExamineeBoardUseCase {
 
     @Transactional(readOnly = true)
     public List<ExamineeBoardResponse> execute(Long examId) {
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new com.yd.vibecode.global.exception.RestApiException(
+                        com.yd.vibecode.global.exception.code.status.ExamErrorStatus.EXAM_NOT_FOUND));
+
+        LocalDateTime now = LocalDateTime.now();
+
         List<ExamParticipant> participants = examParticipantRepository.findAllByExamId(examId);
 
         List<Long> participantIds = participants.stream()
@@ -68,8 +78,9 @@ public class GetExamineeBoardUseCase {
                 BigDecimal correctnessScore = null;
                 BigDecimal totalScore = null;
                 LocalDateTime evaluatedAt = null;
+                Score score = null;
                 if (submitted) {
-                    Score score = scoreBySubmissionId.get(sub.getId());
+                    score = scoreBySubmissionId.get(sub.getId());
                     if (score != null) {
                         promptScore = score.getPromptScore();
                         perfScore = score.getPerfScore();
@@ -78,6 +89,11 @@ public class GetExamineeBoardUseCase {
                         evaluatedAt = score.getUpdatedAt() != null ? score.getUpdatedAt() : score.getCreatedAt();
                     }
                 }
+                var submissionDisplayStatus = ExamParticipantDisplayStatusResolver.resolveSubmissionDisplayStatus(
+                        submitted, sub, score);
+                var attendanceStatus = ExamParticipantDisplayStatusResolver.resolveAttendanceStatus(
+                        exam, ep, submitted, sub, score, now);
+
                 return ExamineeBoardResponse.of(
                     ep,
                     p,
@@ -89,7 +105,9 @@ public class GetExamineeBoardUseCase {
                     correctnessScore,
                     totalScore,
                     submittedAt,
-                    evaluatedAt
+                    evaluatedAt,
+                    attendanceStatus,
+                    submissionDisplayStatus
                 );
             })
             .toList();

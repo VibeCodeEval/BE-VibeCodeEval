@@ -54,10 +54,18 @@ public class ExamParticipant extends BaseEntity {
     @Column
     private LocalDateTime joinedAt;
 
+    /** 자동 제출용 최신 코드 스냅샷 (FE 주기 저장) */
+    @Column(length = 50)
+    private String lastCodeLang;
+
+    @Column(columnDefinition = "TEXT")
+    private String lastCodeInline;
+
     @Builder
     public ExamParticipant(Long examId, Long participantId, Long specId, String state,
                           Integer tokenLimit, Integer tokenUsed, Integer assignedSpecVersion,
-                          Long assignedProblemId, LocalDateTime joinedAt) {
+                          Long assignedProblemId, LocalDateTime joinedAt,
+                          String lastCodeLang, String lastCodeInline) {
         this.examId = examId;
         this.participantId = participantId;
         this.specId = specId;
@@ -67,6 +75,27 @@ public class ExamParticipant extends BaseEntity {
         this.assignedSpecVersion = assignedSpecVersion;
         this.assignedProblemId = assignedProblemId;
         this.joinedAt = joinedAt != null ? joinedAt : LocalDateTime.now();
+        this.lastCodeLang = lastCodeLang;
+        this.lastCodeInline = lastCodeInline;
+    }
+
+    public boolean hasCodeSnapshot() {
+        return lastCodeLang != null && !lastCodeLang.isBlank()
+                && lastCodeInline != null && !lastCodeInline.isBlank();
+    }
+
+    public void updateCodeSnapshot(String lang, String code) {
+        if (lang != null && !lang.isBlank()) {
+            this.lastCodeLang = lang.trim();
+        }
+        if (code != null && !code.isBlank()) {
+            this.lastCodeInline = code;
+        }
+    }
+
+    public void clearCodeSnapshot() {
+        this.lastCodeLang = null;
+        this.lastCodeInline = null;
     }
 
     public void updateSpecId(Long specId) {

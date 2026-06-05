@@ -8,10 +8,12 @@ import static org.mockito.Mockito.verify;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.yd.vibecode.domain.admin.domain.service.MasterActivityLogService;
 import com.yd.vibecode.domain.auth.domain.entity.Admin;
 import com.yd.vibecode.domain.auth.domain.entity.AdminRole;
 import com.yd.vibecode.domain.auth.domain.service.AdminAccountDeletionService;
@@ -31,6 +33,9 @@ class DeleteAdminByMasterUseCaseTest {
     @Mock
     private AdminAccountDeletionService adminAccountDeletionService;
 
+    @Mock
+    private MasterActivityLogService masterActivityLogService;
+
     @Test
     @DisplayName("MASTER가 일반 관리자 계정을 삭제할 수 있다")
     void execute_success() {
@@ -39,6 +44,7 @@ class DeleteAdminByMasterUseCaseTest {
 
         Admin requester = Admin.builder().role(AdminRole.MASTER).build();
         Admin target = Admin.builder().adminNumber(targetAdminNumber).role(AdminRole.ADMIN).build();
+        ReflectionTestUtils.setField(target, "id", 10L);
 
         given(adminService.findById(requesterId)).willReturn(requester);
         given(adminService.findByAdminNumber(targetAdminNumber)).willReturn(target);
@@ -50,6 +56,7 @@ class DeleteAdminByMasterUseCaseTest {
                 eq(requesterId),
                 eq("DELETE_ADMIN_BY_MASTER")
         );
+        verify(masterActivityLogService).logAdminAccountDeleted(requesterId, 10L, target.getDisplayName());
     }
 
     @Test

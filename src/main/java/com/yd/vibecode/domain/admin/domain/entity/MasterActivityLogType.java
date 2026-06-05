@@ -1,0 +1,11 @@
+package com.yd.vibecode.domain.admin.domain.entity;
+
+public enum MasterActivityLogType {
+    ADMIN_SIGNUP_CODE_ISSUED,
+    ADMIN_SIGNUP_CODE_DEACTIVATED,
+    ADMIN_SIGNUP_CODE_REACTIVATED,
+    ADMIN_SIGNED_UP,
+    ADMIN_ACCOUNT_DELETED,
+    ADMIN_PASSWORD_RESET,
+    PLATFORM_SETTINGS_UPDATED
+}

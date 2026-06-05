@@ -20,6 +20,7 @@ import com.yd.vibecode.domain.exam.domain.repository.ExamRepository;
 import com.yd.vibecode.domain.problem.domain.repository.ProblemRepository;
 import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetItemRepository;
 import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetRepository;
+import com.yd.vibecode.domain.admin.domain.service.AdminActivityLogService;
 import com.yd.vibecode.global.exception.RestApiException;
 import com.yd.vibecode.global.exception.code.status.ExamErrorStatus;
 
@@ -43,6 +44,9 @@ class CreateExamUseCaseTest {
 
     @Mock
     private EntryCodeRepository entryCodeRepository;
+
+    @Mock
+    private AdminActivityLogService adminActivityLogService;
 
     @Test
     @DisplayName("종료 시각이 과거이면 시험 생성 실패 (DB 저장 없음)")

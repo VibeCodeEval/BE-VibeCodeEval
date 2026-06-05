@@ -30,15 +30,20 @@ public class AdminNumberService {
         return adminNumberRepository.save(entity);
     }
 
+    @Transactional(readOnly = true)
+    public AdminNumber getByAdminNumber(String adminNumber) {
+        return findByAdminNumber(adminNumber);
+    }
+
     public AdminNumber update(String adminNumber, String label, Boolean active, LocalDateTime expiresAt) {
-        AdminNumber target = getByAdminNumber(adminNumber);
+        AdminNumber target = findByAdminNumber(adminNumber);
         target.update(label, active, expiresAt);
         return target;
     }
 
     @Transactional(readOnly = true)
     public AdminNumber validateUsable(String adminNumber) {
-        AdminNumber found = getByAdminNumber(adminNumber);
+        AdminNumber found = findByAdminNumber(adminNumber);
         if (!found.isUsable()) {
             throw new RestApiException(AuthErrorStatus.ADMIN_NUMBER_INACTIVE);
         }
@@ -49,7 +54,7 @@ public class AdminNumberService {
         adminNumber.assign(adminId, LocalDateTime.now());
     }
 
-    private AdminNumber getByAdminNumber(String adminNumber) {
+    private AdminNumber findByAdminNumber(String adminNumber) {
         return adminNumberRepository.findByAdminNumber(adminNumber)
                 .orElseThrow(() -> new RestApiException(AuthErrorStatus.INVALID_ADMIN_NUMBER));
     }

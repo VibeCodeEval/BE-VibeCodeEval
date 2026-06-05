@@ -2,6 +2,7 @@ package com.yd.vibecode.domain.admin.application.usecase;
 
 import com.yd.vibecode.domain.admin.application.dto.response.ResetAdminPasswordByMasterResponse;
 import com.yd.vibecode.domain.admin.domain.service.AdminAuditLogService;
+import com.yd.vibecode.domain.admin.domain.service.MasterActivityLogService;
 import com.yd.vibecode.domain.auth.domain.entity.Admin;
 import com.yd.vibecode.domain.auth.domain.service.AdminService;
 import com.yd.vibecode.global.exception.RestApiException;
@@ -18,6 +19,7 @@ public class ResetAdminPasswordByMasterUseCase {
 
     private final AdminService adminService;
     private final AdminAuditLogService adminAuditLogService;
+    private final MasterActivityLogService masterActivityLogService;
     private final TemporaryPasswordGenerator temporaryPasswordGenerator;
 
     @Transactional
@@ -40,6 +42,11 @@ public class ResetAdminPasswordByMasterUseCase {
             "targetAdminId", target.getId(),
             "targetAdminNumber", target.getAdminNumber()
         ));
+
+        masterActivityLogService.logAdminPasswordReset(
+                requesterId,
+                target.getId(),
+                target.getDisplayName());
 
         return new ResetAdminPasswordByMasterResponse(temporaryPassword);
     }
