@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.yd.vibecode.domain.exam.application.dto.event.ExamStateEvent;
+import com.yd.vibecode.domain.admin.domain.service.AdminActivityLogService;
 import com.yd.vibecode.domain.exam.domain.entity.Exam;
 import com.yd.vibecode.domain.exam.domain.service.ExamParticipantService;
 import com.yd.vibecode.domain.exam.domain.service.ExamService;
@@ -26,14 +27,22 @@ public class EndExamUseCase {
 
     private final ExamService examService;
     private final ExamParticipantService examParticipantService;
+    private final AutoSubmitParticipantsOnExamEndUseCase autoSubmitParticipantsOnExamEndUseCase;
     private final SimpMessagingTemplate messagingTemplate;
+    private final AdminActivityLogService adminActivityLogService;
 
     @Transactional
     public void execute(Long examId) {
+        // 시험 상태 전환 전(RUNNING) 미제출 참가자 자동 제출 — 멱등
+        autoSubmitParticipantsOnExamEndUseCase.execute(examId);
+
         Exam exam = examService.endExam(examId);
 
         // 모든 참가자의 상태를 ENDED로 변경
         examParticipantService.endAllParticipants(examId);
+
+        // 관리자 활동 로그 (DB — 트랜잭션 커밋 전 외부 브로드캐스트보다 먼저)
+        adminActivityLogService.logExamEnded(exam.getCreatedBy(), examId, exam.getTitle());
 
         ExamStateEvent event = ExamStateEvent.from(exam);
         messagingTemplate.convertAndSend("/topic/exam/" + examId, event);

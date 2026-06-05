@@ -4,14 +4,23 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.yd.vibecode.domain.exam.domain.entity.ExamParticipant;
 
+import jakarta.persistence.LockModeType;
+
 public interface ExamParticipantRepository extends JpaRepository<ExamParticipant, Long> {
 
     Optional<ExamParticipant> findByExamIdAndParticipantId(Long examId, Long participantId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT ep FROM ExamParticipant ep WHERE ep.examId = :examId AND ep.participantId = :participantId")
+    Optional<ExamParticipant> findByExamIdAndParticipantIdForUpdate(
+            @Param("examId") Long examId,
+            @Param("participantId") Long participantId);
 
     List<ExamParticipant> findByExamId(Long examId);
 

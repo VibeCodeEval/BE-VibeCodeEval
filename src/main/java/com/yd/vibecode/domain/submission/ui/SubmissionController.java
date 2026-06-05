@@ -4,11 +4,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.yd.vibecode.domain.exam.application.dto.request.SaveParticipantCodeDraftRequest;
+import com.yd.vibecode.domain.exam.application.dto.response.CodeDraftResponse;
+import com.yd.vibecode.domain.exam.application.usecase.GetParticipantCodeDraftUseCase;
+import com.yd.vibecode.domain.exam.application.usecase.SaveParticipantCodeDraftUseCase;
 import com.yd.vibecode.domain.submission.application.dto.request.SubmitRequest;
 import com.yd.vibecode.domain.submission.application.dto.response.SubmissionDetailResponse;
 import com.yd.vibecode.domain.submission.application.dto.response.SubmitResponse;
@@ -35,6 +40,8 @@ public class SubmissionController implements SubmissionApi {
 
     private final SubmitUseCase submitUseCase;
     private final GetSubmissionDetailUseCase getSubmissionDetailUseCase;
+    private final SaveParticipantCodeDraftUseCase saveParticipantCodeDraftUseCase;
+    private final GetParticipantCodeDraftUseCase getParticipantCodeDraftUseCase;
 
     @PostMapping("/exams/{examId}/submissions")
     @ResponseStatus(HttpStatus.ACCEPTED)  // 202 Accepted
@@ -44,6 +51,24 @@ public class SubmissionController implements SubmissionApi {
             @Valid @RequestBody SubmitRequest request) {
         SubmitResponse response = submitUseCase.execute(examId, userId, request);
         return BaseResponse.onSuccess(response);
+    }
+
+    @GetMapping("/exams/{examId}/code-draft")
+    public BaseResponse<CodeDraftResponse> getCodeDraft(
+            @PathVariable Long examId,
+            @CurrentUser Long userId) {
+        CodeDraftResponse response = getParticipantCodeDraftUseCase.execute(examId, userId);
+        return BaseResponse.onSuccess(response);
+    }
+
+    @PutMapping("/exams/{examId}/code-draft")
+    @ResponseStatus(HttpStatus.OK)
+    public BaseResponse<Void> saveCodeDraft(
+            @PathVariable Long examId,
+            @CurrentUser Long userId,
+            @Valid @RequestBody SaveParticipantCodeDraftRequest request) {
+        saveParticipantCodeDraftUseCase.execute(examId, userId, request);
+        return BaseResponse.onSuccess();
     }
 
     @GetMapping("/submissions/{submissionId}")

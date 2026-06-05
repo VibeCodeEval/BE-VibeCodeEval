@@ -10,14 +10,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
+import com.yd.vibecode.domain.auth.domain.entity.User;
+import com.yd.vibecode.domain.exam.domain.entity.Exam;
+import com.yd.vibecode.domain.exam.domain.entity.ExamState;
 import com.yd.vibecode.domain.submission.application.dto.request.ScoringResultRequest;
 import com.yd.vibecode.domain.submission.application.event.ScoringResultSseEvent;
 import com.yd.vibecode.domain.submission.domain.entity.Score;
@@ -29,6 +34,10 @@ import com.yd.vibecode.domain.submission.domain.repository.ScoreRepository;
 import com.yd.vibecode.domain.submission.domain.repository.SubmissionRunRepository;
 import com.yd.vibecode.domain.submission.domain.service.SubmissionService;
 import com.yd.vibecode.global.exception.RestApiException;
+
+import java.time.LocalDateTime;
+
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ReceiveScoringResultUseCaseTest {
@@ -47,6 +56,15 @@ class ReceiveScoringResultUseCaseTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private com.yd.vibecode.domain.exam.domain.repository.ExamRepository examRepository;
+
+    @Mock
+    private com.yd.vibecode.domain.admin.domain.service.AdminActivityLogService adminActivityLogService;
+
+    @Mock
+    private com.yd.vibecode.domain.auth.domain.repository.UserRepository userRepository;
 
     @Test
     @DisplayName("채점 결과 수신 및 처리 성공 - DB 저장 및 SSE 이벤트 발행 확인")
@@ -173,5 +191,203 @@ class ReceiveScoringResultUseCaseTest {
         receiveScoringResultUseCase.execute(submissionId, request);
 
         verify(scoreRepository).save(existing);
+    }
+
+    @Test
+    @DisplayName("RUNNING → DONE 최초 전환 시 평가 완료 로그 기록")
+    void execute_logsEvaluationCompletedOnFirstTransitionToDone() {
+        Long submissionId = 1L;
+        Long examId = 100L;
+        Long participantId = 200L;
+        Long adminId = 10L;
+
+        Submission submission = Submission.builder()
+                .examId(examId)
+                .participantId(participantId)
+                .status(SubmissionStatus.RUNNING)
+                .build();
+        Exam exam = Exam.builder()
+                .title("기말 시험")
+                .state(ExamState.RUNNING)
+                .startsAt(LocalDateTime.now())
+                .endsAt(LocalDateTime.now().plusHours(2))
+                .createdBy(adminId)
+                .build();
+        ReflectionTestUtils.setField(exam, "id", examId);
+        User user = User.builder().name("김민준").phone("01012345678").build();
+
+        ScoringResultRequest request = doneRequestWithScore();
+
+        given(submissionService.findById(submissionId)).willReturn(submission);
+        given(scoreRepository.findBySubmissionId(submissionId)).willReturn(Optional.empty());
+        given(examRepository.findById(examId)).willReturn(Optional.of(exam));
+        given(userRepository.findById(participantId)).willReturn(Optional.of(user));
+
+        receiveScoringResultUseCase.execute(submissionId, request);
+
+        verify(adminActivityLogService).logEvaluationCompleted(
+                eq(adminId), eq(examId), eq(participantId), eq("기말 시험"), eq("김민준"));
+    }
+
+    @Test
+    @DisplayName("RUNNING → DONE 최초 전환 시 score 없어도 평가 완료 로그 기록")
+    void execute_logsEvaluationCompletedOnFirstTransitionToDone_withoutScore() {
+        Long submissionId = 1L;
+        Long examId = 100L;
+        Long participantId = 200L;
+        Long adminId = 10L;
+
+        Submission submission = Submission.builder()
+                .examId(examId)
+                .participantId(participantId)
+                .status(SubmissionStatus.RUNNING)
+                .build();
+        Exam exam = Exam.builder()
+                .title("기말 시험")
+                .state(ExamState.RUNNING)
+                .startsAt(LocalDateTime.now())
+                .endsAt(LocalDateTime.now().plusHours(2))
+                .createdBy(adminId)
+                .build();
+        ReflectionTestUtils.setField(exam, "id", examId);
+
+        ScoringResultRequest request = new ScoringResultRequest(
+                SubmissionStatus.DONE,
+                List.of(new ScoringResultRequest.TestCaseResult(
+                        0, "SAMPLE", Verdict.AC, 100, 1024, 0, 0)),
+                null);
+
+        given(submissionService.findById(submissionId)).willReturn(submission);
+        given(examRepository.findById(examId)).willReturn(Optional.of(exam));
+        given(userRepository.findById(participantId)).willReturn(Optional.empty());
+
+        receiveScoringResultUseCase.execute(submissionId, request);
+
+        verify(adminActivityLogService).logEvaluationCompleted(
+                eq(adminId), eq(examId), eq(participantId), eq("기말 시험"), eq(null));
+        verify(scoreRepository, never()).save(any(Score.class));
+    }
+
+    @Test
+    @DisplayName("이미 DONE 상태인 제출에 score 없는 DONE 재콜백 시 평가 완료 로그 미기록")
+    void execute_duplicateDoneCallbackWithoutScore_doesNotLogEvaluationCompleted() {
+        Long submissionId = 1L;
+        Long examId = 100L;
+        Long participantId = 200L;
+
+        Submission submission = Submission.builder()
+                .examId(examId)
+                .participantId(participantId)
+                .status(SubmissionStatus.DONE)
+                .build();
+
+        ScoringResultRequest request = new ScoringResultRequest(
+                SubmissionStatus.DONE,
+                List.of(new ScoringResultRequest.TestCaseResult(
+                        0, "SAMPLE", Verdict.AC, 100, 1024, 0, 0)),
+                null);
+
+        given(submissionService.findById(submissionId)).willReturn(submission);
+
+        receiveScoringResultUseCase.execute(submissionId, request);
+        receiveScoringResultUseCase.execute(submissionId, request);
+
+        verify(adminActivityLogService, never()).logEvaluationCompleted(any(), any(), any(), any(), any());
+        verify(examRepository, never()).findById(any());
+        verify(scoreRepository, never()).save(any(Score.class));
+    }
+
+    @Test
+    @DisplayName("이미 DONE 상태인 제출에 DONE 재콜백 시 평가 완료 로그 미기록")
+    void execute_duplicateDoneCallback_doesNotLogEvaluationCompleted() {
+        Long submissionId = 1L;
+        Long examId = 100L;
+        Long participantId = 200L;
+
+        Submission submission = Submission.builder()
+                .examId(examId)
+                .participantId(participantId)
+                .status(SubmissionStatus.DONE)
+                .build();
+
+        ScoringResultRequest request = doneRequestWithScore();
+
+        given(submissionService.findById(submissionId)).willReturn(submission);
+        given(scoreRepository.findBySubmissionId(submissionId)).willReturn(Optional.empty());
+
+        receiveScoringResultUseCase.execute(submissionId, request);
+        receiveScoringResultUseCase.execute(submissionId, request);
+
+        verify(adminActivityLogService, never()).logEvaluationCompleted(any(), any(), any(), any(), any());
+        verify(examRepository, never()).findById(any());
+    }
+
+    @Test
+    @DisplayName("DONE이 아닌 상태 요청 시 평가 완료 로그 미기록")
+    void execute_nonDoneStatus_doesNotLogEvaluationCompleted() {
+        Long submissionId = 1L;
+        Submission submission = Submission.builder()
+                .examId(100L)
+                .participantId(200L)
+                .status(SubmissionStatus.RUNNING)
+                .build();
+
+        ScoringResultRequest request = new ScoringResultRequest(
+                SubmissionStatus.FAILED,
+                Collections.emptyList(),
+                new ScoringResultRequest.ScoreData(
+                        new BigDecimal("10"), new BigDecimal("20"), new BigDecimal("30"), "{}"));
+
+        given(submissionService.findById(submissionId)).willReturn(submission);
+
+        receiveScoringResultUseCase.execute(submissionId, request);
+
+        verify(adminActivityLogService, never()).logEvaluationCompleted(any(), any(), any(), any(), any());
+        verify(examRepository, never()).findById(any());
+    }
+
+    @Test
+    @DisplayName("RUNNING → DONE 후 재콜백 시 평가 완료 로그는 1회만 기록")
+    void execute_runningToDoneThenDuplicateCallback_logsOnce() {
+        Long submissionId = 1L;
+        Long examId = 100L;
+        Long participantId = 200L;
+        Long adminId = 10L;
+
+        Submission submission = Submission.builder()
+                .examId(examId)
+                .participantId(participantId)
+                .status(SubmissionStatus.RUNNING)
+                .build();
+        Exam exam = Exam.builder()
+                .title("기말 시험")
+                .state(ExamState.RUNNING)
+                .startsAt(LocalDateTime.now())
+                .endsAt(LocalDateTime.now().plusHours(2))
+                .createdBy(adminId)
+                .build();
+        ReflectionTestUtils.setField(exam, "id", examId);
+
+        ScoringResultRequest request = doneRequestWithScore();
+
+        given(submissionService.findById(submissionId)).willReturn(submission);
+        given(scoreRepository.findBySubmissionId(submissionId)).willReturn(Optional.empty());
+        given(examRepository.findById(examId)).willReturn(Optional.of(exam));
+        given(userRepository.findById(participantId)).willReturn(Optional.empty());
+
+        receiveScoringResultUseCase.execute(submissionId, request);
+        receiveScoringResultUseCase.execute(submissionId, request);
+
+        verify(adminActivityLogService, times(1)).logEvaluationCompleted(
+                eq(adminId), eq(examId), eq(participantId), eq("기말 시험"), eq(null));
+    }
+
+    private static ScoringResultRequest doneRequestWithScore() {
+        return new ScoringResultRequest(
+                SubmissionStatus.DONE,
+                List.of(new ScoringResultRequest.TestCaseResult(
+                        0, "SAMPLE", Verdict.AC, 100, 1024, 0, 0)),
+                new ScoringResultRequest.ScoreData(
+                        new BigDecimal("30.0"), new BigDecimal("30.0"), new BigDecimal("40.0"), "{}"));
     }
 }

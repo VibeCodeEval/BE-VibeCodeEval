@@ -3,6 +3,7 @@ package com.yd.vibecode.domain.admin.application.usecase;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.yd.vibecode.domain.admin.domain.service.MasterActivityLogService;
 import com.yd.vibecode.domain.auth.domain.entity.Admin;
 import com.yd.vibecode.domain.auth.domain.service.AdminAccountDeletionService;
 import com.yd.vibecode.domain.auth.domain.service.AdminService;
@@ -19,6 +20,7 @@ public class DeleteAdminByMasterUseCase {
 
     private final AdminService adminService;
     private final AdminAccountDeletionService adminAccountDeletionService;
+    private final MasterActivityLogService masterActivityLogService;
 
     @Transactional
     public void execute(Long requesterId, String targetAdminNumber) {
@@ -29,5 +31,9 @@ public class DeleteAdminByMasterUseCase {
 
         Admin target = adminService.findByAdminNumber(targetAdminNumber);
         adminAccountDeletionService.softDelete(target, requesterId, AUDIT_ACTION);
+        masterActivityLogService.logAdminAccountDeleted(
+                requesterId,
+                target.getId(),
+                target.getDisplayName());
     }
 }

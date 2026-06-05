@@ -3,6 +3,7 @@ package com.yd.vibecode.domain.auth.application.usecase;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.yd.vibecode.domain.admin.domain.service.MasterActivityLogService;
 import com.yd.vibecode.domain.auth.application.dto.request.AdminSignupRequest;
 import com.yd.vibecode.domain.auth.domain.entity.AdminNumber;
 import com.yd.vibecode.domain.auth.domain.service.AdminNumberService;
@@ -18,6 +19,7 @@ public class AdminSignupUseCase {
 
     private final AdminService adminService;
     private final AdminNumberService adminNumberService;
+    private final MasterActivityLogService masterActivityLogService;
 
     @Transactional
     public void execute(AdminSignupRequest request) {
@@ -44,6 +46,11 @@ public class AdminSignupUseCase {
 
         // 5. 관리자 번호 사용 처리
         adminNumberService.assign(adminNumber, admin.getId());
+
+        masterActivityLogService.logAdminSignedUp(
+                adminNumber.getIssuedBy(),
+                admin.getId(),
+                admin.getDisplayName());
     }
 }
 

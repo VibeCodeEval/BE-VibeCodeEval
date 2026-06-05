@@ -21,6 +21,7 @@ import com.yd.vibecode.domain.problem.infrastructure.entity.ProblemSet;
 import com.yd.vibecode.domain.problem.infrastructure.entity.ProblemSetItem;
 import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetItemRepository;
 import com.yd.vibecode.domain.problem.infrastructure.repository.ProblemSetRepository;
+import com.yd.vibecode.domain.admin.domain.service.AdminActivityLogService;
 import com.yd.vibecode.global.exception.RestApiException;
 import com.yd.vibecode.global.exception.code.status.ExamErrorStatus;
 import com.yd.vibecode.global.exception.code.status.ProblemErrorStatus;
@@ -37,6 +38,7 @@ public class CreateExamUseCase {
     private final ProblemSetRepository problemSetRepository;
     private final ProblemSetItemRepository problemSetItemRepository;
     private final EntryCodeRepository entryCodeRepository;
+    private final AdminActivityLogService adminActivityLogService;
 
     @Transactional
     public ExamResponse execute(Long adminId, CreateExamRequest request) {
@@ -95,7 +97,9 @@ public class CreateExamUseCase {
             .build();
         
         entryCodeRepository.save(entryCode);
-        
+
+        adminActivityLogService.logRoomCreated(adminId, savedExam.getId(), savedExam.getTitle());
+
         return ExamResponse.from(savedExam);
     }
 }

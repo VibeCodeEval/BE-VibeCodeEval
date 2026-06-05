@@ -22,6 +22,11 @@ public class ExamParticipantService {
                 .orElse(null);
     }
 
+    public ExamParticipant findByExamIdAndParticipantIdForUpdate(Long examId, Long participantId) {
+        return examParticipantRepository.findByExamIdAndParticipantIdForUpdate(examId, participantId)
+                .orElse(null);
+    }
+
     public ExamParticipant findLatestByParticipantId(Long participantId) {
         return examParticipantRepository.findByParticipantIdOrderByJoinedAtDesc(participantId)
                 .stream()

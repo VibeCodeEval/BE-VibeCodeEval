@@ -23,6 +23,7 @@ import com.yd.vibecode.domain.admin.application.dto.response.ProblemDetailRespon
 import com.yd.vibecode.domain.admin.application.usecase.GetProblemDetailUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.GetProblemSpecsUseCase;
 import com.yd.vibecode.domain.admin.application.usecase.GetProblemsUseCase;
+import com.yd.vibecode.domain.admin.application.usecase.UpdateProblemAvailabilityUseCase;
 import com.yd.vibecode.domain.problem.domain.entity.Difficulty;
 import com.yd.vibecode.domain.problem.domain.entity.ProblemStatus;
 import com.yd.vibecode.global.interceptor.JwtBlacklistInterceptor;
@@ -54,6 +55,9 @@ class AdminProblemControllerTest {
 
     @MockBean
     private GetProblemDetailUseCase getProblemDetailUseCase;
+
+    @MockBean
+    private UpdateProblemAvailabilityUseCase updateProblemAvailabilityUseCase;
 
     @MockBean
     private JwtBlacklistInterceptor jwtBlacklistInterceptor;
@@ -104,4 +108,5 @@ class AdminProblemControllerTest {
         mockMvc.perform(get("/api/admin/problems/" + problemId + "/detail"))
             .andExpect(status().isOk());
     }
+
 }
