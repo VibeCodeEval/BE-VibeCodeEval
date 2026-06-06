@@ -64,6 +64,7 @@ public class Exam extends BaseEntity {
         if (this.state != ExamState.WAITING) {
             throw new RestApiException(ExamErrorStatus.INVALID_EXAM_STATE);
         }
+        this.startsAt = LocalDateTime.now();
         this.state = ExamState.RUNNING;
         this.version++;
     }
@@ -73,6 +74,7 @@ public class Exam extends BaseEntity {
         if (this.state != ExamState.RUNNING) {
             throw new RestApiException(ExamErrorStatus.INVALID_EXAM_STATE);
         }
+        this.endsAt = LocalDateTime.now();
         this.state = ExamState.ENDED;
         this.version++;
     }

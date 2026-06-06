@@ -1,6 +1,9 @@
 package com.yd.vibecode.domain.submission.domain.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.yd.vibecode.domain.submission.domain.entity.Score;
 
@@ -13,4 +16,8 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
     Optional<Score> findBySubmissionId(Long submissionId);
 
     List<Score> findBySubmissionIdIn(Collection<Long> submissionIds);
+
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM Score s WHERE s.submissionId IN :submissionIds")
+    int deleteBySubmissionIdIn(@Param("submissionIds") Collection<Long> submissionIds);
 }

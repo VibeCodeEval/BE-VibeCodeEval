@@ -76,4 +76,120 @@ class ExamParticipantDisplayStatusResolverTest {
                 exam, ep, false, null, null, LocalDateTime.now()))
                 .isEqualTo(ParticipantAttendanceStatus.ENDED);
     }
+
+    @Test
+    @DisplayName("WAITING 시험 + joinedAt 있음 + 미제출 → 대기중")
+    void attendance_waitingExamWithJoinedAt_notSubmitted() {
+        Exam exam = waitingExam();
+        ExamParticipant ep = ExamParticipant.builder()
+                .examId(1L)
+                .participantId(1L)
+                .state("RUNNING")
+                .joinedAt(LocalDateTime.now())
+                .build();
+
+        assertThat(ExamParticipantDisplayStatusResolver.resolveAttendanceStatus(
+                exam, ep, false, null, null, LocalDateTime.now()))
+                .isEqualTo(ParticipantAttendanceStatus.WAITING);
+    }
+
+    @Test
+    @DisplayName("WAITING 시험 + tokenUsed > 0 + 미제출 → 대기중")
+    void attendance_waitingExamWithTokenUsed_notSubmitted() {
+        Exam exam = waitingExam();
+        ExamParticipant ep = ExamParticipant.builder()
+                .examId(1L)
+                .participantId(1L)
+                .state("RUNNING")
+                .tokenUsed(100)
+                .build();
+
+        assertThat(ExamParticipantDisplayStatusResolver.resolveAttendanceStatus(
+                exam, ep, false, null, null, LocalDateTime.now()))
+                .isEqualTo(ParticipantAttendanceStatus.WAITING);
+    }
+
+    @Test
+    @DisplayName("WAITING 시험 + 제출 데이터 있음 → 대기중 우선")
+    void attendance_waitingExamWithSubmission_stillWaiting() {
+        Exam exam = waitingExam();
+        ExamParticipant ep = ExamParticipant.builder()
+                .examId(1L)
+                .participantId(1L)
+                .state("RUNNING")
+                .joinedAt(LocalDateTime.now())
+                .build();
+        Submission sub = Submission.builder()
+                .examId(1L)
+                .participantId(1L)
+                .specId(1L)
+                .status(SubmissionStatus.QUEUED)
+                .lang("python")
+                .build();
+
+        assertThat(ExamParticipantDisplayStatusResolver.resolveAttendanceStatus(
+                exam, ep, true, sub, null, LocalDateTime.now()))
+                .isEqualTo(ParticipantAttendanceStatus.WAITING);
+    }
+
+    @Test
+    @DisplayName("RUNNING 시험 + joinedAt 있음 + 미제출 → 응시중")
+    void attendance_runningExamWithJoinedAt_notSubmitted() {
+        Exam exam = runningExam();
+        ExamParticipant ep = ExamParticipant.builder()
+                .examId(1L)
+                .participantId(1L)
+                .state("RUNNING")
+                .joinedAt(LocalDateTime.now())
+                .build();
+
+        assertThat(ExamParticipantDisplayStatusResolver.resolveAttendanceStatus(
+                exam, ep, false, null, null, LocalDateTime.now()))
+                .isEqualTo(ParticipantAttendanceStatus.IN_EXAM);
+    }
+
+    @Test
+    @DisplayName("RUNNING 시험 + 제출 완료 → 응시완료")
+    void attendance_runningExam_submitted() {
+        Exam exam = runningExam();
+        ExamParticipant ep = ExamParticipant.builder()
+                .examId(1L)
+                .participantId(1L)
+                .state("RUNNING")
+                .joinedAt(LocalDateTime.now())
+                .build();
+        Submission sub = Submission.builder()
+                .examId(1L)
+                .participantId(1L)
+                .specId(1L)
+                .status(SubmissionStatus.QUEUED)
+                .lang("python")
+                .build();
+
+        assertThat(ExamParticipantDisplayStatusResolver.resolveAttendanceStatus(
+                exam, ep, true, sub, null, LocalDateTime.now()))
+                .isEqualTo(ParticipantAttendanceStatus.SUBMITTED);
+    }
+
+    private static Exam waitingExam() {
+        return Exam.builder()
+                .title("t")
+                .state(ExamState.WAITING)
+                .startsAt(LocalDateTime.now().plusHours(1))
+                .endsAt(LocalDateTime.now().plusHours(2))
+                .version(1)
+                .createdBy(1L)
+                .build();
+    }
+
+    private static Exam runningExam() {
+        return Exam.builder()
+                .title("t")
+                .state(ExamState.RUNNING)
+                .startsAt(LocalDateTime.now().minusMinutes(10))
+                .endsAt(LocalDateTime.now().plusHours(1))
+                .version(1)
+                .createdBy(1L)
+                .build();
+    }
 }

@@ -18,4 +18,9 @@ public interface ExamRepository extends JpaRepository<Exam, Long> {
      * 자동 시작 대상: WAITING 상태이며 시작 시각이 현재 이하인 시험.
      */
     List<Exam> findByStateAndStartsAtLessThanEqual(ExamState state, LocalDateTime startsAtThreshold);
+
+    /**
+     * 자동 종료 대상: RUNNING 상태이며 종료 시각이 설정되어 있고 현재 이하인 시험.
+     */
+    List<Exam> findByStateAndEndsAtIsNotNullAndEndsAtLessThanEqual(ExamState state, LocalDateTime endsAtThreshold);
 }

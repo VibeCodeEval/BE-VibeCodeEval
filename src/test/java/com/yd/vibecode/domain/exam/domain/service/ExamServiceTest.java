@@ -70,22 +70,27 @@ class ExamServiceTest {
     void startExam_Success() {
         // given
         Long examId = 1L;
+        LocalDateTime scheduledStart = LocalDateTime.now().plusHours(2);
         Exam exam = Exam.builder()
                 .title("Test Exam")
                 .state(ExamState.WAITING)
-                .startsAt(LocalDateTime.now())
-                .endsAt(LocalDateTime.now().plusHours(1))
+                .startsAt(scheduledStart)
+                .endsAt(LocalDateTime.now().plusHours(4))
                 .createdBy(1L)
                 .build();
-        
+        LocalDateTime beforeStart = LocalDateTime.now();
+
         given(examRepository.findById(examId)).willReturn(Optional.of(exam));
         given(examRepository.save(any(Exam.class))).willReturn(exam);
 
         // when
         examService.startExam(examId);
+        LocalDateTime afterStart = LocalDateTime.now();
 
         // then
         assertThat(exam.getState()).isEqualTo(ExamState.RUNNING);
+        assertThat(exam.getStartsAt()).isBetween(beforeStart, afterStart);
+        assertThat(exam.getStartsAt()).isBefore(scheduledStart);
         verify(examRepository).save(exam);
     }
 
@@ -94,22 +99,27 @@ class ExamServiceTest {
     void endExam_Success() {
         // given
         Long examId = 1L;
+        LocalDateTime scheduledEnd = LocalDateTime.now().plusHours(2);
         Exam exam = Exam.builder()
                 .title("Test Exam")
                 .state(ExamState.RUNNING)
-                .startsAt(LocalDateTime.now())
-                .endsAt(LocalDateTime.now().plusHours(1))
+                .startsAt(LocalDateTime.now().minusHours(1))
+                .endsAt(scheduledEnd)
                 .createdBy(1L)
                 .build();
-        
+        LocalDateTime beforeEnd = LocalDateTime.now();
+
         given(examRepository.findById(examId)).willReturn(Optional.of(exam));
         given(examRepository.save(any(Exam.class))).willReturn(exam);
 
         // when
         examService.endExam(examId);
+        LocalDateTime afterEnd = LocalDateTime.now();
 
         // then
         assertThat(exam.getState()).isEqualTo(ExamState.ENDED);
+        assertThat(exam.getEndsAt()).isBetween(beforeEnd, afterEnd);
+        assertThat(exam.getEndsAt()).isBefore(scheduledEnd);
         verify(examRepository).save(exam);
     }
 
