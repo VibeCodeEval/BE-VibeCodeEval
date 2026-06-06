@@ -1,8 +1,11 @@
 package com.yd.vibecode.domain.admin.domain.repository;
 
+import java.time.LocalDateTime;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -26,4 +29,8 @@ public interface AdminActivityLogRepository extends JpaRepository<AdminActivityL
             @Param("type") AdminActivityLogType type,
             @Param("keyword") String keyword,
             Pageable pageable);
+
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM AdminActivityLog l WHERE l.createdAt < :cutoff")
+    int deleteByCreatedAtBefore(@Param("cutoff") LocalDateTime cutoff);
 }
