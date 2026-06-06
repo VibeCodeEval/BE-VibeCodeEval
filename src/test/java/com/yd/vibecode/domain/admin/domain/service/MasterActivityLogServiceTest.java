@@ -147,4 +147,19 @@ class MasterActivityLogServiceTest {
         assertThat(captor.getValue().getType()).isEqualTo(MasterActivityLogType.ADMIN_ACCOUNT_DELETED);
         assertThat(captor.getValue().getMessage()).isEqualTo("'이관리' 관리자 계정이 삭제되었습니다.");
     }
+
+    @Test
+    @DisplayName("ADMIN_ACCOUNT_DELETED 로그는 masterId가 null이어도 기록된다")
+    void logAdminAccountDeleted_withNullMasterId() {
+        masterActivityLogService.logAdminAccountDeleted(null, 5L, "이관리");
+
+        ArgumentCaptor<MasterActivityLog> captor = forClass(MasterActivityLog.class);
+        verify(masterActivityLogRepository).save(captor.capture());
+
+        MasterActivityLog saved = captor.getValue();
+        assertThat(saved.getMasterId()).isNull();
+        assertThat(saved.getTargetAdminId()).isEqualTo(5L);
+        assertThat(saved.getType()).isEqualTo(MasterActivityLogType.ADMIN_ACCOUNT_DELETED);
+        assertThat(saved.getMessage()).isEqualTo("'이관리' 관리자 계정이 삭제되었습니다.");
+    }
 }
