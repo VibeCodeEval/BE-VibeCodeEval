@@ -324,7 +324,3 @@ docker compose -f docker-compose.prod.yml up -d
 | [AI-VibeCodeEval](../AI-VibeCodeEval) | FastAPI + LangGraph AI 채점 워커 |
 
 </div>
-
-<br>
-
-> 전체 시스템 구성도(Mermaid)는 [`docs/architecture.md`](../docs/architecture.md)를 참조하세요.
