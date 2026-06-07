@@ -62,6 +62,10 @@ public final class ExamParticipantDisplayStatusResolver {
             return ParticipantAttendanceStatus.ENDED;
         }
 
+        if (exam.getState() == ExamState.WAITING) {
+            return ParticipantAttendanceStatus.WAITING;
+        }
+
         if (submitted && resolveSubmissionDisplayStatus(submitted, submission, score)
                 != ParticipantSubmissionDisplayStatus.NOT_SUBMITTED) {
             return ParticipantAttendanceStatus.SUBMITTED;

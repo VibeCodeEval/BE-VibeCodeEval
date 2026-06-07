@@ -4,15 +4,18 @@ import com.yd.vibecode.domain.submission.domain.entity.OutboxEvent;
 import com.yd.vibecode.domain.submission.domain.entity.OutboxStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.QueryHint;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.QueryHints;
 
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.QueryHint;
+
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> {
@@ -37,4 +40,14 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> 
             @Param("status") OutboxStatus status,
             @Param("staleThreshold") LocalDateTime staleThreshold
     );
+
+    @Modifying(clearAutomatically = true)
+    @Query("""
+            DELETE FROM OutboxEvent e
+            WHERE e.aggregateType = :aggregateType
+              AND e.aggregateId IN :aggregateIds
+            """)
+    int deleteByAggregateTypeAndAggregateIdIn(
+            @Param("aggregateType") String aggregateType,
+            @Param("aggregateIds") Collection<Long> aggregateIds);
 }

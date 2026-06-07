@@ -35,21 +35,26 @@ class ExamTest {
     @DisplayName("시험 시작: WAITING -> RUNNING 상태 전환 성공")
     void startExam_Success() {
         // given
+        LocalDateTime scheduledStart = LocalDateTime.now().plusHours(1);
         Exam exam = Exam.builder()
                 .title("Test Exam")
                 .state(ExamState.WAITING)
-                .startsAt(LocalDateTime.now().plusHours(1))
+                .startsAt(scheduledStart)
                 .endsAt(LocalDateTime.now().plusHours(2))
                 .createdBy(1L)
                 .build();
         int initialVersion = exam.getVersion();
+        LocalDateTime beforeStart = LocalDateTime.now();
 
         // when
         exam.start();
+        LocalDateTime afterStart = LocalDateTime.now();
 
         // then
         assertThat(exam.getState()).isEqualTo(ExamState.RUNNING);
         assertThat(exam.getVersion()).isEqualTo(initialVersion + 1);
+        assertThat(exam.getStartsAt()).isBetween(beforeStart, afterStart);
+        assertThat(exam.getStartsAt()).isBefore(scheduledStart);
     }
 
     @Test
@@ -74,21 +79,26 @@ class ExamTest {
     @DisplayName("시험 종료: RUNNING -> ENDED 상태 전환 성공")
     void endExam_Success() {
         // given
+        LocalDateTime scheduledEnd = LocalDateTime.now().plusHours(1);
         Exam exam = Exam.builder()
                 .title("Test Exam")
                 .state(ExamState.RUNNING)
                 .startsAt(LocalDateTime.now())
-                .endsAt(LocalDateTime.now().plusHours(1))
+                .endsAt(scheduledEnd)
                 .createdBy(1L)
                 .build();
         int initialVersion = exam.getVersion();
+        LocalDateTime beforeEnd = LocalDateTime.now();
 
         // when
         exam.end();
+        LocalDateTime afterEnd = LocalDateTime.now();
 
         // then
         assertThat(exam.getState()).isEqualTo(ExamState.ENDED);
         assertThat(exam.getVersion()).isEqualTo(initialVersion + 1);
+        assertThat(exam.getEndsAt()).isBetween(beforeEnd, afterEnd);
+        assertThat(exam.getEndsAt()).isBefore(scheduledEnd);
     }
 
     @Test
